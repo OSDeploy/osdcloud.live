@@ -1,15 +1,15 @@
 <#
 .SYNOPSIS
-    OSDCloud Cloud Module for functions.osdcloud.com
+    OSDCloud Live
 .DESCRIPTION
-    OSDCloud Cloud Module for functions.osdcloud.com
+    OSDCloud Live
 .NOTES
     This module is designed to work in WinPE or Full
     This module is for Dell Devices and leveraged HP Tools
 .LINK
-    https://raw.githubusercontent.com/OSDeploy/OSD/master/cloud/modules/debugmode.psm1
+    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/debugmode.psm1
 .EXAMPLE
-    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/OSD/master/cloud/modules/debugmode.psm1')
+    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/debugmode.psm1')
 #>
 #=================================================
 #region Functions

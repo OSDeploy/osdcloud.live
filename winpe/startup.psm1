@@ -1,14 +1,14 @@
 <#
 .SYNOPSIS
-    OSDCloud Cloud Module for functions.osdcloud.com
+    OSDCloud Live
 .DESCRIPTION
-    OSDCloud Cloud Module for functions.osdcloud.com
+    OSDCloud Live
 .NOTES
     Version 22.9.13.1
 .LINK
-    https://raw.githubusercontent.com/OSDeploy/OSD/master/cloud/modules/eq-winpe-startup.psm1
+    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/winpe/startup.psm1
 .EXAMPLE
-    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/OSD/master/cloud/modules/eq-winpe-startup.psm1')
+    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/winpe/startup.psm1')
 #>
 
 #region Functions  
@@ -19,7 +19,7 @@ function AzOSD {
     Get-OSDCloudAzureResources
     Start-OSDCloudAzure
 }
-function osdcloud-StartWinPE {
+function winpe-Startup {
     [CmdletBinding()]
     param (
         [Parameter()]
@@ -43,7 +43,7 @@ function osdcloud-StartWinPE {
         osdcloud-WinpeInstallPowerShellGet
         osdcloud-TrustPSGallery
         if ($OSDCloud) {
-            osdcloud-WinpeInstallCurl
+            winpe-InstallCurl
             osdcloud-InstallPowerShellModule -Name PSReadLine
             osdcloud-InstallPowerShellModule -Name OSD
             osdcloud-InstallPowerShellModule -Name OSDCloud
@@ -55,7 +55,7 @@ function osdcloud-StartWinPE {
         }
         if ($Azure) {
             $KeyVault = $false
-            Invoke-Expression -Command (Invoke-RestMethod -Uri functions.osdcloud.com)
+            # Invoke-Expression -Command (Invoke-RestMethod -Uri https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/functions.ps1)
             osdcloud-InstallPowerShellModule -Name 'AzureAD'
             osdcloud-InstallPowerShellModule -Name 'Az.Accounts'
             osdcloud-InstallPowerShellModule -Name 'Az.KeyVault'
@@ -65,7 +65,7 @@ function osdcloud-StartWinPE {
             osdcloud-InstallPowerShellModule -Name 'Microsoft.Graph.DeviceManagement'
         }
         if ($KeyVault) {
-            Invoke-Expression -Command (Invoke-RestMethod -Uri functions.osdcloud.com)
+            # Invoke-Expression -Command (Invoke-RestMethod -Uri https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/functions.ps1)
             osdcloud-InstallPowerShellModule -Name 'Az.Accounts'
             osdcloud-InstallPowerShellModule -Name 'Az.KeyVault'
         }

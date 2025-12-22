@@ -1,14 +1,14 @@
 <#
 .SYNOPSIS
-    OSDCloud Cloud Module for functions.osdcloud.com
+    OSDCloud Live
 .DESCRIPTION
-    OSDCloud Cloud Module for functions.osdcloud.com
+    OSDCloud Live
 .NOTES
     This module can be loaded in all Windows phases except WinPE
 .LINK
-    https://raw.githubusercontent.com/OSDeploy/OSD/master/cloud/modules/autopilot.psm1
+    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/autopilot.psm1
 .EXAMPLE
-    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/OSD/master/cloud/modules/autopilot.psm1')
+    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/autopilot.psm1')
 #>
 #=================================================
 #region Functions

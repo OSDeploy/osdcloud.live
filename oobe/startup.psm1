@@ -1,18 +1,18 @@
 <#
 .SYNOPSIS
-    OSDCloud Cloud Module for functions.osdcloud.com
+    OSDCloud Live
 .DESCRIPTION
-    OSDCloud Cloud Module for functions.osdcloud.com
+    OSDCloud Live
 .NOTES
     This module is designed for OOBE
 .LINK
-    https://raw.githubusercontent.com/OSDeploy/OSD/master/cloud/modules/eq-oobe-startup.psm1
+    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/oobe/startup.psm1
 .EXAMPLE
-    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/OSD/master/cloud/modules/eq-oobe-startup.psm1')
+    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/oobe/startup.psm1')
 #>
 #=================================================
 #region Functions
-function osdcloud-StartOOBE {
+function oobe-Startup {
     [CmdletBinding()]
     param (
         [System.Management.Automation.SwitchParameter]
@@ -72,7 +72,7 @@ function osdcloud-StartOOBE {
 
         if ($WinGetUpgrade) {
             if (Get-Command 'WinGet' -ErrorAction SilentlyContinue) {
-                Write-Host -ForegroundColor Green "[+] winget upgrade --all --accept-source-agreements --accept-package-agreements"
+                Write-Host -ForegroundColor Green "[✓] winget upgrade --all --accept-source-agreements --accept-package-agreements"
                 winget upgrade --all --accept-source-agreements --accept-package-agreements
             }
         }
@@ -118,6 +118,6 @@ function osdcloud-StartOOBE {
         }
     }
 }
-New-Alias -Name 'Start-OOBE' -Value 'osdcloud-StartOOBE' -Description 'OSDCloud' -Force
+New-Alias -Name 'Start-OOBE' -Value 'oobe-Startup' -Description 'OSDCloud' -Force
 #endregion
 #=================================================
