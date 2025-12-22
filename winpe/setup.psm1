@@ -35,18 +35,6 @@ function winpe-Setup {
         $OSDCloud
     )
     if ($env:SystemDrive -eq 'X:') {
-        winpe-SetExecutionPolicy
-        winpe-SetEnvironmentVariables
-        winpe-SetPowerShellProfile
-        winpe-InstallNuget
-        winpe-InstallPackageManagement
-        winpe-InstallPowerShellGet
-        winpe-TrustPSGallery
-        winpe-InstallCurl
-
-
-
-
         if ($OSDCloud) {
             winpe-InstallPowerShellModule -Name OSD
             winpe-InstallPowerShellModule -Name OSDCloud
