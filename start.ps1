@@ -26,7 +26,7 @@ powershell iex (irm osdcloud.live)
 .NOTES
     Version 25.12.22
 .LINK
-    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/master/cloud/osdcloud.live.ps1
+    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/start.ps1
 .EXAMPLE
     powershell iex (irm osdcloud.live)
 #>
@@ -86,8 +86,9 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-InstallPackageManagement
     winpe-InstallPowerShellGet
     winpe-TrustPSGallery
-    winpe-InstallCurl
     winpe-InstallAzcopy
+    winpe-InstallCurl
+    winpe-InstallZip
     
     winpe-Setup -OSDCloud
     Write-Host -ForegroundColor Cyan "To start a new PowerShell session, type 'start powershell' and press enter"

@@ -291,10 +291,19 @@ function winpe-InstallZip {
     try {
         Write-Host -ForegroundColor Yellow "[→] Installing 7-Zip from GitHub"
 
-        $temp7za = "$env:TEMP\7za.7z"
+        $temp7za = "$env:TEMP\7z2501-extra.7z"
         
-        Invoke-WebRequest -UseBasicParsing -Uri 'https://github.com/ip7z/7zip/releases/download/25.01/7z2501-extra.7z' `
-            -OutFile $temp7za -ErrorAction Stop
+        $curlPath = Join-Path $env:SystemRoot 'System32/curl.exe'
+        if (-not (Test-Path $curlPath)) {
+            throw 'curl.exe not found in System32; install curl first'
+        }
+
+        & $curlPath --fail --location --silent --show-error `
+            'https://github.com/ip7z/7zip/releases/download/25.01/7z2501-extra.7z' `
+            --output $temp7za
+        if ($LASTEXITCODE -ne 0 -or -not (Test-Path $temp7za)) {
+            throw "curl download failed with exit code $LASTEXITCODE"
+        }
         
         $temp7zaDir = "$env:TEMP\7za"
         $null = New-Item -Path $temp7zaDir -ItemType Directory -Force
