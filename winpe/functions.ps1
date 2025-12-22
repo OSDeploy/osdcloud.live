@@ -273,6 +273,60 @@ function winpe-InstallAzcopy {
     }
 }
 
+function winpe-InstallZip {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+
+    # requires both 7zr.exe and 7za.exe
+    $zip7rPath = "$env:SystemRoot\System32\7zr.exe"
+    $zip7aPath = "$env:SystemRoot\System32\7za.exe"
+    
+    if ((Test-Path $zip7rPath) -and (Test-Path $zip7aPath)) {
+        $zip = Get-Item -Path $zip7rPath
+        Write-Host -ForegroundColor Green "[✓] 7-Zip $($zip.VersionInfo.FileVersion) is already installed."
+        return
+    }
+
+    try {
+        Write-Host -ForegroundColor Yellow "[→] Installing 7-Zip from GitHub"
+
+        $temp7zr = "$env:TEMP\7zr.exe"
+        Invoke-WebRequest -UseBasicParsing -Uri 'https://github.com/ip7z/7zip/releases/download/25.01/7zr.exe' `
+            -OutFile $temp7zr -ErrorAction Stop
+        Copy-Item -Path $temp7zr -Destination $zip7rPath -Force -ErrorAction Stop
+
+        $temp7za = "$env:TEMP\7za.7z"
+        
+        Invoke-WebRequest -UseBasicParsing -Uri 'https://github.com/ip7z/7zip/releases/download/25.01/7z2501-extra.7z' `
+            -OutFile $temp7za -ErrorAction Stop
+        
+        $temp7zaDir = "$env:TEMP\7za"
+        $null = New-Item -Path $temp7zaDir -ItemType Directory -Force
+        & $zip7rPath x $temp7za -o"$temp7zaDir" -y
+
+        if ($env:PROCESSOR_ARCHITECTURE -eq "AMD64") {
+            Copy-Item -Path "$temp7zaDir\7za\x64\*" -Destination $env:SystemRoot\System32 -Recurse -Force -ErrorAction Stop
+        }
+        elseif ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") {
+            Copy-Item -Path "$temp7zaDir\7za\arm64\*" -Destination $env:SystemRoot\System32 -Recurse -Force -ErrorAction Stop
+        }
+
+        Write-Host -ForegroundColor Green "[✓] 7-Zip installed successfully"
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] Failed to install 7-Zip: $_"
+        throw
+    }
+    finally {
+        # Cleanup
+        if (Test-Path $temp7zr) { Remove-Item $temp7zr -Force -ErrorAction SilentlyContinue }
+        if (Test-Path $temp7za) { Remove-Item $temp7za -Force -ErrorAction SilentlyContinue }
+        if (Test-Path $temp7zaDir) { Remove-Item $temp7zaDir -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+}
+
+
 function winpe-InstallPowerShellModule {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -331,13 +385,7 @@ function winpe-InstallPowerShellModule {
     }
 }
 
-
-
 # Not used
-
-
-
-
 
 function winpe-InstallNuget {
     [CmdletBinding()]
