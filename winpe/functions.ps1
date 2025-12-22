@@ -240,7 +240,7 @@ function winpe-InstallAzcopy {
     
     if (Test-Path $azcopyPath) {
         $azcopy = Get-Item -Path $azcopyPath
-        Write-Host -ForegroundColor Green "[✓] AzCopy $($azcopy.VersionInfo.FileVersion) is already installed."
+        Write-Host -ForegroundColor Green "[✓] AzCopy is already installed."
         return
     }
 
@@ -291,11 +291,6 @@ function winpe-InstallZip {
     try {
         Write-Host -ForegroundColor Yellow "[→] Installing 7-Zip from GitHub"
 
-        $temp7zr = "$env:TEMP\7zr.exe"
-        Invoke-WebRequest -UseBasicParsing -Uri 'https://github.com/ip7z/7zip/releases/download/25.01/7zr.exe' `
-            -OutFile $temp7zr -ErrorAction Stop
-        Copy-Item -Path $temp7zr -Destination $zip7rPath -Force -ErrorAction Stop
-
         $temp7za = "$env:TEMP\7za.7z"
         
         Invoke-WebRequest -UseBasicParsing -Uri 'https://github.com/ip7z/7zip/releases/download/25.01/7z2501-extra.7z' `
@@ -303,7 +298,8 @@ function winpe-InstallZip {
         
         $temp7zaDir = "$env:TEMP\7za"
         $null = New-Item -Path $temp7zaDir -ItemType Directory -Force
-        & $zip7rPath x $temp7za -o"$temp7zaDir" -y
+
+        Expand-Archive -Path $temp7za -DestinationPath $temp7zaDir -Force -ErrorAction Stop
 
         if ($env:PROCESSOR_ARCHITECTURE -eq "AMD64") {
             Copy-Item -Path "$temp7zaDir\7za\x64\*" -Destination $env:SystemRoot\System32 -Recurse -Force -ErrorAction Stop
@@ -320,9 +316,8 @@ function winpe-InstallZip {
     }
     finally {
         # Cleanup
-        if (Test-Path $temp7zr) { Remove-Item $temp7zr -Force -ErrorAction SilentlyContinue }
-        if (Test-Path $temp7za) { Remove-Item $temp7za -Force -ErrorAction SilentlyContinue }
-        if (Test-Path $temp7zaDir) { Remove-Item $temp7zaDir -Recurse -Force -ErrorAction SilentlyContinue }
+        # if (Test-Path $temp7za) { Remove-Item $temp7za -Force -ErrorAction SilentlyContinue }
+        # if (Test-Path $temp7zaDir) { Remove-Item $temp7zaDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
 }
 
