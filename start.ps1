@@ -86,9 +86,9 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-InstallPackageManagement
     winpe-InstallPowerShellGet
     winpe-TrustPSGallery
-    winpe-InstallAzcopy
     winpe-InstallCurl
-    winpe-InstallZip
+    winpe-InstallAzcopy
+    # winpe-InstallZip
     
     winpe-Setup -OSDCloud
     Write-Host -ForegroundColor Cyan "To start a new PowerShell session, type 'start powershell' and press enter"

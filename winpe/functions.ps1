@@ -249,8 +249,19 @@ function winpe-InstallAzcopy {
         $tempZip = "$env:TEMP\azcopy.zip"
         $tempDir = "$env:TEMP\azcopy"
         
-        # Download
-        Invoke-WebRequest -UseBasicParsing -Uri 'https://aka.ms/downloadazcopy-v10-windows' -OutFile $tempZip -ErrorAction Stop
+        # Download using curl if available, fallback to Invoke-WebRequest
+        $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
+        if (Test-Path $curlPath) {
+            & $curlPath --fail --location --silent --show-error `
+                'https://aka.ms/downloadazcopy-v10-windows' `
+                --output $tempZip
+            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $tempZip)) {
+                throw "curl download failed with exit code $LASTEXITCODE"
+            }
+        }
+        else {
+            Invoke-WebRequest -UseBasicParsing -Uri 'https://aka.ms/downloadazcopy-v10-windows' -OutFile $tempZip -ErrorAction Stop
+        }
         
         # Extract
         $null = New-Item -Path $tempDir -ItemType Directory -Force
