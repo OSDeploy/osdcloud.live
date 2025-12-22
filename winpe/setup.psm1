@@ -6,9 +6,9 @@
 .NOTES
     Version 22.9.13.1
 .LINK
-    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/winpe/startup.psm1
+    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/winpe/setup.psm1
 .EXAMPLE
-    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/winpe/startup.psm1')
+    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/winpe/setup.psm1')
 #>
 
 #region Functions  
@@ -19,7 +19,7 @@ function AzOSD {
     Get-OSDCloudAzureResources
     Start-OSDCloudAzure
 }
-function winpe-Startup {
+function winpe-Setup {
     [CmdletBinding()]
     param (
         [Parameter()]
@@ -38,17 +38,16 @@ function winpe-Startup {
         winpe-SetExecutionPolicy
         winpe-SetEnvironmentVariables
         winpe-SetPowerShellProfile
-        # osdcloud-InstallNuget
+        winpe-InstallNuget
         winpe-InstallPackageManagement
         winpe-InstallPowerShellGet
         winpe-TrustPSGallery
+        winpe-InstallCurl
 
 
 
 
         if ($OSDCloud) {
-            winpe-InstallCurl
-            # winpe-InstallPowerShellModule -Name PSReadLine
             winpe-InstallPowerShellModule -Name OSD
             winpe-InstallPowerShellModule -Name OSDCloud
             if (-not (Get-Command 'curl.exe' -ErrorAction SilentlyContinue)) {
