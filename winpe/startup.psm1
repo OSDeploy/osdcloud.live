@@ -38,7 +38,7 @@ function winpe-Startup {
         winpe-SetExecutionPolicy
         winpe-SetEnvironmentVariables
         winpe-SetPowerShellProfile
-        #osdcloud-InstallNuget
+        # osdcloud-InstallNuget
         winpe-InstallPackageManagement
         winpe-InstallPowerShellGet
         winpe-TrustPSGallery
@@ -48,9 +48,9 @@ function winpe-Startup {
 
         if ($OSDCloud) {
             winpe-InstallCurl
-            osdcloud-InstallPowerShellModule -Name PSReadLine
-            osdcloud-InstallPowerShellModule -Name OSD
-            osdcloud-InstallPowerShellModule -Name OSDCloud
+            # winpe-InstallPowerShellModule -Name PSReadLine
+            winpe-InstallPowerShellModule -Name OSD
+            winpe-InstallPowerShellModule -Name OSDCloud
             if (-not (Get-Command 'curl.exe' -ErrorAction SilentlyContinue)) {
                 Write-Warning 'curl.exe is missing from WinPE. This is required for OSDCloud to function'
                 Start-Sleep -Seconds 5

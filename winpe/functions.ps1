@@ -230,3 +230,148 @@ function winpe-InstallCurl {
         if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
 }
+
+function winpe-InstallPowerShellModule {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param (
+        [Parameter(Mandatory = $true)]
+        [System.String]
+        $Name,
+
+        [System.Management.Automation.SwitchParameter]
+        $Force
+    )
+
+    $InstalledModule = Get-Module -Name $Name -ListAvailable -ErrorAction SilentlyContinue | 
+        Sort-Object Version -Descending | 
+        Select-Object -First 1
+
+    # If installed and not forcing, check for updates
+    if ($InstalledModule -and -not $Force) {
+        try {
+            $GalleryModule = Find-Module -Name $Name -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+            
+            if ($GalleryModule -and ([version]$GalleryModule.Version -gt [version]$InstalledModule.Version)) {
+                Write-Host -ForegroundColor Yellow "[→] Installing $Name $($GalleryModule.Version) [AllUsers]"
+                Install-Module -Name $Name -Scope AllUsers -Force -SkipPublisherCheck -AllowClobber -ErrorAction Stop
+                Write-Host -ForegroundColor Green "[✓] $Name $($GalleryModule.Version) installed successfully"
+                return
+            }
+            
+            # Already installed and current
+            Import-Module -Name $Name -Force -ErrorAction SilentlyContinue
+            Write-Host -ForegroundColor Green "[✓] $Name $($InstalledModule.Version)"
+            return
+        }
+        catch {
+            Write-Host -ForegroundColor Red "[✗] Failed to install $Name : $_"
+            throw
+        }
+    }
+
+    # Module not installed or forced, install it
+    try {
+        Write-Host -ForegroundColor Yellow "[→] Installing $Name [AllUsers]"
+        $GalleryModule = Find-Module -Name $Name -ErrorAction Stop -WarningAction SilentlyContinue
+        
+        if (-not $GalleryModule) {
+            throw "Module $Name not found in PowerShell Gallery"
+        }
+
+        Install-Module -Name $Name -Scope AllUsers -Force -SkipPublisherCheck -AllowClobber -ErrorAction Stop
+        Import-Module -Name $Name -Force -ErrorAction Stop
+        Write-Host -ForegroundColor Green "[✓] $Name $($GalleryModule.Version) installed successfully"
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] Failed to install $Name : $_"
+        throw
+    }
+}
+
+
+
+
+
+
+
+
+
+function winpe-InstallNuget {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+
+    $NuGetClientSourceURL = 'https://nuget.org/nuget.exe'
+    $NuGetExeName = 'NuGet.exe'
+    $nugetPaths = @(
+        Join-Path -Path $env:ProgramData -ChildPath 'Microsoft\Windows\PowerShell\PowerShellGet\'
+        Join-Path -Path $env:LOCALAPPDATA -ChildPath 'Microsoft\Windows\PowerShell\PowerShellGet\'
+    )
+
+    try {
+        # Download NuGet to required locations
+        foreach ($path in $nugetPaths) {
+            $nugetExeFilePath = Join-Path -Path $path -ChildPath $NuGetExeName
+            if (-not (Test-Path -Path $nugetExeFilePath)) {
+                Write-Host -ForegroundColor Yellow "[→] Downloading NuGet to $nugetExeFilePath"
+                if (-not (Test-Path -Path $path)) {
+                    $null = New-Item -Path $path -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+                }
+                Invoke-WebRequest -UseBasicParsing -Uri $NuGetClientSourceURL -OutFile $nugetExeFilePath -ErrorAction Stop
+            }
+        }
+
+        # Install PackageProvider
+        $providerPath = "$env:ProgramFiles\PackageManagement\ProviderAssemblies\nuget\2.8.5.208\Microsoft.PackageManagement.NuGetProvider.dll"
+        if (Test-Path $providerPath) {
+            Write-Host -ForegroundColor Green "[✓] NuGet 2.8.5.208+"
+        }
+        else {
+            Write-Host -ForegroundColor Yellow "[→] Installing PackageProvider NuGet"
+            Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope AllUsers -ErrorAction Stop | Out-Null
+            Write-Host -ForegroundColor Green "[✓] NuGet installed successfully"
+        }
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] Failed to install NuGet: $_"
+        throw
+    }
+}
+
+function oobe-InstallNuget {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+
+    try {
+        $providerPath = "$env:ProgramFiles\PackageManagement\ProviderAssemblies\nuget\2.8.5.208\Microsoft.PackageManagement.NuGetProvider.dll"
+        if (Test-Path $providerPath) {
+            $installedProvider = Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue | 
+                Where-Object { $_.Version -ge '2.8.5.201' } | 
+                Sort-Object Version -Descending | 
+                Select-Object -First 1
+            
+            if ($installedProvider) {
+                Write-Host -ForegroundColor Green "[✓] NuGet $($installedProvider.Version)"
+                return
+            }
+        }
+
+        Write-Host -ForegroundColor Yellow "[→] Installing PackageProvider NuGet"
+        Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope AllUsers -ErrorAction Stop | Out-Null
+        
+        $installedProvider = Get-PackageProvider -Name NuGet -ErrorAction Stop | 
+            Where-Object { $_.Version -ge '2.8.5.201' } | 
+            Sort-Object Version -Descending | 
+            Select-Object -First 1
+        
+        if ($installedProvider) {
+            Write-Host -ForegroundColor Green "[✓] NuGet $($installedProvider.Version)"
+        }
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] Failed to install NuGet: $_"
+        throw
+    }
+}

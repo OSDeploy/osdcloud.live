@@ -11,13 +11,6 @@
     Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/eq-winpe.psm1')
 #>
 #=================================================
-#region Functions
-
-
-
-#end Region
-
-
 #region Gary Blok Functions
 $Manufacturer = (Get-CimInstance -Class:Win32_ComputerSystem).Manufacturer
 $Model = (Get-CimInstance -Class:Win32_ComputerSystem).Model

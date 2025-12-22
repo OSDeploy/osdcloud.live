@@ -80,7 +80,7 @@ if ($WindowsPhase -eq 'WinPE') {
     # Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/osdcloudazure.psm1')
     # Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/secrets.psm1')
     break
-    winpe-Startup -OSDCloud -KeyVault
+    winpe-Startup -OSDCloud
     Write-Host -ForegroundColor Cyan "To start a new PowerShell session, type 'start powershell' and press enter"
     Write-Host -ForegroundColor Cyan "Start-OSDCloud, Start-OSDCloudGUI, or Start-OSDCloudAzure, can be run in the new PowerShell window"
     $null = Stop-Transcript -ErrorAction Ignore

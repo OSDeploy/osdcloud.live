@@ -162,56 +162,7 @@ function osdcloud-SetExecutionPolicy {
         Write-Host -ForegroundColor Gray "[i] Get-ExecutionPolicy $(Get-ExecutionPolicy -Scope LocalMachine) [LocalMachine]"
     }
 }
-function osdcloud-InstallNuget {
-    [CmdletBinding()]
-    param ()
-    if ($WindowsPhase -eq 'WinPE') {
-        $NuGetClientSourceURL = 'https://nuget.org/nuget.exe'
-        $NuGetExeName = 'NuGet.exe'
-        $PSGetProgramDataPath = Join-Path -Path $env:ProgramData -ChildPath 'Microsoft\Windows\PowerShell\PowerShellGet\'
-        $nugetExeBasePath = $PSGetProgramDataPath
-        $nugetExeFilePath = Join-Path -Path $nugetExeBasePath -ChildPath $NuGetExeName
-    
-        if (-not (Test-Path -Path $nugetExeFilePath)) {
-            if (-not (Test-Path -Path $nugetExeBasePath)) {
-                $null = New-Item -Path $nugetExeBasePath -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-            }
-            Write-Host -ForegroundColor Yellow "[→] Downloading NuGet to $nugetExeFilePath"
-            $null = Invoke-WebRequest -UseBasicParsing -Uri $NuGetClientSourceURL -OutFile $nugetExeFilePath
-        }
-    
-        $PSGetAppLocalPath = Join-Path -Path $env:LOCALAPPDATA -ChildPath 'Microsoft\Windows\PowerShell\PowerShellGet\'
-        $nugetExeBasePath = $PSGetAppLocalPath
-        $nugetExeFilePath = Join-Path -Path $nugetExeBasePath -ChildPath $NuGetExeName
-        if (-not (Test-Path -Path $nugetExeFilePath)) {
-            if (-not (Test-Path -Path $nugetExeBasePath)) {
-                $null = New-Item -Path $nugetExeBasePath -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-            }
-            Write-Host -ForegroundColor Yellow "[→] Downloading NuGet to $nugetExeFilePath"
-            $null = Invoke-WebRequest -UseBasicParsing -Uri $NuGetClientSourceURL -OutFile $nugetExeFilePath
-        }
-        if (Test-Path "$env:ProgramFiles\PackageManagement\ProviderAssemblies\nuget\2.8.5.208\Microsoft.PackageManagement.NuGetProvider.dll") {
-            Write-Host -ForegroundColor Green "[✓] Nuget 2.8.5.208+"
-        }
-        else {
-            Write-Host -ForegroundColor Yellow "[→] Install-PackageProvider NuGet -MinimumVersion 2.8.5.201"
-            Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope AllUsers | Out-Null
-        }
-    }
-    else {
-        if (Test-Path "$env:ProgramFiles\PackageManagement\ProviderAssemblies\nuget\2.8.5.208\Microsoft.PackageManagement.NuGetProvider.dll") {
-            #Write-Host -ForegroundColor Green "[✓] Nuget 2.8.5.208+"
-        }
-        else {
-            Write-Host -ForegroundColor Yellow "[→] Install-PackageProvider NuGet -MinimumVersion 2.8.5.201"
-            Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope AllUsers | Out-Null
-        }
-        $InstalledModule = Get-PackageProvider -Name NuGet | Where-Object {$_.Version -ge '2.8.5.201'} | Sort-Object Version -Descending | Select-Object -First 1
-        if ($InstalledModule) {
-            Write-Host -ForegroundColor Green "[✓] NuGet $([string]$InstalledModule.Version)"
-        }
-    }
-}
+
 function osdcloud-InstallPackageManagement {
     [CmdletBinding()]
     param ()
