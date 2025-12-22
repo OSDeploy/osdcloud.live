@@ -10,8 +10,8 @@ function winpe-SetExecutionPolicy {
     }
 
     try {
-        Write-Host -ForegroundColor Yellow "[→] Set-ExecutionPolicy Bypass -Scope Process -Force"
-        Set-ExecutionPolicy Bypass -Scope Process -Force -ErrorAction Stop
+        Write-Host -ForegroundColor Yellow "[→] Set-ExecutionPolicy Bypass -Scope LocalMachine -Force"
+        Set-ExecutionPolicy Bypass -Scope LocalMachine -Force -ErrorAction Stop
         Write-Host -ForegroundColor Green "[✓] ExecutionPolicy Bypass"
     }
     catch {
