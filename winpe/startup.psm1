@@ -35,13 +35,17 @@ function winpe-Startup {
         $OSDCloud
     )
     if ($env:SystemDrive -eq 'X:') {
-        osdcloud-SetExecutionPolicy
+        winpe-SetExecutionPolicy
         winpe-SetEnvironmentVariables
-        osdcloud-SetPowerShellProfile
+        winpe-SetPowerShellProfile
         #osdcloud-InstallNuget
-        osdcloud-InstallPackageManagement
+        winpe-InstallPackageManagement
         winpe-InstallPowerShellGet
-        osdcloud-TrustPSGallery
+        winpe-TrustPSGallery
+
+
+
+
         if ($OSDCloud) {
             winpe-InstallCurl
             osdcloud-InstallPowerShellModule -Name PSReadLine
