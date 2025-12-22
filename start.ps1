@@ -86,6 +86,7 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-InstallPackageManagement
     winpe-InstallPowerShellGet
     winpe-TrustPSGallery
+    winpe-SetTime
     winpe-InstallCurl
     winpe-InstallAzcopy
     # winpe-InstallZip

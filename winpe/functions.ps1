@@ -341,6 +341,47 @@ function winpe-InstallZip {
     }
 }
 
+function winpe-SetTime {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+
+    try {
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -Value 1 -Type DWord -ErrorAction Stop
+        Write-Host -ForegroundColor Green "[✓] RealTimeIsUniversal set successfully."
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] Failed to set RealTimeIsUniversal: $_"
+        throw
+    }
+
+    # Set-Service -Name w32time -StartupType Automatic
+    try {
+        Set-Service -Name w32time -StartupType Automatic -ErrorAction Stop
+        Write-Host -ForegroundColor Green "[✓] w32time service set to Automatic"
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] Failed to set w32time service: $_"
+        throw
+    }
+
+    # Start w32time service if it is not running, if running ,restart
+    try {
+        $w32timeService = Get-Service -Name w32time -ErrorAction Stop
+        if ($w32timeService.Status -eq 'Running') {
+            Restart-Service -Name w32time -ErrorAction Stop
+            Write-Host -ForegroundColor Green "[✓] w32time service restarted successfully"
+        }
+        else {
+            Start-Service -Name w32time -ErrorAction Stop
+            Write-Host -ForegroundColor Green "[✓] w32time service started successfully"
+        }
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] Failed to start/restart w32time service: $_"
+        throw
+    }
+}
 
 function winpe-InstallPowerShellModule {
     [CmdletBinding()]
