@@ -36,11 +36,11 @@ function winpe-Startup {
     )
     if ($env:SystemDrive -eq 'X:') {
         osdcloud-SetExecutionPolicy
-        osdcloud-WinpeSetEnvironmentVariables
+        winpe-SetEnvironmentVariables
         osdcloud-SetPowerShellProfile
         #osdcloud-InstallNuget
         osdcloud-InstallPackageManagement
-        osdcloud-WinpeInstallPowerShellGet
+        winpe-InstallPowerShellGet
         osdcloud-TrustPSGallery
         if ($OSDCloud) {
             winpe-InstallCurl
