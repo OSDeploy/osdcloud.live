@@ -231,6 +231,48 @@ function winpe-InstallCurl {
     }
 }
 
+function winpe-InstallAzcopy {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+
+    $azcopyPath = "$env:SystemRoot\System32\azcopy.exe"
+    
+    if (Test-Path $azcopyPath) {
+        $azcopy = Get-Item -Path $azcopyPath
+        Write-Host -ForegroundColor Green "[✓] AzCopy $($azcopy.VersionInfo.FileVersion) is already installed."
+        return
+    }
+
+    try {
+        Write-Host -ForegroundColor Yellow "[→] Installing AzCopy from Microsoft"
+        $tempZip = "$env:TEMP\azcopy.zip"
+        $tempDir = "$env:TEMP\azcopy"
+        
+        # Download
+        Invoke-WebRequest -UseBasicParsing -Uri 'https://aka.ms/downloadazcopy-v10-windows' -OutFile $tempZip -ErrorAction Stop
+        
+        # Extract
+        $null = New-Item -Path $tempDir -ItemType Directory -Force
+        Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force -ErrorAction Stop
+        
+        # Install
+        Get-ChildItem $tempDir -Include 'azcopy.exe' -Recurse -ErrorAction Stop | 
+            ForEach-Object { Copy-Item -Path $_.FullName -Destination $azcopyPath -Force -ErrorAction Stop }
+        
+        Write-Host -ForegroundColor Green "[✓] AzCopy installed successfully."
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] Failed to install AzCopy: $_"
+        throw
+    }
+    finally {
+        # Cleanup
+        if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
+        if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+}
+
 function winpe-InstallPowerShellModule {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]

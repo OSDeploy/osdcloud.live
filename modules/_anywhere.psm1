@@ -162,7 +162,6 @@ function osdcloud-SetExecutionPolicy {
         Write-Host -ForegroundColor Gray "[i] Get-ExecutionPolicy $(Get-ExecutionPolicy -Scope LocalMachine) [LocalMachine]"
     }
 }
-
 function osdcloud-InstallPackageManagement {
     [CmdletBinding()]
     param ()
