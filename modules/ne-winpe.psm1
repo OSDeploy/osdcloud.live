@@ -22,7 +22,7 @@ function osdcloud-InstallModulePester {
     
     if ($GalleryPSModule) {
         if (($GalleryPSModule.Version -as [version]) -gt ($InstalledModule.Version -as [version])) {
-            Write-Host -ForegroundColor Yellow "[...] Install-Module $PSModuleName $($GalleryPSModule.Version)"
+            Write-Host -ForegroundColor Yellow "[→] Install-Module $PSModuleName $($GalleryPSModule.Version)"
             Install-Module $PSModuleName -Scope AllUsers -Force -SkipPublisherCheck -AllowClobber
             #Import-Module $PSModuleName -Force
         }
@@ -43,11 +43,11 @@ function osdcloud-InstallPwsh {
     }
     else {
         if (Get-Command 'WinGet' -ErrorAction SilentlyContinue) {
-            Write-Host -ForegroundColor Yellow "[...] winget install --id Microsoft.PowerShell --exact --scope machine --override '/quiet ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=1 ADD_FILE_CONTEXT_MENU_RUNPOWERSHELL=1 ADD_PATH=1' --accept-source-agreements --accept-package-agreements"
+            Write-Host -ForegroundColor Yellow "[→] winget install --id Microsoft.PowerShell --exact --scope machine --override '/quiet ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=1 ADD_FILE_CONTEXT_MENU_RUNPOWERSHELL=1 ADD_PATH=1' --accept-source-agreements --accept-package-agreements"
             winget install --id Microsoft.PowerShell --exact --scope machine --override '/quiet ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=1 ADD_FILE_CONTEXT_MENU_RUNPOWERSHELL=1 ADD_PATH=1' --accept-source-agreements --accept-package-agreements
         }
         else {
-            Write-Host -ForegroundColor Yellow "[...] Invoke-Expression (Invoke-RestMethod https://aka.ms/install-powershell.ps1)"
+            Write-Host -ForegroundColor Yellow "[→] Invoke-Expression (Invoke-RestMethod https://aka.ms/install-powershell.ps1)"
             Invoke-Expression "& { $(Invoke-RestMethod https://aka.ms/install-powershell.ps1) } -UseMSI"
         }
         $PowerShellSeven = Get-ChildItem -Path "$env:ProgramFiles" pwsh.exe -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
@@ -74,7 +74,7 @@ function osdcloud-InstallWinGet {
     }
     else {
         if (Get-AppxPackage -Name 'Microsoft.DesktopAppInstaller' -ErrorAction SilentlyContinue) {
-            Write-Host -ForegroundColor Yellow '[...] Add-AppxPackage -RegisterByFamilyName -MainPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe'
+            Write-Host -ForegroundColor Yellow '[→] Add-AppxPackage -RegisterByFamilyName -MainPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe'
             try {
                 Add-AppxPackage -RegisterByFamilyName -MainPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe -ErrorAction Stop
             }
@@ -93,23 +93,23 @@ function osdcloud-InstallWinGet {
             $WingetVersion = & winget.exe --version
             [string]$WingetVersion = $WingetVersion -replace '[a-zA-Z\-]'
 
-            Write-Host -ForegroundColor Yellow "[...] WinGet $WingetVersion requires an update"
+            Write-Host -ForegroundColor Yellow "[→] WinGet $WingetVersion requires an update"
         }
         else {
-            Write-Host -ForegroundColor Yellow '[...] Installing WinGet'
+            Write-Host -ForegroundColor Yellow '[→] Installing WinGet'
         }
 
         $progressPreference = 'silentlyContinue'
-        Write-Host -ForegroundColor Yellow '[...] Downloading Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle'
+        Write-Host -ForegroundColor Yellow '[→] Downloading Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle'
         Invoke-WebRequest -Uri https://aka.ms/getwinget -OutFile Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
 
-        Write-Host -ForegroundColor Yellow '[...] Downloading Microsoft.VCLibs.x64.14.00.Desktop.appx'
+        Write-Host -ForegroundColor Yellow '[→] Downloading Microsoft.VCLibs.x64.14.00.Desktop.appx'
         Invoke-WebRequest -Uri https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx -OutFile Microsoft.VCLibs.x64.14.00.Desktop.appx
     
-        Write-Host -ForegroundColor Yellow '[...] Downloading Microsoft.UI.Xaml.2.8.x64.appx'
+        Write-Host -ForegroundColor Yellow '[→] Downloading Microsoft.UI.Xaml.2.8.x64.appx'
         Invoke-WebRequest -Uri https://github.com/microsoft/microsoft-ui-xaml/releases/download/v2.7.3/Microsoft.UI.Xaml.2.8.x64.appx -OutFile Microsoft.UI.Xaml.2.8.x64.appx
 
-        Write-Host -ForegroundColor Yellow '[...] Installing WinGet and its dependencies'
+        Write-Host -ForegroundColor Yellow '[→] Installing WinGet and its dependencies'
         Add-AppxPackage Microsoft.VCLibs.x64.14.00.Desktop.appx
         Add-AppxPackage Microsoft.UI.Xaml.2.8.x64.appx
         Add-AppxPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
