@@ -249,18 +249,29 @@ function winpe-InstallAzcopy {
         $tempZip = "$env:TEMP\azcopy.zip"
         $tempDir = "$env:TEMP\azcopy"
         
+        # Determine download URL based on architecture
+        if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") {
+            $downloadUrl = 'https://aka.ms/downloadazcopy-v10-windows-arm64'
+        }
+        elseif ($env:PROCESSOR_ARCHITECTURE -eq "AMD64") {
+            $downloadUrl = 'https://aka.ms/downloadazcopy-v10-windows'
+        }
+        else {
+            throw "Unsupported processor architecture: $env:PROCESSOR_ARCHITECTURE"
+        }
+        
         # Download using curl if available, fallback to Invoke-WebRequest
         $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
         if (Test-Path $curlPath) {
             & $curlPath --fail --location --silent --show-error `
-                'https://aka.ms/downloadazcopy-v10-windows' `
+                $downloadUrl `
                 --output $tempZip
             if ($LASTEXITCODE -ne 0 -or -not (Test-Path $tempZip)) {
                 throw "curl download failed with exit code $LASTEXITCODE"
             }
         }
         else {
-            Invoke-WebRequest -UseBasicParsing -Uri 'https://aka.ms/downloadazcopy-v10-windows' -OutFile $tempZip -ErrorAction Stop
+            Invoke-WebRequest -UseBasicParsing -Uri $downloadUrl -OutFile $tempZip -ErrorAction Stop
         }
         
         # Extract
@@ -440,6 +451,42 @@ function winpe-InstallPowerShellModule {
         throw
     }
 }
+
+function winpe-InstallDotNetCore {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+
+    $dotNetCoreUrl = 'https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/10.0.1/windowsdesktop-runtime-10.0.1-win-x64.exe'
+    $dotNetCoreInstaller = Join-Path -Path $env:TEMP -ChildPath 'dotnetcore-installer.exe'
+
+    try {
+        $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
+        if (Test-Path $curlPath) {
+            Write-Host -ForegroundColor Yellow "[→] Downloading .NET Runtime with curl"
+            & $curlPath --fail --location --silent --show-error `
+                $dotNetCoreUrl `
+                --output $dotNetCoreInstaller
+            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $dotNetCoreInstaller)) {
+                throw "curl download failed with exit code $LASTEXITCODE"
+            }
+        }
+        else {
+            Write-Host -ForegroundColor Yellow "[→] Downloading .NET Runtime with Invoke-WebRequest"
+            Invoke-WebRequest -UseBasicParsing -Uri $dotNetCoreUrl -OutFile $dotNetCoreInstaller -ErrorAction Stop
+        }
+        Write-Host -ForegroundColor Green "[✓] .NET Runtime downloaded successfully"
+
+        Write-Host -ForegroundColor Yellow "[→] Installing .NET Runtime"
+        Start-Process -FilePath $dotNetCoreInstaller -ArgumentList '/quiet', '/norestart' -Wait -ErrorAction Stop
+        Write-Host -ForegroundColor Green "[✓] .NET Runtime installed successfully"
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] Failed to install .NET Runtime: $_"
+        throw
+    }
+}
+
 
 # Not used
 

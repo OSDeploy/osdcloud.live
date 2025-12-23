@@ -89,6 +89,7 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-SetTime
     winpe-InstallCurl
     winpe-InstallAzcopy
+    break
     # winpe-InstallZip
     
     winpe-Setup -OSDCloud
