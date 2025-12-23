@@ -56,6 +56,11 @@ function winpe-SetPowerShellProfile {
     $profileDir = "$env:UserProfile\Documents\WindowsPowerShell"
     $profilePath = "$profileDir\Microsoft.PowerShell_profile.ps1"
 
+    if (Test-Path -Path $profilePath) {
+        Write-Host -ForegroundColor DarkGray "[✓] Set PowerShell Profile"
+        return
+    }
+
     try {
         Write-Host -ForegroundColor Cyan "[→] Set PowerShell Profile"
         if (-not (Test-Path $profileDir)) {
@@ -115,11 +120,14 @@ function winpe-SetTime {
 function winpe-InstallCurl {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Force
+    )
 
     $curlPath = "$env:SystemRoot\System32\curl.exe"
     
-    if (Test-Path $curlPath) {
+    if (Test-Path $curlPath -and -not $Force) {
         $curl = Get-Item -Path $curlPath
         Write-Host -ForegroundColor DarkGray "[✓] Curl $($curl.VersionInfo.FileVersion)"
         return
@@ -204,7 +212,7 @@ function winpe-InstallNuget {
     }
 }
 
-function winpe-InstallPackageManagement {
+function winpe-UpdatePackageManagement {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
@@ -257,7 +265,7 @@ function winpe-InstallPackageManagement {
     }
 }
 
-function winpe-InstallPowerShellGet {
+function winpe-UpdatePowerShellGet {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
@@ -340,16 +348,19 @@ function winpe-TrustPSGallery {
     }
 }
 
-function winpe-InstallAzcopy {
+function winpe-InstallAzCopy {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Force
+    )
 
     $azcopyPath = "$env:SystemRoot\System32\azcopy.exe"
     
-    if (Test-Path $azcopyPath) {
+    if (Test-Path $azcopyPath -and -not $Force) {
         $azcopy = Get-Item -Path $azcopyPath
-        Write-Host -ForegroundColor Green "[✓] Microsoft AzCopy"
+        Write-Host -ForegroundColor DarkGray "[✓] Microsoft AzCopy"
         return
     }
 
@@ -367,7 +378,8 @@ function winpe-InstallAzcopy {
         else {
             throw "Unsupported processor architecture: $env:PROCESSOR_ARCHITECTURE"
         }
-        Write-Host -ForegroundColor Cyan "[→] Installing Microsoft AzCopy ($downloadUrl)"
+        Write-Host -ForegroundColor Cyan "[→] Installing Microsoft AzCopy"
+        Write-Host -ForegroundColor DarkGray "[↓] $downloadUrl"
         # Download using curl if available, fallback to Invoke-WebRequest
         $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
         if (Test-Path $curlPath) {

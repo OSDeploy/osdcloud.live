@@ -79,10 +79,10 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-SetPowerShellProfile
     winpe-SetTime
     winpe-InstallCurl
-    winpe-InstallPackageManagement
-    winpe-InstallPowerShellGet
+    winpe-UpdatePackageManagement
+    winpe-UpdatePowerShellGet
     winpe-TrustPSGallery
-    winpe-InstallAzcopy
+    winpe-InstallAzCopy
     break
     # winpe-InstallZip
     
