@@ -79,16 +79,17 @@ function winpe-InstallCurl {
     
     if (Test-Path $curlPath) {
         $curl = Get-Item -Path $curlPath
-        Write-Host -ForegroundColor Green "[✓] Curl $($curl.VersionInfo.FileVersion)"
+        Write-Host -ForegroundColor DarkGray "[✓] Curl $($curl.VersionInfo.FileVersion)"
         return
     }
 
     try {
-        Write-Host -ForegroundColor Cyan "[→] Installing Curl from curl.se"
+        Write-Host -ForegroundColor Cyan "[→] Installing Curl"
         $tempZip = "$env:TEMP\curl.zip"
         $tempDir = "$env:TEMP\curl"
         
         # Download
+        Write-Host -ForegroundColor DarkGray "[↓] https://curl.se/windows/latest.cgi?p=win64-mingw.zip"
         Invoke-WebRequest -UseBasicParsing -Uri 'https://curl.se/windows/latest.cgi?p=win64-mingw.zip' `
             -OutFile $tempZip -ErrorAction Stop
         
@@ -99,8 +100,6 @@ function winpe-InstallCurl {
         # Install
         Get-ChildItem $tempDir -Include 'curl.exe' -Recurse -ErrorAction Stop | 
             ForEach-Object { Copy-Item -Path $_ -Destination $curlPath -Force -ErrorAction Stop }
-        
-        Write-Host -ForegroundColor Green "[✓] CuRL (winpe-InstallCurl)"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] Failed to install CuRL: $_"
@@ -132,6 +131,7 @@ function winpe-InstallPackageManagement {
         $moduleDir = "$env:ProgramFiles\WindowsPowerShell\Modules\PackageManagement"
 
         $url = 'https://www.powershellgallery.com/api/v2/package/PackageManagement/1.4.8.1'
+        Write-Host -ForegroundColor DarkGray "[↓] $url"
         
         # Download using curl if available, fallback to Invoke-WebRequest
         $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
@@ -154,8 +154,6 @@ function winpe-InstallPackageManagement {
         Move-Item -Path $tempDir -Destination "$moduleDir\1.4.8.1" -Force -ErrorAction Stop
 
         Import-Module PackageManagement -Force -Scope Global -ErrorAction Stop
-
-        Write-Host -ForegroundColor Green "[✓] PackageManagement 1.4.8.1 (winpe-InstallPackageManagement)"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] Failed to install PackageManagement: $_"
@@ -175,7 +173,7 @@ function winpe-InstallPowerShellGet {
     $existingModule = Get-Module -Name PowerShellGet -ListAvailable | Where-Object { $_.Version -ge '2.2.5' }
     
     if ($existingModule) {
-        Write-Host -ForegroundColor Green "[✓] PowerShellGet $($existingModule.Version)"
+        Write-Host -ForegroundColor DarkGray "[✓] PowerShellGet $($existingModule.Version)"
         return
     }
 
@@ -187,6 +185,7 @@ function winpe-InstallPowerShellGet {
         
         # Download using curl if available, fallback to Invoke-WebRequest
         $url = 'https://www.powershellgallery.com/api/v2/package/PowerShellGet/2.2.5'
+        Write-Host -ForegroundColor DarkGray "[↓] $url"
         $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
         if (Test-Path $curlPath) {
             & $curlPath --fail --location --silent --show-error `
@@ -210,11 +209,9 @@ function winpe-InstallPowerShellGet {
         
         # Import
         Import-Module PowerShellGet -Force -Scope Global -ErrorAction Stop
-        
-        Write-Host -ForegroundColor Green "[✓] PowerShellGet 2.2.5 installed successfully"
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] Failed to install PowerShellGet: $_"
+        Write-Host -ForegroundColor Red "[✗] Failed to install PowerShellGet 2.2.5: $_"
         throw
     }
     finally {
@@ -261,12 +258,11 @@ function winpe-InstallAzcopy {
     
     if (Test-Path $azcopyPath) {
         $azcopy = Get-Item -Path $azcopyPath
-        Write-Host -ForegroundColor Green "[✓] AzCopy (winpe-InstallAzcopy)"
+        Write-Host -ForegroundColor Green "[✓] Microsoft AzCopy"
         return
     }
 
     try {
-        Write-Host -ForegroundColor Cyan "[→] Installing AzCopy from Microsoft"
         $tempZip = "$env:TEMP\azcopy.zip"
         $tempDir = "$env:TEMP\azcopy"
         
@@ -280,7 +276,7 @@ function winpe-InstallAzcopy {
         else {
             throw "Unsupported processor architecture: $env:PROCESSOR_ARCHITECTURE"
         }
-        
+        Write-Host -ForegroundColor Cyan "[→] Installing Microsoft AzCopy ($downloadUrl)"
         # Download using curl if available, fallback to Invoke-WebRequest
         $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
         if (Test-Path $curlPath) {
@@ -303,10 +299,10 @@ function winpe-InstallAzcopy {
         Get-ChildItem $tempDir -Include 'azcopy.exe' -Recurse -ErrorAction Stop | 
             ForEach-Object { Copy-Item -Path $_.FullName -Destination $azcopyPath -Force -ErrorAction Stop }
         
-        Write-Host -ForegroundColor Green "[✓] AzCopy installed successfully."
+        # Write-Host -ForegroundColor Green "[✓] AzCopy installed successfully."
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] Failed to install AzCopy: $_"
+        Write-Host -ForegroundColor Red "[✗] Failed to install Microsoft AzCopy: $_"
         throw
     }
     finally {
