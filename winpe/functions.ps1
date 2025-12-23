@@ -29,7 +29,7 @@ function winpe-SetEnvironmentVariables {
         Write-Host -ForegroundColor DarkGray "[✓] Environment Variables"
     }
     else {
-        Write-Host -ForegroundColor Cyan "[→] Set Environment Variables"
+        Write-Host -ForegroundColor Cyan "[→] Set Environment Variables for APPDATA, HOMEDRIVE, HOMEPATH, and LOCALAPPDATA"
         Write-Verbose 'WinPE does not have the LocalAppData System Environment Variable'
         Write-Verbose 'Setting environment variables for this PowerShell session (not persistent)'
         
@@ -59,16 +59,16 @@ function winpe-SetPowerShellProfile {
     $profilePath = "$profileDir\Microsoft.PowerShell_profile.ps1"
 
     try {
-        Write-Host -ForegroundColor Cyan "[→] Writing WinPE PowerShell profile"
+        Write-Host -ForegroundColor Cyan "[→] Set PowerShell Profile"
         if (-not (Test-Path $profileDir)) {
             $null = New-Item -Path $profileDir -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
         }
 
         $winpePowerShellProfile | Set-Content -Path $profilePath -Force -Encoding Unicode
-        Write-Host -ForegroundColor Green "[✓] WinPE PowerShell Profile (winpe-SetPowerShellProfile)"
+        Write-Host -ForegroundColor Green "[✓] Set PowerShell Profile"
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] Failed to write WinPE PowerShell profile: $_"
+        Write-Host -ForegroundColor Red "[✗] Failed to Set PowerShell Profile: $_"
         throw
     }
 }
