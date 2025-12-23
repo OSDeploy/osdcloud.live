@@ -145,5 +145,5 @@ if ($WindowsPhase -eq 'Windows') {
 #endregion
 
 $EndTime = Get-Date
-$TotalSeconds = ($EndTime - $StartTime).TotalSeconds
+$TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
 Write-Host -ForegroundColor DarkGray "[✓] Total Time: $TotalSeconds seconds"
