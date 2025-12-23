@@ -49,23 +49,18 @@ else {
     elseif ($ImageState -eq 'IMAGE_STATE_SPECIALIZE_RESEAL_TO_AUDIT') {$WindowsPhase = 'AuditMode'}
     else {$WindowsPhase = 'Windows'}
 }
-Write-Host -ForegroundColor Green "[✓] $ScriptName $ScriptVersion ($WindowsPhase Phase)"
+
+$whoiam = [system.security.principal.windowsidentity]::getcurrent().name
+$isElevated = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
+
+Write-Host -ForegroundColor DarkGray "[✓] $ScriptName version $ScriptVersion running in $WindowsPhase"
 #endregion
 
 #region Admin Elevation
-$whoiam = [system.security.principal.windowsidentity]::getcurrent().name
-$isElevated = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
-if ($isElevated) {
-    Write-Host -ForegroundColor Green "[✓] Running as $whoiam (Admin Elevated)"
-}
-else {
-    Write-Host -ForegroundColor Red "[!] Running as $whoiam (NOT Admin Elevated)"
-    Break
-}
 #endregion
 
 #region Transport Layer Security (TLS) 1.2
-Write-Host -ForegroundColor Green "[✓] Transport Layer Security (TLS) 1.2"
+# Write-Host -ForegroundColor Green "[✓] Transport Layer Security (TLS) 1.2"
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 #endregion
 
@@ -115,6 +110,13 @@ if ($WindowsPhase -eq 'AuditMode') {
 
 #region OOBE
 if ($WindowsPhase -eq 'OOBE') {
+    if ($isElevated) {
+        Write-Host -ForegroundColor Green "[✓] Running as $whoiam (Admin Elevated)"
+    }
+    else {
+        Write-Host -ForegroundColor Red "[!] Running as $whoiam (NOT Admin Elevated)"
+        Break
+    }
     Invoke-Expression -Command (Invoke-RestMethod -Uri https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/oobe/functions.ps1)
     Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/_anywhere.psm1')
     Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/eq-oobe.psm1')
@@ -131,6 +133,13 @@ if ($WindowsPhase -eq 'OOBE') {
 
 #region Windows
 if ($WindowsPhase -eq 'Windows') {
+    if ($isElevated) {
+        Write-Host -ForegroundColor Green "[✓] Running as $whoiam (Admin Elevated)"
+    }
+    else {
+        Write-Host -ForegroundColor Red "[!] Running as $whoiam (NOT Admin Elevated)"
+        Break
+    }
     Invoke-Expression -Command (Invoke-RestMethod -Uri https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/windows/functions.ps1)
     $null = Stop-Transcript -ErrorAction Ignore
 }
