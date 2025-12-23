@@ -54,7 +54,7 @@ else {
 $whoiam = [system.security.principal.windowsidentity]::getcurrent().name
 $isElevated = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
 
-Write-Host -ForegroundColor DarkGray "[✓] $ScriptName $ScriptVersion ($WindowsPhase) started at " ($StartTime).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+Write-Host -ForegroundColor DarkGray "[✓] $ScriptName $ScriptVersion ($WindowsPhase)"
 #endregion
 
 #region Admin Elevation
@@ -144,4 +144,6 @@ if ($WindowsPhase -eq 'Windows') {
 }
 #endregion
 
-Write-Host -ForegroundColor DarkGray "[✓] $ScriptName $ScriptVersion ($WindowsPhase) ended at " (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+$EndTime = Get-Date
+$TotalSeconds = ($EndTime - $StartTime).TotalSeconds
+Write-Host -ForegroundColor DarkGray "[✓] Total Time: $TotalSeconds seconds"
