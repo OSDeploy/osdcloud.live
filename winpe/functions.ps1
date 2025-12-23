@@ -70,6 +70,48 @@ function winpe-SetPowerShellProfile {
     }
 }
 
+function winpe-SetTime {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+
+    try {
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -Value 1 -Type DWord -ErrorAction Stop
+        Write-Host -ForegroundColor DarkGray "[✓] RealTimeIsUniversal = 1"
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] Failed to set RealTimeIsUniversal: $_"
+        throw
+    }
+
+    try {
+        $w32timeService = Get-Service -Name w32time -ErrorAction Stop
+        if ($w32timeService.StartType -ne 'Automatic') {
+            Set-Service -Name w32time -StartupType Automatic -ErrorAction Stop
+            Write-Host -ForegroundColor DarkGray "[✓] Set-Service w32time Automatic"
+        }
+        else {
+            Write-Host -ForegroundColor DarkGray "[✓] Set-Service w32time Automatic"
+        }
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] Failed to set w32time service: $_"
+        throw
+    }
+
+    try {
+        $w32timeService = Get-Service -Name w32time -ErrorAction Stop
+        if ($w32timeService.Status -ne 'Running') {
+            Start-Service -Name w32time -ErrorAction Stop
+            Write-Host -ForegroundColor DarkGray "[✓] Start-Service w32time"
+        }
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] Failed to start w32time service: $_"
+        throw
+    }
+}
+
 function winpe-InstallCurl {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -284,14 +326,13 @@ function winpe-TrustPSGallery {
     }
 
     if ($PowerShellGallery.InstallationPolicy -eq 'Trusted') {
-        Write-Host -ForegroundColor Green "[✓] PSRepository PSGallery Trusted (winpe-TrustPSGallery)"
+        Write-Host -ForegroundColor DarkGray "[✓] Get-PSRepository PSGallery Trusted"
         return
     }
 
     try {
         Write-Host -ForegroundColor Cyan "[→] Set-PSRepository PSGallery Trusted"
         Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction Stop
-        Write-Host -ForegroundColor Green "[✓] PSRepository PSGallery Trusted (winpe-TrustPSGallery)"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] Failed to trust PSGallery: $_"
@@ -416,48 +457,6 @@ function winpe-InstallZip {
         # Cleanup
         # if (Test-Path $temp7za) { Remove-Item $temp7za -Force -ErrorAction SilentlyContinue }
         # if (Test-Path $temp7zaDir) { Remove-Item $temp7zaDir -Recurse -Force -ErrorAction SilentlyContinue }
-    }
-}
-
-function winpe-SetTime {
-    [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
-
-    try {
-        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -Value 1 -Type DWord -ErrorAction Stop
-        Write-Host -ForegroundColor Green "[✓] RealTimeIsUniversal set successfully."
-    }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] Failed to set RealTimeIsUniversal: $_"
-        throw
-    }
-
-    # Set-Service -Name w32time -StartupType Automatic
-    try {
-        Set-Service -Name w32time -StartupType Automatic -ErrorAction Stop
-        Write-Host -ForegroundColor Green "[✓] Service w32time is set to Automatic (winpe-SetTime)"
-    }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] Failed to set w32time service: $_"
-        throw
-    }
-
-    # Start w32time service if it is not running, if running ,restart
-    try {
-        $w32timeService = Get-Service -Name w32time -ErrorAction Stop
-        if ($w32timeService.Status -eq 'Running') {
-            Restart-Service -Name w32time -ErrorAction Stop
-            Write-Host -ForegroundColor Green "[✓] Service w32time restarted successfully (winpe-SetTime)"
-        }
-        else {
-            Start-Service -Name w32time -ErrorAction Stop
-            Write-Host -ForegroundColor Green "[✓] Service w32time started successfully (winpe-SetTime)"
-        }
-    }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] Failed to start/restart w32time service: $_"
-        throw
     }
 }
 

@@ -77,11 +77,11 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-SetExecutionPolicy
     winpe-SetEnvironmentVariables
     winpe-SetPowerShellProfile
+    winpe-SetTime
     winpe-InstallCurl
     winpe-InstallPackageManagement
     winpe-InstallPowerShellGet
     winpe-TrustPSGallery
-    winpe-SetTime
     winpe-InstallAzcopy
     break
     # winpe-InstallZip
