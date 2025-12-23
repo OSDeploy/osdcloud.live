@@ -78,7 +78,6 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-SetEnvironmentVariables
     winpe-SetPowerShellProfile
     winpe-InstallCurl
-    winpe-InstallNuget
     winpe-InstallPackageManagement
     winpe-InstallPowerShellGet
     winpe-TrustPSGallery

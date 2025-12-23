@@ -112,6 +112,56 @@ function winpe-InstallCurl {
     }
 }
 
+function winpe-InstallNuget {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+
+    $NuGetClientSourceURL = 'https://nuget.org/nuget.exe'
+    $NuGetExeName = 'NuGet.exe'
+    $nugetPath = Join-Path -Path $env:LOCALAPPDATA -ChildPath 'Microsoft\Windows\PowerShell\PowerShellGet\'
+
+    try {
+        $nugetExeFilePath = Join-Path -Path $nugetPath -ChildPath $NuGetExeName
+        if (-not (Test-Path -Path $nugetExeFilePath)) {
+            Write-Host -ForegroundColor Cyan "[→] Installing NuGet to $nugetExeFilePath"
+            Write-Host -ForegroundColor DarkGray "[↓] $NuGetClientSourceURL"
+            if (-not (Test-Path -Path $nugetPath)) {
+                $null = New-Item -Path $nugetPath -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+            }
+            
+            # Download using curl if available, fallback to Invoke-WebRequest
+            $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
+            if (Test-Path $curlPath) {
+                & $curlPath --fail --location --silent --show-error `
+                    $NuGetClientSourceURL `
+                    --output $nugetExeFilePath
+                if ($LASTEXITCODE -ne 0 -or -not (Test-Path $nugetExeFilePath)) {
+                    throw "curl download failed with exit code $LASTEXITCODE"
+                }
+            }
+            else {
+                Invoke-WebRequest -UseBasicParsing -Uri $NuGetClientSourceURL -OutFile $nugetExeFilePath -ErrorAction Stop
+            }
+        }
+
+        # Install PackageProvider
+        $providerPath = "$env:ProgramFiles\PackageManagement\ProviderAssemblies\nuget\2.8.5.208\Microsoft.PackageManagement.NuGetProvider.dll"
+        if (Test-Path $providerPath) {
+            Write-Host -ForegroundColor DarkGray "[✓] NuGet 2.8.5.208+"
+        }
+        else {
+            Write-Host -ForegroundColor Cyan "[→] Installing PackageProvider NuGet"
+            Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope AllUsers -ErrorAction Stop | Out-Null
+            Write-Host -ForegroundColor DarkGray "[✓] NuGet 2.8.5.208+"
+        }
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] Failed to install NuGet: $_"
+        throw
+    }
+}
+
 function winpe-InstallPackageManagement {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -120,7 +170,7 @@ function winpe-InstallPackageManagement {
     $existingModule = Get-Module -Name PackageManagement -ListAvailable | Where-Object { $_.Version -ge '1.4.8.1' }
     
     if ($existingModule) {
-        Write-Host -ForegroundColor Green "[✓] PackageManagement $($existingModule.Version)"
+        Write-Host -ForegroundColor DarkGray "[✓] PackageManagement $($existingModule.Version)"
         return
     }
 
@@ -510,62 +560,3 @@ function winpe-InstallDotNetCore {
         if (Test-Path $dotNetCoreZip) { Remove-Item $dotNetCoreZip -Force -ErrorAction SilentlyContinue }
     }
 }
-
-
-# Not used
-
-function winpe-InstallNuget {
-    [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
-
-    $NuGetClientSourceURL = 'https://nuget.org/nuget.exe'
-    $NuGetExeName = 'NuGet.exe'
-    $nugetPaths = @(
-        Join-Path -Path $env:ProgramData -ChildPath 'Microsoft\Windows\PowerShell\PowerShellGet\'
-        Join-Path -Path $env:LOCALAPPDATA -ChildPath 'Microsoft\Windows\PowerShell\PowerShellGet\'
-    )
-
-    try {
-        # Download NuGet to required locations
-        foreach ($path in $nugetPaths) {
-            $nugetExeFilePath = Join-Path -Path $path -ChildPath $NuGetExeName
-            if (-not (Test-Path -Path $nugetExeFilePath)) {
-                Write-Host -ForegroundColor Cyan "[→] Downloading NuGet to $nugetExeFilePath"
-                if (-not (Test-Path -Path $path)) {
-                    $null = New-Item -Path $path -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-                }
-                
-                # Download using curl if available, fallback to Invoke-WebRequest
-                $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
-                if (Test-Path $curlPath) {
-                    & $curlPath --fail --location --silent --show-error `
-                        $NuGetClientSourceURL `
-                        --output $nugetExeFilePath
-                    if ($LASTEXITCODE -ne 0 -or -not (Test-Path $nugetExeFilePath)) {
-                        throw "curl download failed with exit code $LASTEXITCODE"
-                    }
-                }
-                else {
-                    Invoke-WebRequest -UseBasicParsing -Uri $NuGetClientSourceURL -OutFile $nugetExeFilePath -ErrorAction Stop
-                }
-            }
-        }
-
-        # Install PackageProvider
-        $providerPath = "$env:ProgramFiles\PackageManagement\ProviderAssemblies\nuget\2.8.5.208\Microsoft.PackageManagement.NuGetProvider.dll"
-        if (Test-Path $providerPath) {
-            Write-Host -ForegroundColor Green "[✓] NuGet 2.8.5.208+"
-        }
-        else {
-            Write-Host -ForegroundColor Cyan "[→] Installing PackageProvider NuGet"
-            Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope AllUsers -ErrorAction Stop | Out-Null
-            Write-Host -ForegroundColor Green "[✓] NuGet (winpe-InstallNuget)"
-        }
-    }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] Failed to install NuGet: $_"
-        throw
-    }
-}
-
