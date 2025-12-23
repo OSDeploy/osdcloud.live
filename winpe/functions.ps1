@@ -26,10 +26,10 @@ function winpe-SetEnvironmentVariables {
     param ()
     
     if (Get-Item env:LOCALAPPDATA -ErrorAction Ignore) {
-        Write-Host -ForegroundColor DarkGray "[✓] Environment Variables"
+        Write-Host -ForegroundColor DarkGray "[✓] Environment Variables (APPDATA, HOMEDRIVE, HOMEPATH, and LOCALAPPDATA)"
     }
     else {
-        Write-Host -ForegroundColor Cyan "[→] Set Environment Variables for APPDATA, HOMEDRIVE, HOMEPATH, and LOCALAPPDATA"
+        Write-Host -ForegroundColor Cyan "[→] Set Environment Variables (APPDATA, HOMEDRIVE, HOMEPATH, and LOCALAPPDATA)"
         Write-Verbose 'WinPE does not have the LocalAppData System Environment Variable'
         Write-Verbose 'Setting environment variables for this PowerShell session (not persistent)'
         
@@ -37,8 +37,6 @@ function winpe-SetEnvironmentVariables {
         [System.Environment]::SetEnvironmentVariable('HOMEDRIVE', "$env:SystemDrive", [System.EnvironmentVariableTarget]::Process)
         [System.Environment]::SetEnvironmentVariable('HOMEPATH', "$env:UserProfile", [System.EnvironmentVariableTarget]::Process)
         [System.Environment]::SetEnvironmentVariable('LOCALAPPDATA', "$env:UserProfile\AppData\Local", [System.EnvironmentVariableTarget]::Process)
-        
-        Write-Host -ForegroundColor DarkGray "[✓] Environment Variables"
     }
 }
 
@@ -65,11 +63,53 @@ function winpe-SetPowerShellProfile {
         }
 
         $winpePowerShellProfile | Set-Content -Path $profilePath -Force -Encoding Unicode
-        Write-Host -ForegroundColor Green "[✓] Set PowerShell Profile"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] Failed to Set PowerShell Profile: $_"
         throw
+    }
+}
+
+function winpe-InstallCurl {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+
+    $curlPath = "$env:SystemRoot\System32\curl.exe"
+    
+    if (Test-Path $curlPath) {
+        $curl = Get-Item -Path $curlPath
+        Write-Host -ForegroundColor Green "[✓] Curl $($curl.VersionInfo.FileVersion)"
+        return
+    }
+
+    try {
+        Write-Host -ForegroundColor Cyan "[→] Installing Curl from curl.se"
+        $tempZip = "$env:TEMP\curl.zip"
+        $tempDir = "$env:TEMP\curl"
+        
+        # Download
+        Invoke-WebRequest -UseBasicParsing -Uri 'https://curl.se/windows/latest.cgi?p=win64-mingw.zip' `
+            -OutFile $tempZip -ErrorAction Stop
+        
+        # Extract
+        $null = New-Item -Path $tempDir -ItemType Directory -Force
+        Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force -ErrorAction Stop
+        
+        # Install
+        Get-ChildItem $tempDir -Include 'curl.exe' -Recurse -ErrorAction Stop | 
+            ForEach-Object { Copy-Item -Path $_ -Destination $curlPath -Force -ErrorAction Stop }
+        
+        Write-Host -ForegroundColor Green "[✓] CuRL (winpe-InstallCurl)"
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] Failed to install CuRL: $_"
+        throw
+    }
+    finally {
+        # Cleanup
+        if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
+        if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
 }
 
@@ -92,7 +132,20 @@ function winpe-InstallPackageManagement {
         $moduleDir = "$env:ProgramFiles\WindowsPowerShell\Modules\PackageManagement"
 
         $url = 'https://www.powershellgallery.com/api/v2/package/PackageManagement/1.4.8.1'
-        Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $tempZip -ErrorAction Stop
+        
+        # Download using curl if available, fallback to Invoke-WebRequest
+        $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
+        if (Test-Path $curlPath) {
+            & $curlPath --fail --location --silent --show-error `
+                $url `
+                --output $tempZip
+            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $tempZip)) {
+                throw "curl download failed with exit code $LASTEXITCODE"
+            }
+        }
+        else {
+            Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $tempZip -ErrorAction Stop
+        }
 
         $null = New-Item -Path $tempDir -ItemType Directory -Force
         Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force -ErrorAction Stop
@@ -132,9 +185,20 @@ function winpe-InstallPowerShellGet {
         $tempDir = "$env:TEMP\2.2.5"
         $moduleDir = "$env:ProgramFiles\WindowsPowerShell\Modules\PowerShellGet"
         
-        # Download
+        # Download using curl if available, fallback to Invoke-WebRequest
         $url = 'https://www.powershellgallery.com/api/v2/package/PowerShellGet/2.2.5'
-        Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $tempZip -ErrorAction Stop
+        $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
+        if (Test-Path $curlPath) {
+            & $curlPath --fail --location --silent --show-error `
+                $url `
+                --output $tempZip
+            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $tempZip)) {
+                throw "curl download failed with exit code $LASTEXITCODE"
+            }
+        }
+        else {
+            Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $tempZip -ErrorAction Stop
+        }
         
         # Extract
         $null = New-Item -Path $tempDir -ItemType Directory -Force
@@ -185,49 +249,6 @@ function winpe-TrustPSGallery {
     catch {
         Write-Host -ForegroundColor Red "[✗] Failed to trust PSGallery: $_"
         throw
-    }
-}
-
-function winpe-InstallCurl {
-    [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
-
-    $curlPath = "$env:SystemRoot\System32\curl.exe"
-    
-    if (Test-Path $curlPath) {
-        $curl = Get-Item -Path $curlPath
-        Write-Host -ForegroundColor Green "[✓] Curl $($curl.VersionInfo.FileVersion)"
-        return
-    }
-
-    try {
-        Write-Host -ForegroundColor Cyan "[→] Installing Curl from curl.se"
-        $tempZip = "$env:TEMP\curl.zip"
-        $tempDir = "$env:TEMP\curl"
-        
-        # Download
-        Invoke-WebRequest -UseBasicParsing -Uri 'https://curl.se/windows/latest.cgi?p=win64-mingw.zip' `
-            -OutFile $tempZip -ErrorAction Stop
-        
-        # Extract
-        $null = New-Item -Path $tempDir -ItemType Directory -Force
-        Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force -ErrorAction Stop
-        
-        # Install
-        Get-ChildItem $tempDir -Include 'curl.exe' -Recurse -ErrorAction Stop | 
-            ForEach-Object { Copy-Item -Path $_ -Destination $curlPath -Force -ErrorAction Stop }
-        
-        Write-Host -ForegroundColor Green "[✓] CuRL (winpe-InstallCurl)"
-    }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] Failed to install CuRL: $_"
-        throw
-    }
-    finally {
-        # Cleanup
-        if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
-        if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
 }
 
