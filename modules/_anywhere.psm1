@@ -126,7 +126,7 @@ function osdcloud-TrustPSGallery {
     param ()
     $PowerShellGallery = Get-PSRepository -Name PSGallery -ErrorAction Ignore
     if ($PowerShellGallery.InstallationPolicy -ne 'Trusted') {
-        Write-Host -ForegroundColor Yellow "[→] Set-PSRepository PSGallery Trusted"
+        Write-Host -ForegroundColor Cyan "[→] Set-PSRepository PSGallery Trusted"
         Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
     }
     if ($PowerShellGallery.InstallationPolicy -eq 'Trusted') {
@@ -138,7 +138,7 @@ function osdcloud-SetExecutionPolicy {
     param ()
     if ($WindowsPhase -eq 'WinPE') {
         if ((Get-ExecutionPolicy) -ne 'Bypass') {
-            Write-Host -ForegroundColor Yellow "[→] Set-ExecutionPolicy Bypass -Force"
+            Write-Host -ForegroundColor Cyan "[→] Set-ExecutionPolicy Bypass -Force"
             Set-ExecutionPolicy Bypass -Force
         }
         else {
@@ -147,7 +147,7 @@ function osdcloud-SetExecutionPolicy {
     }
     if ($WindowsPhase -eq 'OOBE') {
         if ((Get-ExecutionPolicy -Scope CurrentUser) -ne 'RemoteSigned') {
-            Write-Host -ForegroundColor Yellow "[→] Set-ExecutionPolicy -Scope CurrentUser RemoteSigned"
+            Write-Host -ForegroundColor Cyan "[→] Set-ExecutionPolicy -Scope CurrentUser RemoteSigned"
             Set-ExecutionPolicy RemoteSigned -Force -Scope CurrentUser
         }
         else {
@@ -168,7 +168,7 @@ function osdcloud-InstallPackageManagement {
     if ($WindowsPhase -eq 'WinPE') {
         $InstalledModule = Import-Module PackageManagement -PassThru -ErrorAction Ignore
         if (-not $InstalledModule) {
-            Write-Host -ForegroundColor Yellow "[→] Install PackageManagement 1.4.8.1"
+            Write-Host -ForegroundColor Cyan "[→] Install PackageManagement 1.4.8.1"
             #$PackageManagementURL = "https://psg-prod-eastus.azureedge.net/packages/packagemanagement.1.4.8.1.nupkg"
             $PackageManagementURL = 'https://www.powershellgallery.com/api/v2/package/PackageManagement/1.4.8.1/#manualdownload'
             Invoke-WebRequest -UseBasicParsing -Uri $PackageManagementURL -OutFile "$env:TEMP\packagemanagement.1.4.8.1.zip"
@@ -182,7 +182,7 @@ function osdcloud-InstallPackageManagement {
     else {
         $InstalledModule = Get-PackageProvider -Name PowerShellGet | Where-Object {$_.Version -ge '2.2.5'} | Sort-Object Version -Descending | Select-Object -First 1
         if (-not ($InstalledModule)) {
-            Write-Host -ForegroundColor Yellow "[→] Install-PackageProvider PowerShellGet -MinimumVersion 2.2.5"
+            Write-Host -ForegroundColor Cyan "[→] Install-PackageProvider PowerShellGet -MinimumVersion 2.2.5"
             Install-PackageProvider -Name PowerShellGet -MinimumVersion 2.2.5 -Force -Scope AllUsers | Out-Null
             Import-Module PowerShellGet -Force -Scope Global -ErrorAction SilentlyContinue
             Start-Sleep -Seconds 5
@@ -190,7 +190,7 @@ function osdcloud-InstallPackageManagement {
     
         $InstalledModule = Get-Module -Name PackageManagement -ListAvailable | Where-Object {$_.Version -ge '1.4.8.1'} | Sort-Object Version -Descending | Select-Object -First 1
         if (-not ($InstalledModule)) {
-            Write-Host -ForegroundColor Yellow "[→] Install-Module PackageManagement -MinimumVersion 1.4.8.1"
+            Write-Host -ForegroundColor Cyan "[→] Install-Module PackageManagement -MinimumVersion 1.4.8.1"
             Install-Module -Name PackageManagement -MinimumVersion 1.4.8.1 -Force -Confirm:$false -Source PSGallery -Scope AllUsers
             Import-Module PackageManagement -Force -Scope Global -ErrorAction SilentlyContinue
             Start-Sleep -Seconds 5
@@ -249,16 +249,16 @@ function osdcloud-InstallPowerShellModule {
 
     if ($InstallModule) {
         if ($WindowsPhase -eq 'WinPE') {
-            Write-Host -ForegroundColor Yellow "[→] $Name $($GalleryPSModule.Version) [AllUsers]"
+            Write-Host -ForegroundColor Cyan "[→] $Name $($GalleryPSModule.Version) [AllUsers]"
             Install-Module $Name -Scope AllUsers -Force -SkipPublisherCheck -AllowClobber
         }
         elseif ($WindowsPhase -eq 'OOBE') {
-            Write-Host -ForegroundColor Yellow "[→] $Name $($GalleryPSModule.Version) [AllUsers]"
+            Write-Host -ForegroundColor Cyan "[→] $Name $($GalleryPSModule.Version) [AllUsers]"
             Install-Module $Name -Scope AllUsers -Force -SkipPublisherCheck -AllowClobber
         }
         else {
             # Install the PowerShell Module in the OS
-            Write-Host -ForegroundColor Yellow "[→] $Name $($GalleryPSModule.Version) [CurrentUser]"
+            Write-Host -ForegroundColor Cyan "[→] $Name $($GalleryPSModule.Version) [CurrentUser]"
             Install-Module $Name -Scope CurrentUser -Force -SkipPublisherCheck -AllowClobber
         }
     }
@@ -376,11 +376,11 @@ function osdcloud-InstallModuleAzAccounts {
     if ($GalleryPSModule) {
         if (($GalleryPSModule.Version -as [version]) -gt ($InstalledModule.Version -as [version])) {
             if ($WindowsPhase -eq 'WinPE') {
-                Write-Host -ForegroundColor Yellow "[→] Install-Module $PSModuleName $($GalleryPSModule.Version) [AllUsers]"
+                Write-Host -ForegroundColor Cyan "[→] Install-Module $PSModuleName $($GalleryPSModule.Version) [AllUsers]"
                 Install-Module $PSModuleName -Scope AllUsers -Force -SkipPublisherCheck
             }
             else {
-                Write-Host -ForegroundColor Yellow "[→] Install-Module $PSModuleName $($GalleryPSModule.Version) [CurrentUser]"
+                Write-Host -ForegroundColor Cyan "[→] Install-Module $PSModuleName $($GalleryPSModule.Version) [CurrentUser]"
                 Install-Module $PSModuleName -Scope CurrentUser -Force -SkipPublisherCheck
             }
         }
@@ -404,11 +404,11 @@ function osdcloud-InstallModuleAzKeyVault {
     if ($GalleryPSModule) {
         if (($GalleryPSModule.Version -as [version]) -gt ($InstalledModule.Version -as [version])) {
             if ($WindowsPhase -eq 'WinPE') {
-                Write-Host -ForegroundColor Yellow "[→] Install-Module $PSModuleName $($GalleryPSModule.Version) [AllUsers]"
+                Write-Host -ForegroundColor Cyan "[→] Install-Module $PSModuleName $($GalleryPSModule.Version) [AllUsers]"
                 Install-Module $PSModuleName -Scope AllUsers -Force -SkipPublisherCheck
             }
             else {
-                Write-Host -ForegroundColor Yellow "[→] Install-Module $PSModuleName $($GalleryPSModule.Version) [CurrentUser]"
+                Write-Host -ForegroundColor Cyan "[→] Install-Module $PSModuleName $($GalleryPSModule.Version) [CurrentUser]"
                 Install-Module $PSModuleName -Scope CurrentUser -Force -SkipPublisherCheck
             }
         }
@@ -595,7 +595,7 @@ function osdcloud-InstallModuleOSD {
 
     if ($GalleryPSModule) {
         if (($GalleryPSModule.Version -as [version]) -gt ($InstalledModule.Version -as [version])) {
-            Write-Host -ForegroundColor Yellow "[→] Install-Module $PSModuleName $($GalleryPSModule.Version)"
+            Write-Host -ForegroundColor Cyan "[→] Install-Module $PSModuleName $($GalleryPSModule.Version)"
             Install-Module $PSModuleName -Scope AllUsers -Force -SkipPublisherCheck
             Import-Module $PSModuleName -Force
         }

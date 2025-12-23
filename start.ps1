@@ -60,7 +60,7 @@ Write-Host -ForegroundColor DarkGray "[✓] $ScriptName version $ScriptVersion r
 #endregion
 
 #region Transport Layer Security (TLS) 1.2
-# Write-Host -ForegroundColor Green "[✓] Transport Layer Security (TLS) 1.2"
+Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security (TLS) 1.2"
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 #endregion
 

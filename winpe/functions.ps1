@@ -5,14 +5,14 @@ function winpe-SetExecutionPolicy {
 
     $currentPolicy = Get-ExecutionPolicy
     if ($currentPolicy -eq 'Bypass') {
-        Write-Host -ForegroundColor Green "[✓] ExecutionPolicy Bypass (winpe-SetExecutionPolicy)"
+        Write-Host -ForegroundColor DarkGray "[✓] ExecutionPolicy Bypass"
         return
     }
 
     try {
-        Write-Host -ForegroundColor Yellow "[→] Set-ExecutionPolicy Bypass -Scope LocalMachine -Force"
+        Write-Host -ForegroundColor Cyan "[→] Set-ExecutionPolicy Bypass -Scope LocalMachine -Force"
         Set-ExecutionPolicy Bypass -Scope LocalMachine -Force -ErrorAction Stop
-        Write-Host -ForegroundColor Green "[✓] ExecutionPolicy Bypass (winpe-SetExecutionPolicy)"
+        Write-Host -ForegroundColor DarkGray "[✓] ExecutionPolicy Bypass"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] Failed to set ExecutionPolicy: $_"
@@ -26,10 +26,10 @@ function winpe-SetEnvironmentVariables {
     param ()
     
     if (Get-Item env:LOCALAPPDATA -ErrorAction Ignore) {
-        Write-Host -ForegroundColor Green "[✓] Environment Variables (winpe-SetEnvironmentVariables)"
+        Write-Host -ForegroundColor DarkGray "[✓] Environment Variables"
     }
     else {
-        Write-Host -ForegroundColor Yellow "[→] Setting environment variables for WinPE"
+        Write-Host -ForegroundColor Cyan "[→] Set Environment Variables"
         Write-Verbose 'WinPE does not have the LocalAppData System Environment Variable'
         Write-Verbose 'Setting environment variables for this PowerShell session (not persistent)'
         
@@ -38,7 +38,7 @@ function winpe-SetEnvironmentVariables {
         [System.Environment]::SetEnvironmentVariable('HOMEPATH', "$env:UserProfile", [System.EnvironmentVariableTarget]::Process)
         [System.Environment]::SetEnvironmentVariable('LOCALAPPDATA', "$env:UserProfile\AppData\Local", [System.EnvironmentVariableTarget]::Process)
         
-        Write-Host -ForegroundColor Green "[✓] Environment Variables (winpe-SetEnvironmentVariables)"
+        Write-Host -ForegroundColor DarkGray "[✓] Environment Variables"
     }
 }
 
@@ -59,7 +59,7 @@ function winpe-SetPowerShellProfile {
     $profilePath = "$profileDir\Microsoft.PowerShell_profile.ps1"
 
     try {
-        Write-Host -ForegroundColor Yellow "[→] Writing WinPE PowerShell profile"
+        Write-Host -ForegroundColor Cyan "[→] Writing WinPE PowerShell profile"
         if (-not (Test-Path $profileDir)) {
             $null = New-Item -Path $profileDir -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
         }
@@ -86,7 +86,7 @@ function winpe-InstallPackageManagement {
     }
 
     try {
-        Write-Host -ForegroundColor Yellow "[→] Installing PackageManagement 1.4.8.1"
+        Write-Host -ForegroundColor Cyan "[→] Installing PackageManagement 1.4.8.1"
         $tempZip = "$env:TEMP\packagemanagement.1.4.8.1.zip"
         $tempDir = "$env:TEMP\1.4.8.1"
         $moduleDir = "$env:ProgramFiles\WindowsPowerShell\Modules\PackageManagement"
@@ -127,7 +127,7 @@ function winpe-InstallPowerShellGet {
     }
 
     try {
-        Write-Host -ForegroundColor Yellow "[→] Installing PowerShellGet 2.2.5"
+        Write-Host -ForegroundColor Cyan "[→] Installing PowerShellGet 2.2.5"
         $tempZip = "$env:TEMP\powershellget.2.2.5.zip"
         $tempDir = "$env:TEMP\2.2.5"
         $moduleDir = "$env:ProgramFiles\WindowsPowerShell\Modules\PowerShellGet"
@@ -178,7 +178,7 @@ function winpe-TrustPSGallery {
     }
 
     try {
-        Write-Host -ForegroundColor Yellow "[→] Set-PSRepository PSGallery Trusted"
+        Write-Host -ForegroundColor Cyan "[→] Set-PSRepository PSGallery Trusted"
         Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction Stop
         Write-Host -ForegroundColor Green "[✓] PSRepository PSGallery Trusted (winpe-TrustPSGallery)"
     }
@@ -202,7 +202,7 @@ function winpe-InstallCurl {
     }
 
     try {
-        Write-Host -ForegroundColor Yellow "[→] Installing Curl from curl.se"
+        Write-Host -ForegroundColor Cyan "[→] Installing Curl from curl.se"
         $tempZip = "$env:TEMP\curl.zip"
         $tempDir = "$env:TEMP\curl"
         
@@ -245,7 +245,7 @@ function winpe-InstallAzcopy {
     }
 
     try {
-        Write-Host -ForegroundColor Yellow "[→] Installing AzCopy from Microsoft"
+        Write-Host -ForegroundColor Cyan "[→] Installing AzCopy from Microsoft"
         $tempZip = "$env:TEMP\azcopy.zip"
         $tempDir = "$env:TEMP\azcopy"
         
@@ -311,7 +311,7 @@ function winpe-InstallZip {
     }
 
     try {
-        Write-Host -ForegroundColor Yellow "[→] Installing 7-Zip from GitHub"
+        Write-Host -ForegroundColor Cyan "[→] Installing 7-Zip from GitHub"
 
         $temp7za = "$env:TEMP\7z2501-extra.7z"
         
@@ -416,7 +416,7 @@ function winpe-InstallPowerShellModule {
             $GalleryModule = Find-Module -Name $Name -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
             
             if ($GalleryModule -and ([version]$GalleryModule.Version -gt [version]$InstalledModule.Version)) {
-                Write-Host -ForegroundColor Yellow "[→] Installing $Name $($GalleryModule.Version) [AllUsers]"
+                Write-Host -ForegroundColor Cyan "[→] Installing $Name $($GalleryModule.Version) [AllUsers]"
                 Install-Module -Name $Name -Scope AllUsers -Force -SkipPublisherCheck -AllowClobber -ErrorAction Stop
                 Write-Host -ForegroundColor Green "[✓] $Name $($GalleryModule.Version) installed successfully"
                 return
@@ -435,7 +435,7 @@ function winpe-InstallPowerShellModule {
 
     # Module not installed or forced, install it
     try {
-        Write-Host -ForegroundColor Yellow "[→] Installing $Name [AllUsers]"
+        Write-Host -ForegroundColor Cyan "[→] Installing $Name [AllUsers]"
         $GalleryModule = Find-Module -Name $Name -ErrorAction Stop -WarningAction SilentlyContinue
         
         if (-not $GalleryModule) {
@@ -464,7 +464,7 @@ function winpe-InstallDotNetCore {
     try {
         $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
         if (Test-Path $curlPath) {
-            Write-Host -ForegroundColor Yellow "[→] Downloading .NET Runtime with curl"
+            Write-Host -ForegroundColor Cyan "[→] Downloading .NET Runtime with curl"
             & $curlPath --fail --location --silent --show-error `
                 $dotNetCoreUrl `
                 --output $dotNetCoreZip
@@ -473,12 +473,12 @@ function winpe-InstallDotNetCore {
             }
         }
         else {
-            Write-Host -ForegroundColor Yellow "[→] Downloading .NET Runtime with Invoke-WebRequest"
+            Write-Host -ForegroundColor Cyan "[→] Downloading .NET Runtime with Invoke-WebRequest"
             Invoke-WebRequest -UseBasicParsing -Uri $dotNetCoreUrl -OutFile $dotNetCoreZip -ErrorAction Stop
         }
         Write-Host -ForegroundColor Green "[✓] .NET Runtime downloaded successfully"
 
-        Write-Host -ForegroundColor Yellow "[→] Extracting .NET Runtime"
+        Write-Host -ForegroundColor Cyan "[→] Extracting .NET Runtime"
         if (-not (Test-Path $dotNetCoreDir)) {
             $null = New-Item -Path $dotNetCoreDir -ItemType Directory -Force
         }
@@ -514,7 +514,7 @@ function winpe-InstallNuget {
         foreach ($path in $nugetPaths) {
             $nugetExeFilePath = Join-Path -Path $path -ChildPath $NuGetExeName
             if (-not (Test-Path -Path $nugetExeFilePath)) {
-                Write-Host -ForegroundColor Yellow "[→] Downloading NuGet to $nugetExeFilePath"
+                Write-Host -ForegroundColor Cyan "[→] Downloading NuGet to $nugetExeFilePath"
                 if (-not (Test-Path -Path $path)) {
                     $null = New-Item -Path $path -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
                 }
@@ -528,7 +528,7 @@ function winpe-InstallNuget {
             Write-Host -ForegroundColor Green "[✓] NuGet 2.8.5.208+"
         }
         else {
-            Write-Host -ForegroundColor Yellow "[→] Installing PackageProvider NuGet"
+            Write-Host -ForegroundColor Cyan "[→] Installing PackageProvider NuGet"
             Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope AllUsers -ErrorAction Stop | Out-Null
             Write-Host -ForegroundColor Green "[✓] NuGet (winpe-InstallNuget)"
         }

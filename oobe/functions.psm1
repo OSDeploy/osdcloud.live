@@ -13,7 +13,7 @@ function oobe-SetPowerShellProfile {
     $allHostsPath = $Profile.CurrentUserAllHosts
 
     try {
-        Write-Host -ForegroundColor Yellow "[→] Writing OOBE PowerShell profile"
+        Write-Host -ForegroundColor Cyan "[→] Writing OOBE PowerShell profile"
         if (-not (Test-Path $profileDir)) {
             $null = New-Item -Path $profileDir -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
         }
@@ -22,7 +22,7 @@ function oobe-SetPowerShellProfile {
         Write-Host -ForegroundColor Green "[✓] OOBE PowerShell profile updated"
 
         if (-not (Test-Path $allHostsPath)) {
-            Write-Host -ForegroundColor Yellow "[→] Writing OOBE PowerShell profile [CurrentUserAllHosts]"
+            Write-Host -ForegroundColor Cyan "[→] Writing OOBE PowerShell profile [CurrentUserAllHosts]"
             $null = New-Item $allHostsPath -ItemType File -Force
             $oobePowerShellProfile | Set-Content -Path $allHostsPath -Force -Encoding Unicode
             Write-Host -ForegroundColor Green "[✓] OOBE PowerShell profile [CurrentUserAllHosts] updated"
@@ -54,7 +54,7 @@ function oobe-InstallNuget {
             }
         }
 
-        Write-Host -ForegroundColor Yellow "[→] Installing PackageProvider NuGet"
+        Write-Host -ForegroundColor Cyan "[→] Installing PackageProvider NuGet"
         Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope AllUsers -ErrorAction Stop | Out-Null
         
         $installedProvider = Get-PackageProvider -Name NuGet -ErrorAction Stop | 
