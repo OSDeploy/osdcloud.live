@@ -78,7 +78,7 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-SetExecutionPolicy
     winpe-SetEnvironmentVariables
     winpe-SetPowerShellProfile
-    winpe-SetTime
+    winpe-SetTimeUTC
     winpe-InstallCurl
     winpe-UpdatePackageManagement
     winpe-UpdatePowerShellGet

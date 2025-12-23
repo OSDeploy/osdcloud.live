@@ -75,17 +75,17 @@ function winpe-SetPowerShellProfile {
     }
 }
 
-function winpe-SetTime {
+function winpe-SetTimeUTC {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
 
     try {
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -Value 1 -Type DWord -ErrorAction Stop
-        Write-Host -ForegroundColor DarkGray "[✓] RealTimeIsUniversal = 1"
+        Write-Host -ForegroundColor DarkGray "[✓] Set RealTimeClock to UTC"
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] Failed to set RealTimeIsUniversal: $_"
+        Write-Host -ForegroundColor Red "[✗] Set RealTimeClock to UTC: $_"
         throw
     }
 
