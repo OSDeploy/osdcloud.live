@@ -539,7 +539,20 @@ function winpe-InstallNuget {
                 if (-not (Test-Path -Path $path)) {
                     $null = New-Item -Path $path -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
                 }
-                Invoke-WebRequest -UseBasicParsing -Uri $NuGetClientSourceURL -OutFile $nugetExeFilePath -ErrorAction Stop
+                
+                # Download using curl if available, fallback to Invoke-WebRequest
+                $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
+                if (Test-Path $curlPath) {
+                    & $curlPath --fail --location --silent --show-error `
+                        $NuGetClientSourceURL `
+                        --output $nugetExeFilePath
+                    if ($LASTEXITCODE -ne 0 -or -not (Test-Path $nugetExeFilePath)) {
+                        throw "curl download failed with exit code $LASTEXITCODE"
+                    }
+                }
+                else {
+                    Invoke-WebRequest -UseBasicParsing -Uri $NuGetClientSourceURL -OutFile $nugetExeFilePath -ErrorAction Stop
+                }
             }
         }
 
