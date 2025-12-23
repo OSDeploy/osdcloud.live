@@ -5,14 +5,14 @@ function winpe-SetExecutionPolicy {
 
     $currentPolicy = Get-ExecutionPolicy
     if ($currentPolicy -eq 'Bypass') {
-        Write-Host -ForegroundColor Green "[✓] ExecutionPolicy Bypass"
+        Write-Host -ForegroundColor Green "[✓] ExecutionPolicy Bypass (winpe-SetExecutionPolicy)"
         return
     }
 
     try {
         Write-Host -ForegroundColor Yellow "[→] Set-ExecutionPolicy Bypass -Scope LocalMachine -Force"
         Set-ExecutionPolicy Bypass -Scope LocalMachine -Force -ErrorAction Stop
-        Write-Host -ForegroundColor Green "[✓] ExecutionPolicy Bypass"
+        Write-Host -ForegroundColor Green "[✓] ExecutionPolicy Bypass (winpe-SetExecutionPolicy)"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] Failed to set ExecutionPolicy: $_"
@@ -26,7 +26,7 @@ function winpe-SetEnvironmentVariables {
     param ()
     
     if (Get-Item env:LOCALAPPDATA -ErrorAction Ignore) {
-        Write-Host -ForegroundColor Green "[✓] LocalAppData environment variable exists"
+        Write-Host -ForegroundColor Green "[✓] Environment Variables (winpe-SetEnvironmentVariables)"
     }
     else {
         Write-Host -ForegroundColor Yellow "[→] Setting environment variables for WinPE"
@@ -38,7 +38,7 @@ function winpe-SetEnvironmentVariables {
         [System.Environment]::SetEnvironmentVariable('HOMEPATH', "$env:UserProfile", [System.EnvironmentVariableTarget]::Process)
         [System.Environment]::SetEnvironmentVariable('LOCALAPPDATA', "$env:UserProfile\AppData\Local", [System.EnvironmentVariableTarget]::Process)
         
-        Write-Host -ForegroundColor Green "[✓] Environment variables set successfully"
+        Write-Host -ForegroundColor Green "[✓] Environment Variables (winpe-SetEnvironmentVariables)"
     }
 }
 
@@ -65,7 +65,7 @@ function winpe-SetPowerShellProfile {
         }
 
         $winpePowerShellProfile | Set-Content -Path $profilePath -Force -Encoding Unicode
-        Write-Host -ForegroundColor Green "[✓] WinPE PowerShell profile updated"
+        Write-Host -ForegroundColor Green "[✓] WinPE PowerShell Profile (winpe-SetPowerShellProfile)"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] Failed to write WinPE PowerShell profile: $_"
@@ -102,7 +102,7 @@ function winpe-InstallPackageManagement {
 
         Import-Module PackageManagement -Force -Scope Global -ErrorAction Stop
 
-        Write-Host -ForegroundColor Green "[✓] PackageManagement 1.4.8.1 installed successfully"
+        Write-Host -ForegroundColor Green "[✓] PackageManagement 1.4.8.1 (winpe-InstallPackageManagement)"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] Failed to install PackageManagement: $_"
@@ -173,14 +173,14 @@ function winpe-TrustPSGallery {
     }
 
     if ($PowerShellGallery.InstallationPolicy -eq 'Trusted') {
-        Write-Host -ForegroundColor Green "[✓] PSRepository PSGallery Trusted"
+        Write-Host -ForegroundColor Green "[✓] PSRepository PSGallery Trusted (winpe-TrustPSGallery)"
         return
     }
 
     try {
         Write-Host -ForegroundColor Yellow "[→] Set-PSRepository PSGallery Trusted"
         Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction Stop
-        Write-Host -ForegroundColor Green "[✓] PSRepository PSGallery Trusted"
+        Write-Host -ForegroundColor Green "[✓] PSRepository PSGallery Trusted (winpe-TrustPSGallery)"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] Failed to trust PSGallery: $_"
@@ -218,10 +218,10 @@ function winpe-InstallCurl {
         Get-ChildItem $tempDir -Include 'curl.exe' -Recurse -ErrorAction Stop | 
             ForEach-Object { Copy-Item -Path $_ -Destination $curlPath -Force -ErrorAction Stop }
         
-        Write-Host -ForegroundColor Green "[✓] Curl installed successfully"
+        Write-Host -ForegroundColor Green "[✓] CuRL (winpe-InstallCurl)"
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] Failed to install Curl: $_"
+        Write-Host -ForegroundColor Red "[✗] Failed to install CuRL: $_"
         throw
     }
     finally {
@@ -240,7 +240,7 @@ function winpe-InstallAzcopy {
     
     if (Test-Path $azcopyPath) {
         $azcopy = Get-Item -Path $azcopyPath
-        Write-Host -ForegroundColor Green "[✓] AzCopy is already installed."
+        Write-Host -ForegroundColor Green "[✓] AzCopy (winpe-InstallAzcopy)"
         return
     }
 
@@ -369,7 +369,7 @@ function winpe-SetTime {
     # Set-Service -Name w32time -StartupType Automatic
     try {
         Set-Service -Name w32time -StartupType Automatic -ErrorAction Stop
-        Write-Host -ForegroundColor Green "[✓] w32time service set to Automatic"
+        Write-Host -ForegroundColor Green "[✓] Service w32time is set to Automatic (winpe-SetTime)"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] Failed to set w32time service: $_"
@@ -381,11 +381,11 @@ function winpe-SetTime {
         $w32timeService = Get-Service -Name w32time -ErrorAction Stop
         if ($w32timeService.Status -eq 'Running') {
             Restart-Service -Name w32time -ErrorAction Stop
-            Write-Host -ForegroundColor Green "[✓] w32time service restarted successfully"
+            Write-Host -ForegroundColor Green "[✓] Service w32time restarted successfully (winpe-SetTime)"
         }
         else {
             Start-Service -Name w32time -ErrorAction Stop
-            Write-Host -ForegroundColor Green "[✓] w32time service started successfully"
+            Write-Host -ForegroundColor Green "[✓] Service w32time started successfully (winpe-SetTime)"
         }
     }
     catch {
@@ -530,7 +530,7 @@ function winpe-InstallNuget {
         else {
             Write-Host -ForegroundColor Yellow "[→] Installing PackageProvider NuGet"
             Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope AllUsers -ErrorAction Stop | Out-Null
-            Write-Host -ForegroundColor Green "[✓] NuGet installed successfully"
+            Write-Host -ForegroundColor Green "[✓] NuGet (winpe-InstallNuget)"
         }
     }
     catch {
