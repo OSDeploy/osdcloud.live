@@ -86,9 +86,9 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-InstallAzCopy
     # winpe-InstallZip
     
-    # winpe-Setup -OSDCloud
+    winpe-Setup -OSDCloud
     Write-Host -ForegroundColor Cyan "To start a new PowerShell session, type 'start powershell' and press enter"
-    Write-Host -ForegroundColor Cyan "Start-OSDCloud, Start-OSDCloudGUI, or Start-OSDCloudAzure, can be run in the new PowerShell window"
+    Write-Host -ForegroundColor Cyan "Deploy-OSDCloud can be run in the new PowerShell window"
     $null = Stop-Transcript -ErrorAction Ignore
 }
 #endregion
