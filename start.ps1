@@ -32,6 +32,7 @@ powershell iex (irm osdcloud.live)
 #>
 [CmdletBinding()]
 param()
+$StartTime = Get-Date
 $ScriptName = 'osdcloud.live'
 $ScriptVersion = '25.12.22'
 
@@ -53,7 +54,7 @@ else {
 $whoiam = [system.security.principal.windowsidentity]::getcurrent().name
 $isElevated = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
 
-Write-Host -ForegroundColor DarkGray "[✓] $ScriptName version $ScriptVersion running in $WindowsPhase"
+Write-Host -ForegroundColor DarkGray "[✓] $ScriptName $ScriptVersion ($WindowsPhase) started at " ($StartTime).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 #endregion
 
 #region Admin Elevation
@@ -83,10 +84,9 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-UpdatePowerShellGet
     winpe-TrustPSGallery
     winpe-InstallAzCopy
-    break
     # winpe-InstallZip
     
-    winpe-Setup -OSDCloud
+    # winpe-Setup -OSDCloud
     Write-Host -ForegroundColor Cyan "To start a new PowerShell session, type 'start powershell' and press enter"
     Write-Host -ForegroundColor Cyan "Start-OSDCloud, Start-OSDCloudGUI, or Start-OSDCloudAzure, can be run in the new PowerShell window"
     $null = Stop-Transcript -ErrorAction Ignore
@@ -143,3 +143,5 @@ if ($WindowsPhase -eq 'Windows') {
     $null = Stop-Transcript -ErrorAction Ignore
 }
 #endregion
+
+Write-Host -ForegroundColor DarkGray "[✓] $ScriptName $ScriptVersion ($WindowsPhase) ended at " (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
