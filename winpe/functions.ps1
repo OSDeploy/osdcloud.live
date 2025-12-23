@@ -127,7 +127,10 @@ function winpe-InstallCurl {
 
     $curlPath = "$env:SystemRoot\System32\curl.exe"
     
-    if (Test-Path $curlPath -and -not $Force) {
+    if ($Force) {
+        Write-Host -ForegroundColor Cyan "[→] Installing Curl -Force"
+    }
+    elseif (Test-Path $curlPath) {
         $curl = Get-Item -Path $curlPath
         Write-Host -ForegroundColor DarkGray "[✓] Curl $($curl.VersionInfo.FileVersion)"
         return
@@ -358,7 +361,10 @@ function winpe-InstallAzCopy {
 
     $azcopyPath = "$env:SystemRoot\System32\azcopy.exe"
     
-    if (Test-Path $azcopyPath -and -not $Force) {
+    if ($Force) {
+        Write-Host -ForegroundColor Cyan "[→] Microsoft AzCopy -Force"
+    }
+    elseif (Test-Path $azcopyPath) {
         $azcopy = Get-Item -Path $azcopyPath
         Write-Host -ForegroundColor DarkGray "[✓] Microsoft AzCopy"
         return
