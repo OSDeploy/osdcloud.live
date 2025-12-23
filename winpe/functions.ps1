@@ -457,8 +457,9 @@ function winpe-InstallDotNetCore {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
 
-    $dotNetCoreUrl = 'https://builds.dotnet.microsoft.com/dotnet/WindowsDesktop/10.0.1/windowsdesktop-runtime-10.0.1-win-x64.exe'
-    $dotNetCoreInstaller = Join-Path -Path $env:TEMP -ChildPath 'dotnetcore-installer.exe'
+    $dotNetCoreUrl = 'https://builds.dotnet.microsoft.com/dotnet/Runtime/10.0.1/dotnet-runtime-10.0.1-win-x64.zip'
+    $dotNetCoreZip = Join-Path -Path $env:TEMP -ChildPath 'dotnet-runtime.zip'
+    $dotNetCoreDir = Join-Path -Path $env:ProgramFiles -ChildPath 'dotnet'
 
     try {
         $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
@@ -466,24 +467,30 @@ function winpe-InstallDotNetCore {
             Write-Host -ForegroundColor Yellow "[→] Downloading .NET Runtime with curl"
             & $curlPath --fail --location --silent --show-error `
                 $dotNetCoreUrl `
-                --output $dotNetCoreInstaller
-            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $dotNetCoreInstaller)) {
+                --output $dotNetCoreZip
+            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $dotNetCoreZip)) {
                 throw "curl download failed with exit code $LASTEXITCODE"
             }
         }
         else {
             Write-Host -ForegroundColor Yellow "[→] Downloading .NET Runtime with Invoke-WebRequest"
-            Invoke-WebRequest -UseBasicParsing -Uri $dotNetCoreUrl -OutFile $dotNetCoreInstaller -ErrorAction Stop
+            Invoke-WebRequest -UseBasicParsing -Uri $dotNetCoreUrl -OutFile $dotNetCoreZip -ErrorAction Stop
         }
         Write-Host -ForegroundColor Green "[✓] .NET Runtime downloaded successfully"
 
-        Write-Host -ForegroundColor Yellow "[→] Installing .NET Runtime"
-        Start-Process -FilePath $dotNetCoreInstaller -ArgumentList '/quiet', '/norestart' -Wait -ErrorAction Stop
-        Write-Host -ForegroundColor Green "[✓] .NET Runtime installed successfully"
+        Write-Host -ForegroundColor Yellow "[→] Extracting .NET Runtime"
+        if (-not (Test-Path $dotNetCoreDir)) {
+            $null = New-Item -Path $dotNetCoreDir -ItemType Directory -Force
+        }
+        Expand-Archive -Path $dotNetCoreZip -DestinationPath $dotNetCoreDir -Force -ErrorAction Stop
+        Write-Host -ForegroundColor Green "[✓] .NET Runtime installed successfully to $dotNetCoreDir"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] Failed to install .NET Runtime: $_"
         throw
+    }
+    finally {
+        if (Test-Path $dotNetCoreZip) { Remove-Item $dotNetCoreZip -Force -ErrorAction SilentlyContinue }
     }
 }
 
