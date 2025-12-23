@@ -7,15 +7,15 @@
     This module is designed to work in WinPE or Full
     This module is for HP Devices and leveraged HP Tools
 .LINK
-    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/deviceshp.psm1
+    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/deviceshp.psm1
 .EXAMPLE
-    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/deviceshp.psm1')
+    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/deviceshp.psm1')
 #>
 #=================================================
 #region Functions
 
 #Some Dependancies on these Functions
-Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/_anywhere.psm1')
+Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/_anywhere.psm1')
 
 function osdcloud-addserviceui {
     [CmdletBinding()]
@@ -843,8 +843,8 @@ function osdcloud-HPSetupCompleteAppend {
     $PSFilePath = "$($RunScript.Path)\$($RunScript.ps1File)"
 
     if (Test-Path -Path $PSFilePath){
-        Add-Content -Path $PSFilePath "Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/deviceshp.psm1')"
-        Add-Content -Path $PSFilePath "Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/eq-winpe.psm1')"
+        Add-Content -Path $PSFilePath "Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/deviceshp.psm1')"
+        Add-Content -Path $PSFilePath "Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/eq-winpe.psm1')"
         Add-Content -Path $PSFilePath "Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/functions.ps1' -ErrorAction SilentlyContinue)"
         Add-Content -Path $PSFilePath "winpe-SetEnvironmentVariables"
         Add-Content -Path $PSFilePath "osdcloud-InstallModuleHPCMSL -ErrorAction SilentlyContinue"

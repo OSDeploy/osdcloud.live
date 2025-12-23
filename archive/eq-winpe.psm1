@@ -6,9 +6,9 @@
 .NOTES
     Version 25.9.10.1
 .LINK
-    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/eq-winpe.psm1
+    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/eq-winpe.psm1
 .EXAMPLE
-    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/eq-winpe.psm1')
+    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/eq-winpe.psm1')
 #>
 #=================================================
 #region Gary Blok Functions
@@ -209,7 +209,7 @@ function osdcloud-SetupCompleteDefenderUpdate {
 
     if (Test-Path -Path $PSFilePath){
         Add-Content -Path $PSFilePath "Write-Output 'Running Defender Update Stack Function'"
-        Add-Content -Path $PSFilePath "Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/defender.psm1')"
+        Add-Content -Path $PSFilePath "Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/defender.psm1')"
         Add-Content -Path $PSFilePath "osdcloud-UpdateDefenderStack"
     }
     else {
@@ -224,7 +224,7 @@ function osdcloud-SetupCompleteNetFX {
 
     if (Test-Path -Path $PSFilePath){
         Add-Content -Path $PSFilePath "Write-Output 'Running Enable NetFX Function'"
-        Add-Content -Path $PSFilePath "Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/eq-oobe.psm1')"
+        Add-Content -Path $PSFilePath "Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/eq-oobe.psm1')"
         Add-Content -Path $PSFilePath "osdcloud-NetFX"
     }
     else {
@@ -242,7 +242,7 @@ function osdcloud-SetupCompleteMS365Install {
 
     if (Test-Path -Path $PSFilePath){
         Add-Content -Path $PSFilePath "Write-Output 'Running M365 Install'"
-        Add-Content -Path $PSFilePath "Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/m365.psm1')"
+        Add-Content -Path $PSFilePath "Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/m365.psm1')"
         Add-Content -Path $PSFilePath "osdcloud-InstallM365 -CompanyValue $CompanyValue -Channel 'MonthlyEnterprise'"
     }
     else {

@@ -7,9 +7,9 @@
     This module can be loaded in all Windows phases
     Version 25.9.10.1
 .LINK
-    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/_anywhere.psm1
+    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/_anywhere.psm1
 .EXAMPLE
-    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/_anywhere.psm1')
+    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/_anywhere.psm1')
 #>
 #=================================================
 #region Functions
@@ -359,7 +359,7 @@ function osdcloud-UpdateModuleFilesManually {
             Invoke-WebRequest -UseBasicParsing -uri "$GitHubURI/OSD.psd1" -OutFile "$ModulePath/OSD.psd1"
         }
     }
-    if (Test-HPIASupport -eq $true){Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/deviceshp.psm1')}
+    if (Test-HPIASupport -eq $true){Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/deviceshp.psm1')}
 }
 #endregion
 #=================================================

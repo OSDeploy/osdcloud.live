@@ -7,9 +7,9 @@
     This module is designed to work in WinPE or Full
     This module is for Dell Devices and leveraged HP Tools
 .LINK
-    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/devicesdell.psm1
+    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/devicesdell.psm1
 .EXAMPLE
-    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/devicesdell.psm1')
+    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/devicesdell.psm1')
 #>
 #=================================================
 #region Functions

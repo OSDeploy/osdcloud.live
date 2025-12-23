@@ -6,9 +6,9 @@
 .NOTES
     This module can be loaded in all Windows phases
 .LINK
-    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/osdcloudazure.psm1
+    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/osdcloudazure.psm1
 .EXAMPLE
-    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/osdcloudazure.psm1')
+    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/osdcloudazure.psm1')
 #>
 #=================================================
 #region Functions

@@ -6,9 +6,9 @@
 .NOTES
     This module should be loaded in OOBE and Windows
 .LINK
-    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/ne-winpe.psm1
+    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/ne-winpe.psm1
 .EXAMPLE
-    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/ne-winpe.psm1')
+    Invoke-Expression (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/ne-winpe.psm1')
 #>
 
 #region Functions
