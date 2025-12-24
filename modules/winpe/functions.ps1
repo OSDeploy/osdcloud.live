@@ -601,8 +601,8 @@ function winpe-SetupCompleteApplicationWorkspace {
     param (
         [String]$agentbootstrapperURL = "https://download.liquit.com/extra/Bootstrapper/AgentBootstrapper-Win-2.1.0.2.exe",
         [String]$containerName = "liquit",
-        [String]$DestinationPath = "C:\Windows\Temp\recast-aw",
-        [string]$logPath = "C:\Windows\Temp",
+        [String]$DestinationPath = "C:\ProgramData\Liquit\Agent",
+        [string]$logPath = "C:\ProgramData\Liquit\Agent",
         [String]$storageAccountName = "madduxliquit",
         [switch]$StartDeployment = $false,
         [switch]$UseCertificate = $true
@@ -657,7 +657,7 @@ function winpe-SetupCompleteApplicationWorkspace {
 :: ========================================================
 :: Recast Software - Application Workspace
 :: ========================================================
-C:\Windows\Temp\recast-aw\AgentBootstrapper.exe /certificate=C:\Windows\Temp\recast-aw\AgentRegistration.cer /startDeployment /waitForDeployment /logPath=C:\Windows\Temp\recast-aw"
+C:\ProgramData\Liquit\Agent\AgentBootstrapper.exe /certificate=C:\ProgramData\Liquit\Agent\AgentRegistration.cer /startDeployment /waitForDeployment /logPath=C:\ProgramData\Liquit\Agent"
 :: ========================================================
 "@
     $Content | Out-File -FilePath $SetupCompleteCmd -Append -Encoding ascii -Width 2000 -Force
