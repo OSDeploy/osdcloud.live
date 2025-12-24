@@ -607,6 +607,9 @@ function winpe-SetupCompleteApplicationWorkspace {
         [switch]$StartDeployment = $false,
         [switch]$UseCertificate = $true
     )
+    
+    Write-Host -ForegroundColor Cyan "[→] Recast Software Application Workspace"
+    Write-Host -ForegroundColor DarkGray "[↓] $agentbootstrapperURL"
 
     #https://madduxliquit.blob.core.windows.net/liquit/agent.json
 
@@ -638,12 +641,16 @@ function winpe-SetupCompleteApplicationWorkspace {
         #Invoke-WebRequest -Uri $blobUrl -Headers $headers -OutFile $localFilePath
         Invoke-WebRequest -Uri $blobUrl -OutFile $localFilePath
 
-        Write-Output "Downloading $blobName to $localFilePath..."
+        # Write-Output "Downloading $blobName to $localFilePath..."
         try {
+            
+            Write-Host -ForegroundColor DarkGray "[↓] $blobUrl"
             Invoke-RestMethod -Uri $blobUrl -Headers $headers -OutFile $localFilePath
-            Write-Output "$blobName downloaded successfully."
+            # Write-Output "$blobName downloaded successfully."
         } catch {
-            Write-Output "Failed to download $blobName $_"
+            # Write-Output "Failed to download $blobName $_"
+            Write-Host -ForegroundColor Red "[✗] Failed to setup Recast Software Application Workspace: $_"
+            throw
         }
     }
 
@@ -653,11 +660,48 @@ function winpe-SetupCompleteApplicationWorkspace {
     }
     $SetupCompleteCmd = "$ScriptsPath\SetupComplete.cmd"
 
+    <#
+    [Info] Agent Bootstrapper Version: 2.1.0.2
+    [Info] /help    Displays the help message.
+    [Info] /?    Alias for displaying the help message
+    [Info] /forceDownload    Forces the bootstrapper to download the installer file.
+    [Info] /downloadUrl=    Sets a source URL for the bootstrapper to download the installer.
+    [Info] /startDeployment    Run ShellAPI deployment after installing the User Agent.
+    [Info] /waitForDeployment    Wait for the deployment to finish before exiting.
+    [Info] /zoneOverride=    Writes the zone input to the configuration file before reading it.
+    [Info] /logPath=    Specify a path to place the log files in. If not specified, current directory will be used.
+    [Info] /certificate=    Copies the specified certificate file to the Liquit data folder.
+    [Info] /certificateThumbprint=    Writes the value to the Certificate Thumbprint field in the configuration file.
+    [Info] /certificateIssuer=    Writes the value to the Certificate Issuer field in the configuration file.
+    [Info] /uninstall    Uninstalls the Liquit Agent.
+    [Info] /legacyDownload    Downloads the legacy installer when using the static link.
+    [Info] /skipOverrideConfig    Don't use the 'OVERRIDE_CONFIG' flag when installing.
+    [Info] /msiProperties=    Specify properties that are passed along to the installer.[Info] Agent Bootstrapper Version: 2.1.0.2
+    [Info] /help    Displays the help message.
+    [Info] /?    Alias for displaying the help message
+    [Info] /forceDownload    Forces the bootstrapper to download the installer file.
+    [Info] /downloadUrl=    Sets a source URL for the bootstrapper to download the installer.
+    [Info] /startDeployment    Run ShellAPI deployment after installing the User Agent.
+    [Info] /waitForDeployment    Wait for the deployment to finish before exiting.
+    [Info] /zoneOverride=    Writes the zone input to the configuration file before reading it.
+    [Info] /logPath=    Specify a path to place the log files in. If not specified, current directory will be used.
+    [Info] /certificate=    Copies the specified certificate file to the Liquit data folder.
+    [Info] /certificateThumbprint=    Writes the value to the Certificate Thumbprint field in the configuration file.
+    [Info] /certificateIssuer=    Writes the value to the Certificate Issuer field in the configuration file.
+    [Info] /uninstall    Uninstalls the Liquit Agent.
+    [Info] /legacyDownload    Downloads the legacy installer when using the static link.
+    [Info] /skipOverrideConfig    Don't use the 'OVERRIDE_CONFIG' flag when installing.
+    [Info] /msiProperties=    Specify properties that are passed along to the installer.
+    #>
+
+
     $Content = @"
 :: ========================================================
 :: Recast Software - Application Workspace
 :: ========================================================
-C:\Windows\Temp\AgentBootstrapper.exe /certificate=C:\Windows\Temp\AgentRegistration.cer /startDeployment /waitForDeployment /logPath=C:\Windows\Temp
+pushd C:\Windows\Temp
+AgentBootstrapper.exe /certificate=AgentRegistration.cer /startDeployment /waitForDeployment
+popd
 :: ========================================================
 "@
     $Content | Out-File -FilePath $SetupCompleteCmd -Append -Encoding ascii -Width 2000 -Force
