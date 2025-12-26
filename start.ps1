@@ -85,6 +85,9 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-TrustPSGallery
     winpe-InstallAzCopy
     winpe-Setup -OSDCloud
+    $EndTime = Get-Date
+    $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
+    Write-Host -ForegroundColor DarkGray "[✓] Initialization Time: $TotalSeconds seconds"
     $null = Stop-Transcript -ErrorAction Ignore
     Deploy-OSDCloud
     winpe-SetupCompleteApplicationWorkspace
