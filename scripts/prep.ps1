@@ -24,9 +24,9 @@ powershell iex (irm osdcloud.live)
 .DESCRIPTION
     PowerShell Script which supports the OSDCloud environment
 .NOTES
-    Version 25.12.22
+    Version 26.01.07
 .LINK
-    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/start.ps1
+    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/scripts/prep.ps1
 .EXAMPLE
     powershell iex (irm osdcloud.live)
 #>
@@ -34,7 +34,7 @@ powershell iex (irm osdcloud.live)
 param()
 $StartTime = Get-Date
 $ScriptName = 'osdcloud.live'
-$ScriptVersion = '25.12.22'
+$ScriptVersion = '26.01.07'
 
 #region Initialize
 $Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-$ScriptName.log"
