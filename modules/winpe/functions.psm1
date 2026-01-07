@@ -252,7 +252,7 @@ function winpe-InstallPowerShellModule {
             }
             
             # Already installed and current
-            Import-Module -Name $Name -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+            Import-Module -Name $Name -Force -DisableNameChecking -ErrorAction SilentlyContinue
             Write-Host -ForegroundColor Green "[✓] $Name $($InstalledModule.Version)"
             return
         }
@@ -272,7 +272,7 @@ function winpe-InstallPowerShellModule {
         }
 
         Install-Module -Name $Name -Scope AllUsers -Force -SkipPublisherCheck -AllowClobber -ErrorAction Stop -WarningAction SilentlyContinue
-        Import-Module -Name $Name -Force -ErrorAction Stop -WarningAction SilentlyContinue
+        Import-Module -Name $Name -Force -DisableNameChecking -ErrorAction Stop
         Write-Host -ForegroundColor Green "[✓] $Name $($GalleryModule.Version) installed successfully"
     }
     catch {
