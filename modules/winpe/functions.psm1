@@ -246,7 +246,7 @@ function winpe-InstallPowerShellModule {
             
             if ($GalleryModule -and ([version]$GalleryModule.Version -gt [version]$InstalledModule.Version)) {
                 Write-Host -ForegroundColor Cyan "[→] Installing $Name $($GalleryModule.Version) [AllUsers]"
-                Install-Module -Name $Name -Scope AllUsers -Force -SkipPublisherCheck -AllowClobber -ErrorAction Stop
+                Install-Module -Name $Name -Scope AllUsers -Force -SkipPublisherCheck -AllowClobber -ErrorAction Stop -WarningAction SilentlyContinue
                 Write-Host -ForegroundColor Green "[✓] $Name $($GalleryModule.Version) installed successfully"
                 return
             }
@@ -271,7 +271,7 @@ function winpe-InstallPowerShellModule {
             throw "Module $Name not found in PowerShell Gallery"
         }
 
-        Install-Module -Name $Name -Scope AllUsers -Force -SkipPublisherCheck -AllowClobber -ErrorAction Stop
+        Install-Module -Name $Name -Scope AllUsers -Force -SkipPublisherCheck -AllowClobber -ErrorAction Stop -WarningAction SilentlyContinue
         Import-Module -Name $Name -Force -ErrorAction Stop
         Write-Host -ForegroundColor Green "[✓] $Name $($GalleryModule.Version) installed successfully"
     }

@@ -86,7 +86,7 @@ if ($WindowsPhase -eq 'WinPE') {
     }
     $EndTime = Get-Date
     $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
-    Write-Host -ForegroundColor DarkGray "[✓] Initialization Time: $TotalSeconds seconds"
+    Write-Host -ForegroundColor DarkGray "[✓] Elapsed Time: $TotalSeconds seconds"
     Write-Host -ForegroundColor Cyan "[✓] Available WinPE Functions:"
     Get-Command winpe-* | Select-Object -ExpandProperty Name | ForEach-Object {
         Write-Host -ForegroundColor DarkGray $_
