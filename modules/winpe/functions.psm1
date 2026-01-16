@@ -39,7 +39,7 @@ function winpe-SetExecutionPolicy {
     $currentPolicy = Get-ExecutionPolicy
     if ($currentPolicy -eq 'Bypass') {
         # Handle the case where the policy is already set to Bypass
-        Write-Host -ForegroundColor DarkGray "[✓] Execution Policy"
+        Write-Host -ForegroundColor DarkGray "[✓] Test Execution Policy [Bypass]"
         return
     }
 
@@ -72,7 +72,7 @@ function winpe-SetEnvironmentVariable {
                        (Get-ItemProperty -Path $registryPath -Name 'HOMEPATH' -ErrorAction SilentlyContinue)
 
     if ($envVarsSet -and $registryVarsSet) {
-        Write-Host -ForegroundColor DarkGray "[✓] Environment Variables (APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA)"
+        Write-Host -ForegroundColor DarkGray "[✓] Test Environment Variables (APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA)"
         return
     }
 
@@ -157,7 +157,7 @@ function winpe-SetRealTimeClockUTC {
     $realTimeIsUniversal = Get-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -ErrorAction SilentlyContinue
 
     if ($realTimeIsUniversal -and ($realTimeIsUniversal.RealTimeIsUniversal -eq 1)) {
-        Write-Host -ForegroundColor DarkGray "[✓] RealTimeClock UTC"
+        Write-Host -ForegroundColor DarkGray "[✓] Test RealTimeClock UTC"
         return
     }
     else {
@@ -181,14 +181,14 @@ function winpe-SetTimeService {
         $w32timeService = Get-Service -Name w32time -ErrorAction Stop
         if ($w32timeService.StartType -ne 'Automatic') {
             Set-Service -Name w32time -StartupType Automatic -ErrorAction Stop
-            Write-Host -ForegroundColor Cyan "[→] Set-Service w32time Automatic"
+            Write-Host -ForegroundColor Cyan "[→] Test Time Service"
         }
         else {
-            Write-Host -ForegroundColor DarkGray "[✓] Time Service"
+            Write-Host -ForegroundColor DarkGray "[✓] Set Time Service [Automatic]"
         }
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] Failed to set w32time service: $_"
+        Write-Host -ForegroundColor Red "[✗] Set Time Service failed: $_"
         throw
     }
 
@@ -196,11 +196,11 @@ function winpe-SetTimeService {
         $w32timeService = Get-Service -Name w32time -ErrorAction Stop
         if ($w32timeService.Status -ne 'Running') {
             Start-Service -Name w32time -ErrorAction Stop
-            Write-Host -ForegroundColor DarkGray "[✓] Start-Service w32time"
+            Write-Host -ForegroundColor DarkGray "[✓] Restart Time Service"
         }
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] Failed to start w32time service: $_"
+        Write-Host -ForegroundColor Red "[✗] Restart Time Service failed: $_"
         throw
     }
 }
@@ -217,11 +217,11 @@ function winpe-InstallAzCopy {
     $azcopyPath = "$Env:SystemRoot\System32\azcopy.exe"
     
     if ($Force) {
-        Write-Host -ForegroundColor Cyan "[→] Microsoft AzCopy -Force"
+        Write-Host -ForegroundColor Cyan "[→] Install Microsoft AzCopy -Force"
     }
     elseif (Test-Path $azcopyPath) {
         $azcopy = Get-Item -Path $azcopyPath
-        Write-Host -ForegroundColor DarkGray "[✓] Microsoft AzCopy"
+        Write-Host -ForegroundColor DarkGray "[✓] Test Microsoft AzCopy"
         return
     }
 
@@ -239,7 +239,7 @@ function winpe-InstallAzCopy {
         else {
             throw "Unsupported processor architecture: $Env:PROCESSOR_ARCHITECTURE"
         }
-        Write-Host -ForegroundColor Cyan "[→] Installing Microsoft AzCopy"
+        Write-Host -ForegroundColor Cyan "[→] Install Microsoft AzCopy"
         Write-Host -ForegroundColor DarkGray "[↓] $downloadUrl"
         # Download using curl if available, fallback to Invoke-WebRequest
         $curlPath = Join-Path $Env:SystemRoot 'System32\curl.exe'
