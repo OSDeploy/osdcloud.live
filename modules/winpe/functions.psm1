@@ -186,7 +186,7 @@ function winpe-InstallPackageProviderNuget {
     }
 
     try {
-        Write-Host -ForegroundColor Cyan "[→] Installing PackageProvider NuGet"
+        Write-Host -ForegroundColor Cyan "[→] Install-PackageProvider -Name NuGet -Force -Scope AllUsers"
         Install-PackageProvider -Name NuGet -Force -Scope AllUsers -ErrorAction Stop | Out-Null
     }
     catch {
@@ -234,7 +234,7 @@ function winpe-InstallNuget {
             Write-Host -ForegroundColor DarkGray "[✓] NuGet 2.8.5.208+"
         }
         else {
-            Write-Host -ForegroundColor Cyan "[→] Installing PackageProvider NuGet"
+            Write-Host -ForegroundColor Cyan "[→] Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope AllUsers"
             Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope AllUsers -ErrorAction Stop | Out-Null
             Write-Host -ForegroundColor DarkGray "[✓] NuGet 2.8.5.208+"
         }
@@ -267,8 +267,8 @@ function winpe-InstallPowerShellModule {
             $GalleryModule = Find-Module -Name $Name -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
             
             if ($GalleryModule -and ([version]$GalleryModule.Version -gt [version]$InstalledModule.Version)) {
-                Write-Host -ForegroundColor Cyan "[→] Installing $Name $($GalleryModule.Version) [AllUsers]"
-                Install-Module -Name $Name -Scope AllUsers -Force -SkipPublisherCheck -AllowClobber -ErrorAction Stop -WarningAction SilentlyContinue
+                Write-Host -ForegroundColor Cyan "[→] Install-Module -Name $Name -Force -Scope AllUsers -SkipPublisherCheck -AllowClobber [$($GalleryModule.Version)]"
+                Install-Module -Name $Name -Force -Scope AllUsers -SkipPublisherCheck -AllowClobber -ErrorAction Stop -WarningAction SilentlyContinue
                 Write-Host -ForegroundColor Green "[✓] $Name $($GalleryModule.Version) installed successfully"
                 return
             }
