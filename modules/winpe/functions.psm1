@@ -492,6 +492,7 @@ function winpe-InstallAzCopy {
         }
         Write-Host -ForegroundColor Cyan "[→] Microsoft AzCopy"
         Write-Host -ForegroundColor DarkGray "[↓] $downloadUrl"
+
         # Download using curl if available, fallback to Invoke-WebRequest
         $curlPath = Join-Path $Env:SystemRoot 'System32\curl.exe'
         if (Test-Path $curlPath) {
@@ -638,48 +639,53 @@ function winpe-InstallZip {
     
     if ((Test-Path $zip7rPath) -and (Test-Path $zip7aPath)) {
         $zip = Get-Item -Path $zip7rPath
-        Write-Host -ForegroundColor Green "[✓] 7-Zip $($zip.VersionInfo.FileVersion) is already installed."
+        Write-Host -ForegroundColor DarkGray "[✓] 7-Zip [$($zip.VersionInfo.FileVersion)]"
         return
     }
 
     try {
-        Write-Host -ForegroundColor Cyan "[→] Installing 7-Zip from GitHub"
+        $downloadUrl = 'https://github.com/ip7z/7zip/releases/download/25.01/7z2501-extra.7z'
+        $tempZip = "$Env:TEMP\7z2501-extra.7z"
+        $tempDir = "$Env:TEMP\7za"
 
-        $temp7za = "$Env:TEMP\7z2501-extra.7z"
+        Write-Host -ForegroundColor Cyan "[→] 7-Zip [25.01]"
+        Write-Host -ForegroundColor DarkGray "[↓] $downloadUrl"
         
-        $curlPath = Join-Path $Env:SystemRoot 'System32/curl.exe'
-        if (-not (Test-Path $curlPath)) {
-            throw 'curl.exe not found in System32; install curl first'
+        # Download using curl if available, fallback to Invoke-WebRequest
+        $curlPath = Join-Path $Env:SystemRoot 'System32\curl.exe'
+        if (Test-Path $curlPath) {
+            & $curlPath --fail --location --silent --show-error `
+                $downloadUrl `
+                --output $tempZip
+            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $tempZip)) {
+                throw "curl download failed with exit code $LASTEXITCODE"
+            }
         }
-
-        & $curlPath --fail --location --silent --show-error `
-            'https://github.com/ip7z/7zip/releases/download/25.01/7z2501-extra.7z' `
-            --output $temp7za
-        if ($LASTEXITCODE -ne 0 -or -not (Test-Path $temp7za)) {
-            throw "curl download failed with exit code $LASTEXITCODE"
+        else {
+            Invoke-WebRequest -UseBasicParsing -Uri $downloadUrl -OutFile $tempZip -ErrorAction Stop
         }
         
-        $temp7zaDir = "$Env:TEMP\7za"
-        $null = New-Item -Path $temp7zaDir -ItemType Directory -Force
-
-        Expand-Archive -Path $temp7za -DestinationPath $temp7zaDir -Force -ErrorAction Stop
-
+        # Extract
+        $null = New-Item -Path $tempDir -ItemType Directory -Force
+        Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force -ErrorAction Stop
+        
+        # Install
         if ($Env:PROCESSOR_ARCHITECTURE -eq "AMD64") {
-            Copy-Item -Path "$temp7zaDir\7za\x64\*" -Destination $Env:SystemRoot\System32 -Recurse -Force -ErrorAction Stop
+            Copy-Item -Path "$tempDir\7za\x64\*" -Destination $Env:SystemRoot\System32 -Recurse -Force -ErrorAction Stop
         }
         elseif ($Env:PROCESSOR_ARCHITECTURE -eq "ARM64") {
-            Copy-Item -Path "$temp7zaDir\7za\arm64\*" -Destination $Env:SystemRoot\System32 -Recurse -Force -ErrorAction Stop
+            Copy-Item -Path "$tempDir\7za\arm64\*" -Destination $Env:SystemRoot\System32 -Recurse -Force -ErrorAction Stop
         }
 
-        Write-Host -ForegroundColor Green "[✓] 7-Zip installed successfully"
+        Write-Host -ForegroundColor Green "[✓] 7-Zip [25.01]"
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] Failed to install 7-Zip: $_"
+        Write-Host -ForegroundColor Red "[✗] 7-Zip [25.01] failed: $_"
         throw
     }
     finally {
         # Cleanup
-        # if (Test-Path $temp7za) { Remove-Item $temp7za -Force -ErrorAction SilentlyContinue }
-        # if (Test-Path $temp7zaDir) { Remove-Item $temp7zaDir -Recurse -Force -ErrorAction SilentlyContinue }
+        # if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
+        # if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
 }
