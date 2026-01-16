@@ -104,11 +104,6 @@ function winpe-SetPowerShellProfile {
     param ()
 
     $winpePowerShellProfile = @'
-$registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
-Set-ItemProperty -Path $registryPath -Name 'APPDATA' -Value "$Env:UserProfile\AppData\Roaming" -Force -ErrorAction SilentlyContinue
-Set-ItemProperty -Path $registryPath -Name 'HOMEDRIVE' -Value "$Env:SystemDrive" -Force -ErrorAction SilentlyContinue
-Set-ItemProperty -Path $registryPath -Name 'HOMEPATH' -Value "$Env:UserProfile" -Force -ErrorAction SilentlyContinue
-Set-ItemProperty -Path $registryPath -Name 'LOCALAPPDATA' -Value "$Env:UserProfile\AppData\Local" -Force -ErrorAction SilentlyContinue
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 [System.Environment]::SetEnvironmentVariable('APPDATA',"$Env:UserProfile\AppData\Roaming",[System.EnvironmentVariableTarget]::Process)
 [System.Environment]::SetEnvironmentVariable('HOMEDRIVE',"$Env:SystemDrive",[System.EnvironmentVariableTarget]::Process)
@@ -121,7 +116,6 @@ Set-ItemProperty -Path $registryPath -Name 'LOCALAPPDATA' -Value "$Env:UserProfi
 
     try {
         if (Test-Path -Path $profilePath) {
-            Write-Host -ForegroundColor Cyan "[→] Append to PowerShell Profile"
             $existingContent = Get-Content -Path $profilePath -Raw -ErrorAction Stop
             $linesToAdd = @()
             
@@ -133,21 +127,22 @@ Set-ItemProperty -Path $registryPath -Name 'LOCALAPPDATA' -Value "$Env:UserProfi
             }
             
             if ($linesToAdd.Count -gt 0) {
+                Write-Host -ForegroundColor Cyan "[→] Update PowerShell Profile $profilePath"
                 Add-Content -Path $profilePath -Value ("`r`n" + ($linesToAdd -join "`r`n")) -Encoding Unicode -ErrorAction Stop
             }
         }
         else {
-            Write-Host -ForegroundColor Cyan "[→] Set PowerShell Profile"
+            Write-Host -ForegroundColor Cyan "[→] Set PowerShell Profile $profilePath"
             if (-not (Test-Path $profileDir)) {
                 $null = New-Item -Path $profileDir -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
             }
 
             $winpePowerShellProfile | Set-Content -Path $profilePath -Force -Encoding Unicode
         }
-        Write-Host -ForegroundColor DarkGray "[✓] PowerShell Profile configured"
+        Write-Host -ForegroundColor DarkGray "[✓] PowerShell Profile configured $profilePath"
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] Failed to Set PowerShell Profile: $_"
+        Write-Host -ForegroundColor Red "[✗] Set PowerShell Profile failed: $_"
         throw
     }
 }

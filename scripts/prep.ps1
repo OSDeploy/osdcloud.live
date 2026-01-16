@@ -72,20 +72,16 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-SetExecutionPolicy
     winpe-SetEnvironmentVariable
     winpe-SetPowerShellProfile
-    Pause
     winpe-SetTimeUTC
-    Pause
     winpe-InstallCurl
-    Pause
     winpe-InstallPackageProviderNuGet
-    Pause
     winpe-InstallNuget
     winpe-UpdatePackageManagement
     winpe-UpdatePowerShellGet
     winpe-TrustPSGallery
     winpe-InstallAzCopy
-    winpe-InstallPowerShellModule -Name OSD
-    winpe-InstallPowerShellModule -Name OSDCloud
+    # winpe-InstallPowerShellModule -Name OSD
+    # winpe-InstallPowerShellModule -Name OSDCloud
     if (-not (Get-Command 'curl.exe' -ErrorAction SilentlyContinue)) {
         Write-Warning 'curl.exe is missing from WinPE. This is required for OSDCloud to function'
         Start-Sleep -Seconds 5
