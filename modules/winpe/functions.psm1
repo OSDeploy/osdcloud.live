@@ -10,13 +10,14 @@ Recommended execution order for initial setup:
     1. winpe-SetExecutionPolicy
     2. winpe-SetEnvironmentVariable
     3. winpe-SetPowerShellProfile
-    4. winpe-SetTimeUTC
-    5. winpe-InstallCurl
-    6. winpe-InstallNuget
-    7. winpe-UpdatePackageManagement
-    8. winpe-UpdatePowerShellGet
-    9. winpe-TrustPSGallery
-    10. winpe-InstallAzCopy
+    4. winpe-SetRealTimeClockUTC
+    5. winpe-SetTimeService
+    6. winpe-InstallCurl
+    7. winpe-InstallNuget
+    8. winpe-UpdatePackageManagement
+    9. winpe-UpdatePowerShellGet
+    10. winpe-TrustPSGallery
+    11. winpe-InstallAzCopy
 
 Additional functions (can be run after the core setup above):
     - winpe-InstallDotNetCore
@@ -38,7 +39,7 @@ function winpe-SetExecutionPolicy {
     $currentPolicy = Get-ExecutionPolicy
     if ($currentPolicy -eq 'Bypass') {
         # Handle the case where the policy is already set to Bypass
-        Write-Host -ForegroundColor DarkGray "[✓] Set-ExecutionPolicy -ExecutionPolicy Bypass -Force"
+        Write-Host -ForegroundColor DarkGray "[✓] Execution Policy"
         return
     }
 
@@ -71,7 +72,7 @@ function winpe-SetEnvironmentVariable {
                        (Get-ItemProperty -Path $registryPath -Name 'HOMEPATH' -ErrorAction SilentlyContinue)
 
     if ($envVarsSet -and $registryVarsSet) {
-        Write-Host -ForegroundColor DarkGray "[✓] Environment Variables are set (APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA)"
+        Write-Host -ForegroundColor DarkGray "[✓] Environment Variables (APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA)"
         return
     }
 
@@ -139,7 +140,7 @@ function winpe-SetPowerShellProfile {
 
             $winpePowerShellProfile | Set-Content -Path $profilePath -Force -Encoding Unicode
         }
-        Write-Host -ForegroundColor DarkGray "[✓] PowerShell Profile configured $profilePath"
+        Write-Host -ForegroundColor DarkGray "[✓] Test PowerShell Profile"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] Set PowerShell Profile failed: $_"
@@ -147,28 +148,43 @@ function winpe-SetPowerShellProfile {
     }
 }
 
-function winpe-SetTimeUTC {
+function winpe-SetRealTimeClockUTC {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+
+    # Test if RealTimeIsUniversal is already set
+    $realTimeIsUniversal = Get-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -ErrorAction SilentlyContinue
+
+    if ($realTimeIsUniversal -and ($realTimeIsUniversal.RealTimeIsUniversal -eq 1)) {
+        Write-Host -ForegroundColor DarkGray "[✓] RealTimeClock UTC"
+        return
+    }
+    else {
+        try {
+            Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -Value 1 -Type DWord -ErrorAction Stop
+            Write-Host -ForegroundColor Cyan "[→] Set RealTimeClock UTC"
+        }
+        catch {
+            Write-Host -ForegroundColor Red "[✗] Set RealTimeClock UTC failed: $_"
+            throw
+        }
+    }
+}
+
+function winpe-SetTimeService {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
 
     try {
-        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -Value 1 -Type DWord -ErrorAction Stop
-        Write-Host -ForegroundColor DarkGray "[✓] Set RealTimeClock to UTC"
-    }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] Set RealTimeClock to UTC: $_"
-        throw
-    }
-
-    try {
         $w32timeService = Get-Service -Name w32time -ErrorAction Stop
         if ($w32timeService.StartType -ne 'Automatic') {
             Set-Service -Name w32time -StartupType Automatic -ErrorAction Stop
-            Write-Host -ForegroundColor DarkGray "[✓] Set-Service w32time Automatic"
+            Write-Host -ForegroundColor Cyan "[→] Set-Service w32time Automatic"
         }
         else {
-            Write-Host -ForegroundColor DarkGray "[✓] Set-Service w32time Automatic"
+            Write-Host -ForegroundColor DarkGray "[✓] Time Service"
         }
     }
     catch {

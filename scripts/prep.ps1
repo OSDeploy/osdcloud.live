@@ -61,8 +61,8 @@ Write-Host -ForegroundColor DarkGray "[✓] $ScriptName $ScriptVersion ($Windows
 #endregion
 
 #region Transport Layer Security (TLS) 1.2
-# Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security (TLS) 1.2"
-Write-Host -ForegroundColor DarkGray "[✓] [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12"
+Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security (TLS) 1.2"
+# Write-Host -ForegroundColor DarkGray "[✓] [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12"
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 #endregion
 
@@ -72,7 +72,8 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-SetExecutionPolicy
     winpe-SetEnvironmentVariable
     winpe-SetPowerShellProfile
-    winpe-SetTimeUTC
+    winpe-SetRealTimeClockUTC
+    winpe-SetTimeService
     winpe-InstallCurl
     winpe-InstallPackageProviderNuGet
     winpe-InstallNuget
