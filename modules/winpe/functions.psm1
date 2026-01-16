@@ -179,7 +179,7 @@ function winpe-InstallPackageProviderNuget {
     param ()
 
     # Test if NuGet PackageProvider is already installed
-    $provider = Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue
+    $provider = Get-PackageProvider -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq 'NuGet' }
     if ($provider) {
         Write-Host -ForegroundColor DarkGray "[✓] PackageProvider NuGet $($provider.Version)"
         return
