@@ -61,7 +61,7 @@ Write-Host -ForegroundColor DarkGray "[✓] $ScriptName $ScriptVersion ($Windows
 #endregion
 
 #region Transport Layer Security (TLS) 1.2
-Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security (TLS) 1.2"
+Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [TLS 1.2]"
 # Write-Host -ForegroundColor DarkGray "[✓] [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12"
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 #endregion
@@ -91,7 +91,6 @@ if ($WindowsPhase -eq 'WinPE') {
     $EndTime = Get-Date
     $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
     Write-Host -ForegroundColor DarkGray "[✓] Ready in $TotalSeconds seconds"
-    Write-Host
     <#
     Write-Host -ForegroundColor Cyan "[✓] OSDCloud.live imported functions:"
     Get-Command winpe-* | Select-Object -ExpandProperty Name | ForEach-Object {

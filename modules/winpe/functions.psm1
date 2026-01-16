@@ -44,7 +44,7 @@ function winpe-SetExecutionPolicy {
     }
 
     try {
-        Write-Host -ForegroundColor Cyan "[→] Execution Policy [Bypass]"
+        Write-Host -ForegroundColor Cyan "[→] Set Execution Policy [Bypass]"
         Set-ExecutionPolicy -ExecutionPolicy Bypass -Force -ErrorAction Stop
         Write-Host -ForegroundColor DarkGray "[>] Set-ExecutionPolicy -ExecutionPolicy Bypass -Force"
     }
@@ -132,16 +132,19 @@ function winpe-SetPowerShellProfile {
                 Write-Host -ForegroundColor DarkGray "[i] $profilePath"
                 Add-Content -Path $profilePath -Value ("`r`n" + ($linesToAdd -join "`r`n")) -Encoding Unicode -ErrorAction Stop
             }
+            else {
+                Write-Host -ForegroundColor DarkGray "[✓] PowerShell Profile"
+            }
         }
         else {
-            Write-Host -ForegroundColor Cyan "[→] Set PowerShell Profile $profilePath"
+            Write-Host -ForegroundColor Cyan "[→] Set PowerShell Profile"
+            Write-Host -ForegroundColor DarkGray "[i] $profilePath"
             if (-not (Test-Path $profileDir)) {
                 $null = New-Item -Path $profileDir -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
             }
 
             $winpePowerShellProfile | Set-Content -Path $profilePath -Force -Encoding Unicode
         }
-        Write-Host -ForegroundColor DarkGray "[✓] PowerShell Profile"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] Set PowerShell Profile failed: $_"
@@ -182,14 +185,14 @@ function winpe-SetTimeService {
         $w32timeService = Get-Service -Name w32time -ErrorAction Stop
         if ($w32timeService.StartType -ne 'Automatic') {
             Set-Service -Name w32time -StartupType Automatic -ErrorAction Stop
-            Write-Host -ForegroundColor Cyan "[→] Test Time Service"
+            Write-Host -ForegroundColor Cyan "[→] Time Service [Automatic]"
         }
         else {
             Write-Host -ForegroundColor DarkGray "[✓] Time Service [Automatic]"
         }
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] Set Time Service failed: $_"
+        Write-Host -ForegroundColor Red "[✗] Time Service [Automatic] failed: $_"
         throw
     }
 
@@ -197,11 +200,11 @@ function winpe-SetTimeService {
         $w32timeService = Get-Service -Name w32time -ErrorAction Stop
         if ($w32timeService.Status -ne 'Running') {
             Start-Service -Name w32time -ErrorAction Stop
-            Write-Host -ForegroundColor DarkGray "[✓] Restart Time Service"
+            Write-Host -ForegroundColor DarkGray "[✓] Time Service [Restart]"
         }
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] Restart Time Service failed: $_"
+        Write-Host -ForegroundColor Red "[✗] Time Service [Restart] failed: $_"
         throw
     }
 }
