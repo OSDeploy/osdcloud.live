@@ -90,10 +90,12 @@ if ($WindowsPhase -eq 'WinPE') {
     $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
     Write-Host -ForegroundColor DarkGray "[✓] Ready in $TotalSeconds seconds"
     Write-Host
+    <#
     Write-Host -ForegroundColor Cyan "[✓] OSDCloud.live imported functions:"
     Get-Command winpe-* | Select-Object -ExpandProperty Name | ForEach-Object {
         Write-Host -ForegroundColor DarkGray $_
     }
+    #>
     $null = Stop-Transcript -ErrorAction Ignore
 }
 #endregion
