@@ -76,7 +76,6 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-SetTimeServiceAutomatic
     winpe-InstallCurl
     winpe-InstallPackageProviderNuGet
-    pause
     winpe-InstallNuGet
     winpe-UpdatePackageManagement
     winpe-UpdatePowerShellGet
@@ -145,5 +144,5 @@ if ($WindowsPhase -eq 'Windows') {
 
 $EndTime = Get-Date
 $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
-Write-Host
-Write-Host -ForegroundColor DarkGray "[✓] Total Time: $TotalSeconds seconds"
+# Write-Host
+# Write-Host -ForegroundColor DarkGray "[✓] Total Time: $TotalSeconds seconds"

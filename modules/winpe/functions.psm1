@@ -13,16 +13,16 @@ Recommended execution order for initial setup:
     4. winpe-SetRealTimeClockUTC
     5. winpe-SetTimeServiceAutomatic
     6. winpe-InstallCurl
-    7. winpe-InstallNuGet
-    8. winpe-UpdatePackageManagement
-    9. winpe-UpdatePowerShellGet
-    10. winpe-TrustPSGallery
-    11. winpe-InstallAzCopy
+    7. winpe-InstallPackageProviderNuget
+    8. winpe-InstallNuGet
+    9. winpe-UpdatePackageManagement
+    10. winpe-UpdatePowerShellGet
+    11. winpe-TrustPSGallery
+    12. winpe-InstallAzCopy
 
 Additional functions (can be run after the core setup above):
-    - winpe-InstallDotNetCore
-    - winpe-InstallPackageProviderNuget
     - winpe-InstallPowerShellModule -Name <ModuleName>
+    - winpe-InstallDotNetCore
     - winpe-InstallZip
 
 .NOTES
@@ -224,7 +224,7 @@ function winpe-InstallCurl {
     }
     elseif (Test-Path $curlPath) {
         $curl = Get-Item -Path $curlPath
-        Write-Host -ForegroundColor DarkGray "[✓] Curl $($curl.VersionInfo.FileVersion)"
+        Write-Host -ForegroundColor DarkGray "[✓] Curl [$($curl.VersionInfo.FileVersion)]"
         return
     }
 
@@ -306,7 +306,7 @@ function winpe-InstallNuGet {
                     $NuGetClientSourceURL `
                     --output $nugetExeFilePath
                 if ($LASTEXITCODE -ne 0 -or -not (Test-Path $nugetExeFilePath)) {
-                    throw "NuGet download failed with exit code $LASTEXITCODE"
+                    throw "curl download failed with exit code $LASTEXITCODE"
                 }
             }
             else {
@@ -320,7 +320,142 @@ function winpe-InstallNuGet {
     }
 }
 
+function winpe-UpdatePackageManagement {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+    
+    $existingModule = Get-Module -Name PackageManagement -ListAvailable | Where-Object { $_.Version -ge '1.4.8.1' }
+    
+    if ($existingModule) {
+        Write-Host -ForegroundColor DarkGray "[✓] PackageManagement [$($existingModule.Version)]"
+        return
+    }
 
+    try {
+        Write-Host -ForegroundColor Cyan "[→] PackageManagement [1.4.8.1]"
+        $tempZip = "$Env:TEMP\packagemanagement.1.4.8.1.zip"
+        $tempDir = "$Env:TEMP\1.4.8.1"
+        $moduleDir = "$Env:ProgramFiles\WindowsPowerShell\Modules\PackageManagement"
+
+        $url = 'https://www.powershellgallery.com/api/v2/package/PackageManagement/1.4.8.1'
+        Write-Host -ForegroundColor DarkGray "[↓] $url"
+        
+        # Download using curl if available, fallback to Invoke-WebRequest
+        $curlPath = Join-Path $Env:SystemRoot 'System32\curl.exe'
+        if (Test-Path $curlPath) {
+            & $curlPath --fail --location --silent --show-error `
+                $url `
+                --output $tempZip
+            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $tempZip)) {
+                throw "curl download failed with exit code $LASTEXITCODE"
+            }
+        }
+        else {
+            Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $tempZip -ErrorAction Stop
+        }
+
+        $null = New-Item -Path $tempDir -ItemType Directory -Force
+        Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force -ErrorAction Stop
+
+        $null = New-Item -Path $moduleDir -ItemType Directory -Force -ErrorAction SilentlyContinue
+        Move-Item -Path $tempDir -Destination "$moduleDir\1.4.8.1" -Force -ErrorAction Stop
+
+        Import-Module PackageManagement -Force -Scope Global -ErrorAction Stop
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] PackageManagement [1.4.8.1] failed: $_"
+        throw
+    }
+    finally {
+        if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
+        if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+}
+
+function winpe-UpdatePowerShellGet {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+    
+    $existingModule = Get-Module -Name PowerShellGet -ListAvailable | Where-Object { $_.Version -ge '2.2.5' }
+    
+    if ($existingModule) {
+        Write-Host -ForegroundColor DarkGray "[✓] PowerShellGet [$($existingModule.Version)]"
+        return
+    }
+
+    try {
+        Write-Host -ForegroundColor Cyan "[→] PowerShellGet [2.2.5]"
+        $tempZip = "$Env:TEMP\powershellget.2.2.5.zip"
+        $tempDir = "$Env:TEMP\2.2.5"
+        $moduleDir = "$Env:ProgramFiles\WindowsPowerShell\Modules\PowerShellGet"
+        
+        # Download using curl if available, fallback to Invoke-WebRequest
+        $url = 'https://www.powershellgallery.com/api/v2/package/PowerShellGet/2.2.5'
+        Write-Host -ForegroundColor DarkGray "[↓] $url"
+        $curlPath = Join-Path $Env:SystemRoot 'System32\curl.exe'
+        if (Test-Path $curlPath) {
+            & $curlPath --fail --location --silent --show-error `
+                $url `
+                --output $tempZip
+            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $tempZip)) {
+                throw "curl download failed with exit code $LASTEXITCODE"
+            }
+        }
+        else {
+            Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $tempZip -ErrorAction Stop
+        }
+        
+        # Extract
+        $null = New-Item -Path $tempDir -ItemType Directory -Force
+        Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force -ErrorAction Stop
+        
+        # Install
+        $null = New-Item -Path $moduleDir -ItemType Directory -Force -ErrorAction SilentlyContinue
+        Move-Item -Path $tempDir -Destination "$moduleDir\2.2.5" -Force -ErrorAction Stop
+        
+        # Import
+        Import-Module PowerShellGet -Force -Scope Global -ErrorAction Stop
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] PowerShellGet [2.2.5] failed: $_"
+        throw
+    }
+    finally {
+        # Cleanup
+        if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
+        if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+}
+
+function winpe-TrustPSGallery {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+
+    $PowerShellGallery = Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue
+
+    if (-not $PowerShellGallery) {
+        Write-Host -ForegroundColor Red "[✗] PSRepository PSGallery not found"
+        return
+    }
+
+    if ($PowerShellGallery.InstallationPolicy -eq 'Trusted') {
+        Write-Host -ForegroundColor DarkGray "[✓] Trust PSGallery"
+        return
+    }
+
+    try {
+        Write-Host -ForegroundColor Cyan "[→] Trust PSGallery"
+        Write-Host -ForegroundColor DarkGray "[>] Set-PSRepository -Name PSGallery -InstallationPolicy Trusted"
+        Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction Stop
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] Trust PSGallery failed: $_"
+        throw
+    }
+}
 
 function winpe-InstallAzCopy {
     [CmdletBinding()]
@@ -333,11 +468,11 @@ function winpe-InstallAzCopy {
     $azcopyPath = "$Env:SystemRoot\System32\azcopy.exe"
     
     if ($Force) {
-        Write-Host -ForegroundColor Cyan "[→] Install Microsoft AzCopy -Force"
+        Write-Host -ForegroundColor Cyan "[→] Microsoft AzCopy -Force"
     }
     elseif (Test-Path $azcopyPath) {
         $azcopy = Get-Item -Path $azcopyPath
-        Write-Host -ForegroundColor DarkGray "[✓] Test Microsoft AzCopy"
+        Write-Host -ForegroundColor DarkGray "[✓] Microsoft AzCopy"
         return
     }
 
@@ -355,7 +490,7 @@ function winpe-InstallAzCopy {
         else {
             throw "Unsupported processor architecture: $Env:PROCESSOR_ARCHITECTURE"
         }
-        Write-Host -ForegroundColor Cyan "[→] Install Microsoft AzCopy"
+        Write-Host -ForegroundColor Cyan "[→] Microsoft AzCopy"
         Write-Host -ForegroundColor DarkGray "[↓] $downloadUrl"
         # Download using curl if available, fallback to Invoke-WebRequest
         $curlPath = Join-Path $Env:SystemRoot 'System32\curl.exe'
@@ -382,7 +517,7 @@ function winpe-InstallAzCopy {
         # Write-Host -ForegroundColor Green "[✓] AzCopy installed successfully."
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] Failed to install Microsoft AzCopy: $_"
+        Write-Host -ForegroundColor Red "[✗] Microsoft AzCopy failed: $_"
         throw
     }
     finally {
@@ -433,10 +568,6 @@ function winpe-InstallDotNetCore {
         if (Test-Path $dotNetCoreZip) { Remove-Item $dotNetCoreZip -Force -ErrorAction SilentlyContinue }
     }
 }
-
-
-
-
 
 function winpe-InstallPowerShellModule {
     [CmdletBinding()]
@@ -550,149 +681,5 @@ function winpe-InstallZip {
         # Cleanup
         # if (Test-Path $temp7za) { Remove-Item $temp7za -Force -ErrorAction SilentlyContinue }
         # if (Test-Path $temp7zaDir) { Remove-Item $temp7zaDir -Recurse -Force -ErrorAction SilentlyContinue }
-    }
-}
-
-
-
-
-
-
-
-
-
-function winpe-TrustPSGallery {
-    [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
-
-    $PowerShellGallery = Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue
-
-    if (-not $PowerShellGallery) {
-        Write-Host -ForegroundColor Red "[✗] PSRepository PSGallery not found"
-        return
-    }
-
-    if ($PowerShellGallery.InstallationPolicy -eq 'Trusted') {
-        Write-Host -ForegroundColor DarkGray "[✓] Get-PSRepository PSGallery Trusted"
-        return
-    }
-
-    try {
-        Write-Host -ForegroundColor Cyan "[→] Set-PSRepository PSGallery Trusted"
-        Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction Stop
-    }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] Failed to trust PSGallery: $_"
-        throw
-    }
-}
-
-function winpe-UpdatePackageManagement {
-    [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
-    
-    $existingModule = Get-Module -Name PackageManagement -ListAvailable | Where-Object { $_.Version -ge '1.4.8.1' }
-    
-    if ($existingModule) {
-        Write-Host -ForegroundColor DarkGray "[✓] PackageManagement $($existingModule.Version)"
-        return
-    }
-
-    try {
-        Write-Host -ForegroundColor Cyan "[→] Installing PackageManagement 1.4.8.1"
-        $tempZip = "$Env:TEMP\packagemanagement.1.4.8.1.zip"
-        $tempDir = "$Env:TEMP\1.4.8.1"
-        $moduleDir = "$Env:ProgramFiles\WindowsPowerShell\Modules\PackageManagement"
-
-        $url = 'https://www.powershellgallery.com/api/v2/package/PackageManagement/1.4.8.1'
-        Write-Host -ForegroundColor DarkGray "[↓] $url"
-        
-        # Download using curl if available, fallback to Invoke-WebRequest
-        $curlPath = Join-Path $Env:SystemRoot 'System32\curl.exe'
-        if (Test-Path $curlPath) {
-            & $curlPath --fail --location --silent --show-error `
-                $url `
-                --output $tempZip
-            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $tempZip)) {
-                throw "curl download failed with exit code $LASTEXITCODE"
-            }
-        }
-        else {
-            Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $tempZip -ErrorAction Stop
-        }
-
-        $null = New-Item -Path $tempDir -ItemType Directory -Force
-        Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force -ErrorAction Stop
-
-        $null = New-Item -Path $moduleDir -ItemType Directory -Force -ErrorAction SilentlyContinue
-        Move-Item -Path $tempDir -Destination "$moduleDir\1.4.8.1" -Force -ErrorAction Stop
-
-        Import-Module PackageManagement -Force -Scope Global -ErrorAction Stop
-    }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] Failed to install PackageManagement: $_"
-        throw
-    }
-    finally {
-        if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
-        if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
-    }
-}
-
-function winpe-UpdatePowerShellGet {
-    [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
-    
-    $existingModule = Get-Module -Name PowerShellGet -ListAvailable | Where-Object { $_.Version -ge '2.2.5' }
-    
-    if ($existingModule) {
-        Write-Host -ForegroundColor DarkGray "[✓] PowerShellGet $($existingModule.Version)"
-        return
-    }
-
-    try {
-        Write-Host -ForegroundColor Cyan "[→] Installing PowerShellGet 2.2.5"
-        $tempZip = "$Env:TEMP\powershellget.2.2.5.zip"
-        $tempDir = "$Env:TEMP\2.2.5"
-        $moduleDir = "$Env:ProgramFiles\WindowsPowerShell\Modules\PowerShellGet"
-        
-        # Download using curl if available, fallback to Invoke-WebRequest
-        $url = 'https://www.powershellgallery.com/api/v2/package/PowerShellGet/2.2.5'
-        Write-Host -ForegroundColor DarkGray "[↓] $url"
-        $curlPath = Join-Path $Env:SystemRoot 'System32\curl.exe'
-        if (Test-Path $curlPath) {
-            & $curlPath --fail --location --silent --show-error `
-                $url `
-                --output $tempZip
-            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $tempZip)) {
-                throw "curl download failed with exit code $LASTEXITCODE"
-            }
-        }
-        else {
-            Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $tempZip -ErrorAction Stop
-        }
-        
-        # Extract
-        $null = New-Item -Path $tempDir -ItemType Directory -Force
-        Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force -ErrorAction Stop
-        
-        # Install
-        $null = New-Item -Path $moduleDir -ItemType Directory -Force -ErrorAction SilentlyContinue
-        Move-Item -Path $tempDir -Destination "$moduleDir\2.2.5" -Force -ErrorAction Stop
-        
-        # Import
-        Import-Module PowerShellGet -Force -Scope Global -ErrorAction Stop
-    }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] Failed to install PowerShellGet 2.2.5: $_"
-        throw
-    }
-    finally {
-        # Cleanup
-        if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
-        if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
 }
