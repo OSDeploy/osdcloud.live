@@ -67,19 +67,21 @@ function winpe-SetEnvironmentVariable {
                        (Get-ItemProperty -Path $registryPath -Name 'HOMEPATH' -ErrorAction SilentlyContinue)
 
     if ($registryVarsSet) {
-        Write-Host -ForegroundColor DarkGray "[✓] Environment Variables in Registry [APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA]"
+        Write-Host -ForegroundColor DarkGray "[✓] Registry Environment Variables [APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA]"
         return
     }
     else {
         # Set in registry for persistence
         try {
+            
+            Write-Host -ForegroundColor Cyan "[→] Registry Environment Variables [APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA]"
             Set-ItemProperty -Path $registryPath -Name 'APPDATA' -Value "$Env:UserProfile\AppData\Roaming" -Force -ErrorAction Stop
             Set-ItemProperty -Path $registryPath -Name 'HOMEDRIVE' -Value "$Env:SystemDrive" -Force -ErrorAction Stop
             Set-ItemProperty -Path $registryPath -Name 'HOMEPATH' -Value "$Env:UserProfile" -Force -ErrorAction Stop
             Set-ItemProperty -Path $registryPath -Name 'LOCALAPPDATA' -Value "$Env:UserProfile\AppData\Local" -Force -ErrorAction Stop
         }
         catch {
-            Write-Host -ForegroundColor Red "[✗] Set Environment Variables failed: $_"
+            Write-Host -ForegroundColor Red "[✗] Registry Environment Variables failed: $_"
             throw
         }
     }
