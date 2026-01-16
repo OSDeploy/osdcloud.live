@@ -73,6 +73,7 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-SetPowerShellProfile
     winpe-SetTimeUTC
     winpe-InstallCurl
+    winpe-InstallPackageProviderNuGet
     winpe-InstallNuget
     winpe-UpdatePackageManagement
     winpe-UpdatePowerShellGet

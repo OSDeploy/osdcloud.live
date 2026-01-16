@@ -173,6 +173,28 @@ function winpe-InstallDotNetCore {
     }
 }
 
+function winpe-InstallPackageProviderNuget {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+
+    # Test if NuGet PackageProvider is already installed
+    $provider = Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue
+    if ($provider) {
+        Write-Host -ForegroundColor DarkGray "[✓] PackageProvider NuGet $($provider.Version)"
+        return
+    }
+
+    try {
+        Write-Host -ForegroundColor Cyan "[→] Installing PackageProvider NuGet"
+        Install-PackageProvider -Name NuGet -Force -Scope AllUsers -ErrorAction Stop | Out-Null
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] Failed to install PackageProvider NuGet: $_"
+        throw
+    }
+}
+
 function winpe-InstallNuget {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -185,7 +207,7 @@ function winpe-InstallNuget {
     try {
         $nugetExeFilePath = Join-Path -Path $nugetPath -ChildPath $NuGetExeName
         if (-not (Test-Path -Path $nugetExeFilePath)) {
-            Write-Host -ForegroundColor Cyan "[→] Installing NuGet to $nugetExeFilePath"
+            Write-Host -ForegroundColor Cyan "[→] Install nuget.exe to $nugetExeFilePath"
             Write-Host -ForegroundColor DarkGray "[↓] $NuGetClientSourceURL"
             if (-not (Test-Path -Path $nugetPath)) {
                 $null = New-Item -Path $nugetPath -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
