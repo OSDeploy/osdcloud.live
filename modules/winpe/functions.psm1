@@ -594,6 +594,3 @@ function winpe-UpdatePowerShellGet {
         if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
 }
-
-
-
