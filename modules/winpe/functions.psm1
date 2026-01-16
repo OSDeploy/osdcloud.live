@@ -13,6 +13,33 @@ Functions should be executed in the following order:
     *** Any remaining functions can be run at this point ***
     winpe-Setup -OSDCloud
 #>
+
+function winpe-SetExecutionPolicy {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+
+    # Get the current execution policy
+    $currentPolicy = Get-ExecutionPolicy
+    if ($currentPolicy -eq 'Bypass') {
+        # Handle the case where the policy is already set to Bypass
+        Write-Host -ForegroundColor DarkGray "[✓] Set-ExecutionPolicy -ExecutionPolicy Bypass -Force"
+        return
+    }
+
+    try {
+        Write-Host -ForegroundColor Cyan "[→] Set-ExecutionPolicy -ExecutionPolicy Bypass -Force"
+        Set-ExecutionPolicy -ExecutionPolicy Bypass -Force -ErrorAction Stop
+        # Write-Host -ForegroundColor DarkGray "[✓] Set-ExecutionPolicy -ExecutionPolicy Bypass -Force"
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] Set-ExecutionPolicy Failed: $_"
+        throw
+    }
+}
+
+
+
 function winpe-InstallAzCopy {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -380,29 +407,7 @@ function winpe-SetEnvironmentVariables {
     }
 }
 
-function winpe-SetExecutionPolicy {
-    [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
 
-    # Get the current execution policy
-    $currentPolicy = Get-ExecutionPolicy
-    if ($currentPolicy -eq 'Bypass') {
-        # Handle the case where the policy is already set to Bypass
-        Write-Host -ForegroundColor DarkGray "[✓] ExecutionPolicy Bypass"
-        return
-    }
-
-    try {
-        Write-Host -ForegroundColor Cyan "[→] Set-ExecutionPolicy Bypass -Scope LocalMachine -Force"
-        Set-ExecutionPolicy Bypass -Scope LocalMachine -Force -ErrorAction Stop
-        Write-Host -ForegroundColor DarkGray "[✓] ExecutionPolicy Bypass"
-    }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] Failed to set ExecutionPolicy: $_"
-        throw
-    }
-}
 
 function winpe-SetPowerShellProfile {
     [CmdletBinding()]
