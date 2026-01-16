@@ -72,7 +72,7 @@ function winpe-SetEnvironmentVariable {
                        (Get-ItemProperty -Path $registryPath -Name 'HOMEPATH' -ErrorAction SilentlyContinue)
 
     if ($envVarsSet -and $registryVarsSet) {
-        Write-Host -ForegroundColor DarkGray "[✓] Test Environment Variables [APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA]"
+        Write-Host -ForegroundColor DarkGray "[✓] Environment Variables [APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA]"
         return
     }
 
@@ -128,7 +128,8 @@ function winpe-SetPowerShellProfile {
             }
             
             if ($linesToAdd.Count -gt 0) {
-                Write-Host -ForegroundColor Cyan "[→] Update PowerShell Profile $profilePath"
+                Write-Host -ForegroundColor Cyan "[→] Set PowerShell Profile"
+                Write-Host -ForegroundColor DarkGray "[i] $profilePath"
                 Add-Content -Path $profilePath -Value ("`r`n" + ($linesToAdd -join "`r`n")) -Encoding Unicode -ErrorAction Stop
             }
         }
@@ -140,7 +141,7 @@ function winpe-SetPowerShellProfile {
 
             $winpePowerShellProfile | Set-Content -Path $profilePath -Force -Encoding Unicode
         }
-        Write-Host -ForegroundColor DarkGray "[✓] Test PowerShell Profile"
+        Write-Host -ForegroundColor DarkGray "[✓] PowerShell Profile"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] Set PowerShell Profile failed: $_"
@@ -157,7 +158,7 @@ function winpe-SetRealTimeClockUTC {
     $realTimeIsUniversal = Get-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -ErrorAction SilentlyContinue
 
     if ($realTimeIsUniversal -and ($realTimeIsUniversal.RealTimeIsUniversal -eq 1)) {
-        Write-Host -ForegroundColor DarkGray "[✓] Test RealTimeClock UTC"
+        Write-Host -ForegroundColor DarkGray "[✓] RealTimeClock UTC"
         return
     }
     else {
@@ -184,7 +185,7 @@ function winpe-SetTimeService {
             Write-Host -ForegroundColor Cyan "[→] Test Time Service"
         }
         else {
-            Write-Host -ForegroundColor DarkGray "[✓] Set Time Service [Automatic]"
+            Write-Host -ForegroundColor DarkGray "[✓] Time Service [Automatic]"
         }
     }
     catch {
