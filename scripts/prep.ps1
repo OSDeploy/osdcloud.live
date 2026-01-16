@@ -73,10 +73,11 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-SetEnvironmentVariable
     winpe-SetPowerShellProfile
     winpe-SetRealTimeClockUTC
-    winpe-SetTimeService
+    winpe-SetTimeServiceAutomatic
     winpe-InstallCurl
     winpe-InstallPackageProviderNuGet
-    winpe-InstallNuget
+    pause
+    winpe-InstallNuGet
     winpe-UpdatePackageManagement
     winpe-UpdatePowerShellGet
     winpe-TrustPSGallery

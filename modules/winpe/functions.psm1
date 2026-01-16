@@ -11,9 +11,9 @@ Recommended execution order for initial setup:
     2. winpe-SetEnvironmentVariable
     3. winpe-SetPowerShellProfile
     4. winpe-SetRealTimeClockUTC
-    5. winpe-SetTimeService
+    5. winpe-SetTimeServiceAutomatic
     6. winpe-InstallCurl
-    7. winpe-InstallNuget
+    7. winpe-InstallNuGet
     8. winpe-UpdatePackageManagement
     9. winpe-UpdatePowerShellGet
     10. winpe-TrustPSGallery
@@ -161,22 +161,22 @@ function winpe-SetRealTimeClockUTC {
     $realTimeIsUniversal = Get-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -ErrorAction SilentlyContinue
 
     if ($realTimeIsUniversal -and ($realTimeIsUniversal.RealTimeIsUniversal -eq 1)) {
-        Write-Host -ForegroundColor DarkGray "[✓] RealTimeClock UTC"
+        Write-Host -ForegroundColor DarkGray "[✓] RealTime Clock [UTC]"
         return
     }
     else {
         try {
             Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -Value 1 -Type DWord -ErrorAction Stop
-            Write-Host -ForegroundColor Cyan "[→] Set RealTimeClock UTC"
+            Write-Host -ForegroundColor Cyan "[→] Set RealTime Clock [UTC]"
         }
         catch {
-            Write-Host -ForegroundColor Red "[✗] Set RealTimeClock UTC failed: $_"
+            Write-Host -ForegroundColor Red "[✗] Set RealTime Clock [UTC] failed: $_"
             throw
         }
     }
 }
 
-function winpe-SetTimeService {
+function winpe-SetTimeServiceAutomatic {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
@@ -208,6 +208,118 @@ function winpe-SetTimeService {
         throw
     }
 }
+
+function winpe-InstallCurl {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Force
+    )
+
+    $curlPath = "$Env:SystemRoot\System32\curl.exe"
+    
+    if ($Force) {
+        Write-Host -ForegroundColor Cyan "[→] Install Curl -Force"
+    }
+    elseif (Test-Path $curlPath) {
+        $curl = Get-Item -Path $curlPath
+        Write-Host -ForegroundColor DarkGray "[✓] Curl $($curl.VersionInfo.FileVersion)"
+        return
+    }
+
+    try {
+        Write-Host -ForegroundColor Cyan "[→] Install Curl"
+        $tempZip = "$Env:TEMP\curl.zip"
+        $tempDir = "$Env:TEMP\curl"
+        
+        # Download
+        $url = 'https://curl.se/windows/latest.cgi?p=win64-mingw.zip'
+        Write-Host -ForegroundColor DarkGray "[↓] $url"
+        Invoke-WebRequest -UseBasicParsing -Uri $url `
+            -OutFile $tempZip -ErrorAction Stop
+        
+        # Extract
+        $null = New-Item -Path $tempDir -ItemType Directory -Force
+        Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force -ErrorAction Stop
+        
+        # Install
+        Get-ChildItem $tempDir -Include 'curl.exe' -Recurse -ErrorAction Stop | 
+            ForEach-Object { Copy-Item -Path $_ -Destination $curlPath -Force -ErrorAction Stop }
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] Install Curl failed: $_"
+        throw
+    }
+    finally {
+        # Cleanup
+        if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
+        if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+}
+
+function winpe-InstallPackageProviderNuget {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+
+    # Test if NuGet PackageProvider is already installed
+    $provider = Get-PackageProvider -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq 'NuGet' }
+    if ($provider) {
+        Write-Host -ForegroundColor DarkGray "[✓] Package Provider NuGet [$($provider.Version)]"
+        return
+    }
+
+    try {
+        Write-Host -ForegroundColor Cyan "[→] Package Provider NuGet"
+        Write-Host -ForegroundColor DarkGray "[>] Install-PackageProvider -Name NuGet -Force -Scope AllUsers"
+        Install-PackageProvider -Name NuGet -Force -Scope AllUsers -ErrorAction Stop | Out-Null
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] Package Provider NuGet failed: $_"
+        throw
+    }
+}
+
+function winpe-InstallNuGet {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+
+    $NuGetClientSourceURL = 'https://nuget.org/nuget.exe'
+    $NuGetExeName = 'NuGet.exe'
+    $nugetPath = Join-Path -Path $Env:LOCALAPPDATA -ChildPath 'Microsoft\Windows\PowerShell\PowerShellGet\'
+
+    try {
+        $nugetExeFilePath = Join-Path -Path $nugetPath -ChildPath $NuGetExeName
+        if (-not (Test-Path -Path $nugetExeFilePath)) {
+            Write-Host -ForegroundColor Cyan "[→] NuGet [$nugetExeFilePath]"
+            Write-Host -ForegroundColor DarkGray "[↓] $NuGetClientSourceURL"
+            if (-not (Test-Path -Path $nugetPath)) {
+                $null = New-Item -Path $nugetPath -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+            }
+            
+            # Download using curl if available, fallback to Invoke-WebRequest
+            $curlPath = Join-Path $Env:SystemRoot 'System32\curl.exe'
+            if (Test-Path $curlPath) {
+                & $curlPath --fail --location --silent --show-error `
+                    $NuGetClientSourceURL `
+                    --output $nugetExeFilePath
+                if ($LASTEXITCODE -ne 0 -or -not (Test-Path $nugetExeFilePath)) {
+                    throw "NuGet download failed with exit code $LASTEXITCODE"
+                }
+            }
+            else {
+                Invoke-WebRequest -UseBasicParsing -Uri $NuGetClientSourceURL -OutFile $nugetExeFilePath -ErrorAction Stop
+            }
+        }
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] NuGet failed: $_"
+        throw
+    }
+}
+
 
 
 function winpe-InstallAzCopy {
@@ -280,54 +392,6 @@ function winpe-InstallAzCopy {
     }
 }
 
-function winpe-InstallCurl {
-    [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param (
-        [System.Management.Automation.SwitchParameter]
-        $Force
-    )
-
-    $curlPath = "$Env:SystemRoot\System32\curl.exe"
-    
-    if ($Force) {
-        Write-Host -ForegroundColor Cyan "[→] Installing Curl -Force"
-    }
-    elseif (Test-Path $curlPath) {
-        $curl = Get-Item -Path $curlPath
-        Write-Host -ForegroundColor DarkGray "[✓] Curl $($curl.VersionInfo.FileVersion)"
-        return
-    }
-
-    try {
-        Write-Host -ForegroundColor Cyan "[→] Installing Curl"
-        $tempZip = "$Env:TEMP\curl.zip"
-        $tempDir = "$Env:TEMP\curl"
-        
-        # Download
-        Write-Host -ForegroundColor DarkGray "[↓] https://curl.se/windows/latest.cgi?p=win64-mingw.zip"
-        Invoke-WebRequest -UseBasicParsing -Uri 'https://curl.se/windows/latest.cgi?p=win64-mingw.zip' `
-            -OutFile $tempZip -ErrorAction Stop
-        
-        # Extract
-        $null = New-Item -Path $tempDir -ItemType Directory -Force
-        Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force -ErrorAction Stop
-        
-        # Install
-        Get-ChildItem $tempDir -Include 'curl.exe' -Recurse -ErrorAction Stop | 
-            ForEach-Object { Copy-Item -Path $_ -Destination $curlPath -Force -ErrorAction Stop }
-    }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] Failed to install CuRL: $_"
-        throw
-    }
-    finally {
-        # Cleanup
-        if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
-        if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
-    }
-}
-
 function winpe-InstallDotNetCore {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -370,77 +434,9 @@ function winpe-InstallDotNetCore {
     }
 }
 
-function winpe-InstallPackageProviderNuget {
-    [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
 
-    # Test if NuGet PackageProvider is already installed
-    $provider = Get-PackageProvider -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq 'NuGet' }
-    if ($provider) {
-        Write-Host -ForegroundColor DarkGray "[✓] PackageProvider NuGet $($provider.Version)"
-        return
-    }
 
-    try {
-        Write-Host -ForegroundColor Cyan "[→] Install-PackageProvider -Name NuGet -Force -Scope AllUsers"
-        Install-PackageProvider -Name NuGet -Force -Scope AllUsers -ErrorAction Stop | Out-Null
-    }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] Failed to install PackageProvider NuGet: $_"
-        throw
-    }
-}
 
-function winpe-InstallNuget {
-    [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
-
-    $NuGetClientSourceURL = 'https://nuget.org/nuget.exe'
-    $NuGetExeName = 'NuGet.exe'
-    $nugetPath = Join-Path -Path $Env:LOCALAPPDATA -ChildPath 'Microsoft\Windows\PowerShell\PowerShellGet\'
-
-    try {
-        $nugetExeFilePath = Join-Path -Path $nugetPath -ChildPath $NuGetExeName
-        if (-not (Test-Path -Path $nugetExeFilePath)) {
-            Write-Host -ForegroundColor Cyan "[→] Install nuget.exe to $nugetExeFilePath"
-            Write-Host -ForegroundColor DarkGray "[↓] $NuGetClientSourceURL"
-            if (-not (Test-Path -Path $nugetPath)) {
-                $null = New-Item -Path $nugetPath -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-            }
-            
-            # Download using curl if available, fallback to Invoke-WebRequest
-            $curlPath = Join-Path $Env:SystemRoot 'System32\curl.exe'
-            if (Test-Path $curlPath) {
-                & $curlPath --fail --location --silent --show-error `
-                    $NuGetClientSourceURL `
-                    --output $nugetExeFilePath
-                if ($LASTEXITCODE -ne 0 -or -not (Test-Path $nugetExeFilePath)) {
-                    throw "curl download failed with exit code $LASTEXITCODE"
-                }
-            }
-            else {
-                Invoke-WebRequest -UseBasicParsing -Uri $NuGetClientSourceURL -OutFile $nugetExeFilePath -ErrorAction Stop
-            }
-        }
-
-        # Install PackageProvider
-        $providerPath = "$Env:ProgramFiles\PackageManagement\ProviderAssemblies\nuget\2.8.5.208\Microsoft.PackageManagement.NuGetProvider.dll"
-        if (Test-Path $providerPath) {
-            Write-Host -ForegroundColor DarkGray "[✓] NuGet 2.8.5.208+"
-        }
-        else {
-            Write-Host -ForegroundColor Cyan "[→] Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope AllUsers"
-            Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -Scope AllUsers -ErrorAction Stop | Out-Null
-            Write-Host -ForegroundColor DarkGray "[✓] NuGet 2.8.5.208+"
-        }
-    }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] Failed to install NuGet: $_"
-        throw
-    }
-}
 
 function winpe-InstallPowerShellModule {
     [CmdletBinding()]
