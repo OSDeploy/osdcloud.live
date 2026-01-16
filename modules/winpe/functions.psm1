@@ -1,17 +1,32 @@
 <#
-Functions should be executed in the following order:
-    winpe-SetExecutionPolicy
-    winpe-SetEnvironmentVariables
-    winpe-SetPowerShellProfile
-    winpe-SetTimeUTC
-    winpe-InstallCurl
-    winpe-InstallNuget
-    winpe-UpdatePackageManagement
-    winpe-UpdatePowerShellGet
-    winpe-TrustPSGallery
-    winpe-InstallAzCopy
-    *** Any remaining functions can be run at this point ***
-    winpe-Setup -OSDCloud
+.SYNOPSIS
+WinPE environment setup and configuration functions.
+
+.DESCRIPTION
+Functions for configuring the Windows PE environment, including execution policy,
+environment variables, package management, and tool installation.
+
+Recommended execution order for initial setup:
+    1. winpe-SetExecutionPolicy
+    2. winpe-SetEnvironmentVariable
+    3. winpe-SetPowerShellProfile
+    4. winpe-SetTimeUTC
+    5. winpe-InstallCurl
+    6. winpe-InstallNuget
+    7. winpe-UpdatePackageManagement
+    8. winpe-UpdatePowerShellGet
+    9. winpe-TrustPSGallery
+    10. winpe-InstallAzCopy
+
+Additional functions (can be run after the core setup above):
+    - winpe-InstallDotNetCore
+    - winpe-InstallPackageProviderNuget
+    - winpe-InstallPowerShellModule -Name <ModuleName>
+    - winpe-InstallZip
+
+.NOTES
+Functions are designed to be idempotent and can be safely re-run.
+Most functions will skip if the target is already configured/installed.
 #>
 
 function winpe-SetExecutionPolicy {
@@ -38,7 +53,38 @@ function winpe-SetExecutionPolicy {
     }
 }
 
-
+function winpe-SetEnvironmentVariable {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+    
+    if (Get-Item env:LOCALAPPDATA -ErrorAction Ignore) {
+        Write-Host -ForegroundColor DarkGray "[✓] Environment Variables (APPDATA, HOMEDRIVE, HOMEPATH, and LOCALAPPDATA)"
+    }
+    else {
+        Write-Host -ForegroundColor Cyan "[→] Set Environment Variables (APPDATA, HOMEDRIVE, HOMEPATH, and LOCALAPPDATA)"
+        Write-Verbose 'WinPE does not have the LocalAppData System Environment Variable'
+        Write-Verbose 'Setting environment variables for this PowerShell session and registry'
+        
+        # Set for current process
+        [System.Environment]::SetEnvironmentVariable('APPDATA', "$env:UserProfile\AppData\Roaming", [System.EnvironmentVariableTarget]::Process)
+        [System.Environment]::SetEnvironmentVariable('HOMEDRIVE', "$env:SystemDrive", [System.EnvironmentVariableTarget]::Process)
+        [System.Environment]::SetEnvironmentVariable('HOMEPATH', "$env:UserProfile", [System.EnvironmentVariableTarget]::Process)
+        [System.Environment]::SetEnvironmentVariable('LOCALAPPDATA', "$env:UserProfile\AppData\Local", [System.EnvironmentVariableTarget]::Process)
+        
+        # Set in registry for persistence
+        try {
+            Set-ItemProperty -Path 'HKCU:\Environment' -Name 'APPDATA' -Value "$env:UserProfile\AppData\Roaming" -Type String -ErrorAction Stop
+            Set-ItemProperty -Path 'HKCU:\Environment' -Name 'HOMEDRIVE' -Value "$env:SystemDrive" -Type String -ErrorAction Stop
+            Set-ItemProperty -Path 'HKCU:\Environment' -Name 'HOMEPATH' -Value "$env:UserProfile" -Type String -ErrorAction Stop
+            Set-ItemProperty -Path 'HKCU:\Environment' -Name 'LOCALAPPDATA' -Value "$env:UserProfile\AppData\Local" -Type String -ErrorAction Stop
+        }
+        catch {
+            Write-Host -ForegroundColor Red "[✗] Failed to set environment variables in registry: $_"
+            throw
+        }
+    }
+}
 
 function winpe-InstallAzCopy {
     [CmdletBinding()]
@@ -387,25 +433,7 @@ function winpe-InstallZip {
     }
 }
 
-function winpe-SetEnvironmentVariables {
-    [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
-    
-    if (Get-Item env:LOCALAPPDATA -ErrorAction Ignore) {
-        Write-Host -ForegroundColor DarkGray "[✓] Environment Variables (APPDATA, HOMEDRIVE, HOMEPATH, and LOCALAPPDATA)"
-    }
-    else {
-        Write-Host -ForegroundColor Cyan "[→] Set Environment Variables (APPDATA, HOMEDRIVE, HOMEPATH, and LOCALAPPDATA)"
-        Write-Verbose 'WinPE does not have the LocalAppData System Environment Variable'
-        Write-Verbose 'Setting environment variables for this PowerShell session (not persistent)'
-        
-        [System.Environment]::SetEnvironmentVariable('APPDATA', "$env:UserProfile\AppData\Roaming", [System.EnvironmentVariableTarget]::Process)
-        [System.Environment]::SetEnvironmentVariable('HOMEDRIVE', "$env:SystemDrive", [System.EnvironmentVariableTarget]::Process)
-        [System.Environment]::SetEnvironmentVariable('HOMEPATH', "$env:UserProfile", [System.EnvironmentVariableTarget]::Process)
-        [System.Environment]::SetEnvironmentVariable('LOCALAPPDATA', "$env:UserProfile\AppData\Local", [System.EnvironmentVariableTarget]::Process)
-    }
-}
+
 
 
 
