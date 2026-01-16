@@ -112,8 +112,8 @@ function winpe-SetPowerShellProfile {
 [System.Environment]::SetEnvironmentVariable('LOCALAPPDATA',"$Env:UserProfile\AppData\Local",[System.EnvironmentVariableTarget]::Process)
 '@
 
-    $profileDir = "$Env:UserProfile\Documents\WindowsPowerShell"
-    $profilePath = "$profileDir\Microsoft.PowerShell_profile.ps1"
+    $profileDir = "$env:PSHome"
+    $profilePath = "$profileDir\profile.ps1"
 
     try {
         if (Test-Path -Path $profilePath) {
