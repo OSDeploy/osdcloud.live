@@ -74,10 +74,10 @@ function winpe-SetEnvironmentVariable {
         
         # Set in registry for persistence
         try {
-            Set-ItemProperty -Path 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' -Name 'APPDATA' -Value "$env:UserProfile\AppData\Roaming" -Type String -ErrorAction Stop
-            Set-ItemProperty -Path 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' -Name 'HOMEDRIVE' -Value "$env:SystemDrive" -Type String -ErrorAction Stop
-            Set-ItemProperty -Path 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' -Name 'HOMEPATH' -Value "$env:UserProfile" -Type String -ErrorAction Stop
-            Set-ItemProperty -Path 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' -Name 'LOCALAPPDATA' -Value "$env:UserProfile\AppData\Local" -Type String -ErrorAction Stop
+            Set-ItemProperty -Path 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' -Name 'APPDATA' -Value "$env:UserProfile\AppData\Roaming" -Force -ErrorAction Stop
+            Set-ItemProperty -Path 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' -Name 'HOMEDRIVE' -Value "$env:SystemDrive" -Force -ErrorAction Stop
+            Set-ItemProperty -Path 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' -Name 'HOMEPATH' -Value "$env:UserProfile" -Force -ErrorAction Stop
+            Set-ItemProperty -Path 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' -Name 'LOCALAPPDATA' -Value "$env:UserProfile\AppData\Local" -Force -ErrorAction Stop
         }
         catch {
             Write-Host -ForegroundColor Red "[✗] Failed to set environment variables in registry: $_"
