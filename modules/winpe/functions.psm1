@@ -75,10 +75,10 @@ function winpe-SetEnvironmentVariable {
         try {
             
             Write-Host -ForegroundColor Cyan "[→] Registry Environment Variables [APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA]"
-            Set-ItemProperty -Path $registryPath -Name 'APPDATA' -Value "$Env:UserProfile\AppData\Roaming" -Force -ErrorAction Stop
-            Set-ItemProperty -Path $registryPath -Name 'HOMEDRIVE' -Value "$Env:SystemDrive" -Force -ErrorAction Stop
-            Set-ItemProperty -Path $registryPath -Name 'HOMEPATH' -Value "$Env:UserProfile" -Force -ErrorAction Stop
-            Set-ItemProperty -Path $registryPath -Name 'LOCALAPPDATA' -Value "$Env:UserProfile\AppData\Local" -Force -ErrorAction Stop
+            Set-ItemProperty -Path $registryPath -Name 'APPDATA' -Value "$env:UserProfile\AppData\Roaming" -Force -ErrorAction Stop
+            Set-ItemProperty -Path $registryPath -Name 'HOMEDRIVE' -Value "$env:SystemDrive" -Force -ErrorAction Stop
+            Set-ItemProperty -Path $registryPath -Name 'HOMEPATH' -Value "$env:UserProfile" -Force -ErrorAction Stop
+            Set-ItemProperty -Path $registryPath -Name 'LOCALAPPDATA' -Value "$env:UserProfile\AppData\Local" -Force -ErrorAction Stop
         }
         catch {
             Write-Host -ForegroundColor Red "[✗] Registry Environment Variables failed: $_"
@@ -93,18 +93,30 @@ function winpe-SetEnvironmentVariable {
                   (Get-Item env:HOMEDRIVE -ErrorAction Ignore) -and
                   (Get-Item env:HOMEPATH -ErrorAction Ignore)
     
-
-
     if ($envVarsSet) {
         Write-Host -ForegroundColor DarkGray "[✓] Environment Variables [APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA]"
         return
     }
 
     # Set for current process
-    [System.Environment]::SetEnvironmentVariable('APPDATA', "$Env:UserProfile\AppData\Roaming", [System.EnvironmentVariableTarget]::Process)
-    [System.Environment]::SetEnvironmentVariable('HOMEDRIVE', "$Env:SystemDrive", [System.EnvironmentVariableTarget]::Process)
-    [System.Environment]::SetEnvironmentVariable('HOMEPATH', "$Env:UserProfile", [System.EnvironmentVariableTarget]::Process)
-    [System.Environment]::SetEnvironmentVariable('LOCALAPPDATA', "$Env:UserProfile\AppData\Local", [System.EnvironmentVariableTarget]::Process)
+    Set-Item -Path "Env:\APPDATA" -Value "$env:UserProfile\AppData\Roaming" -ErrorAction SilentlyContinue
+    Set-Item -Path "Env:\HOMEDRIVE" -Value "$env:SystemDrive" -ErrorAction SilentlyContinue
+    Set-Item -Path "Env:\HOMEPATH" -Value "$env:UserProfile" -ErrorAction SilentlyContinue
+    Set-Item -Path "Env:\LOCALAPPDATA" -Value "$env:UserProfile\AppData\Local" -ErrorAction SilentlyContinue
+
+    Write-Host -ForegroundColor DarkGray "[✓] Environment Variables 3 [APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA]"
+
+    return
+
+
+    [System.Environment]::SetEnvironmentVariable('APPDATA', "$env:UserProfile\AppData\Roaming", [System.EnvironmentVariableTarget]::Process)
+    [System.Environment]::SetEnvironmentVariable('HOMEDRIVE', "$env:SystemDrive", [System.EnvironmentVariableTarget]::Process)
+    [System.Environment]::SetEnvironmentVariable('HOMEPATH', "$env:UserProfile", [System.EnvironmentVariableTarget]::Process)
+    [System.Environment]::SetEnvironmentVariable('LOCALAPPDATA', "$env:UserProfile\AppData\Local", [System.EnvironmentVariableTarget]::Process)
+
+
+
+
     return
 
     # Also set for current session
@@ -129,10 +141,10 @@ function winpe-SetPowerShellProfile {
 
     $winpePowerShellProfile = @'
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-[System.Environment]::SetEnvironmentVariable('APPDATA',"$Env:UserProfile\AppData\Roaming",[System.EnvironmentVariableTarget]::Process)
-[System.Environment]::SetEnvironmentVariable('HOMEDRIVE',"$Env:SystemDrive",[System.EnvironmentVariableTarget]::Process)
-[System.Environment]::SetEnvironmentVariable('HOMEPATH',"$Env:UserProfile",[System.EnvironmentVariableTarget]::Process)
-[System.Environment]::SetEnvironmentVariable('LOCALAPPDATA',"$Env:UserProfile\AppData\Local",[System.EnvironmentVariableTarget]::Process)
+[System.Environment]::SetEnvironmentVariable('APPDATA',"$env:UserProfile\AppData\Roaming",[System.EnvironmentVariableTarget]::Process)
+[System.Environment]::SetEnvironmentVariable('HOMEDRIVE',"$env:SystemDrive",[System.EnvironmentVariableTarget]::Process)
+[System.Environment]::SetEnvironmentVariable('HOMEPATH',"$env:UserProfile",[System.EnvironmentVariableTarget]::Process)
+[System.Environment]::SetEnvironmentVariable('LOCALAPPDATA',"$env:UserProfile\AppData\Local",[System.EnvironmentVariableTarget]::Process)
 '@
 
     $profileDir = "$PSHome"
@@ -240,7 +252,7 @@ function winpe-InstallCurl {
         $Force
     )
 
-    $curlPath = "$Env:SystemRoot\System32\curl.exe"
+    $curlPath = "$env:SystemRoot\System32\curl.exe"
     
     if ($Force) {
         Write-Host -ForegroundColor Cyan "[→] Install Curl -Force"
@@ -253,8 +265,8 @@ function winpe-InstallCurl {
 
     try {
         Write-Host -ForegroundColor Cyan "[→] Install Curl"
-        $tempZip = "$Env:TEMP\curl.zip"
-        $tempDir = "$Env:TEMP\curl"
+        $tempZip = "$env:TEMP\curl.zip"
+        $tempDir = "$env:TEMP\curl"
         
         # Download
         $url = 'https://curl.se/windows/latest.cgi?p=win64-mingw.zip'
@@ -311,7 +323,7 @@ function winpe-InstallNuGet {
 
     $NuGetClientSourceURL = 'https://nuget.org/nuget.exe'
     $NuGetExeName = 'NuGet.exe'
-    $nugetPath = Join-Path -Path $Env:LOCALAPPDATA -ChildPath 'Microsoft\Windows\PowerShell\PowerShellGet\'
+    $nugetPath = Join-Path -Path $env:LOCALAPPDATA -ChildPath 'Microsoft\Windows\PowerShell\PowerShellGet\'
 
     try {
         $nugetExeFilePath = Join-Path -Path $nugetPath -ChildPath $NuGetExeName
@@ -323,7 +335,7 @@ function winpe-InstallNuGet {
             }
             
             # Download using curl if available, fallback to Invoke-WebRequest
-            $curlPath = Join-Path $Env:SystemRoot 'System32\curl.exe'
+            $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
             if (Test-Path $curlPath) {
                 & $curlPath --fail --location --silent --show-error `
                     $NuGetClientSourceURL `
@@ -357,15 +369,15 @@ function winpe-UpdatePackageManagement {
 
     try {
         Write-Host -ForegroundColor Cyan "[→] PackageManagement [1.4.8.1]"
-        $tempZip = "$Env:TEMP\packagemanagement.1.4.8.1.zip"
-        $tempDir = "$Env:TEMP\1.4.8.1"
-        $moduleDir = "$Env:ProgramFiles\WindowsPowerShell\Modules\PackageManagement"
+        $tempZip = "$env:TEMP\packagemanagement.1.4.8.1.zip"
+        $tempDir = "$env:TEMP\1.4.8.1"
+        $moduleDir = "$env:ProgramFiles\WindowsPowerShell\Modules\PackageManagement"
 
         $url = 'https://www.powershellgallery.com/api/v2/package/PackageManagement/1.4.8.1'
         Write-Host -ForegroundColor DarkGray "[↓] $url"
         
         # Download using curl if available, fallback to Invoke-WebRequest
-        $curlPath = Join-Path $Env:SystemRoot 'System32\curl.exe'
+        $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
         if (Test-Path $curlPath) {
             & $curlPath --fail --location --silent --show-error `
                 $url `
@@ -410,14 +422,14 @@ function winpe-UpdatePowerShellGet {
 
     try {
         Write-Host -ForegroundColor Cyan "[→] PowerShellGet [2.2.5]"
-        $tempZip = "$Env:TEMP\powershellget.2.2.5.zip"
-        $tempDir = "$Env:TEMP\2.2.5"
-        $moduleDir = "$Env:ProgramFiles\WindowsPowerShell\Modules\PowerShellGet"
+        $tempZip = "$env:TEMP\powershellget.2.2.5.zip"
+        $tempDir = "$env:TEMP\2.2.5"
+        $moduleDir = "$env:ProgramFiles\WindowsPowerShell\Modules\PowerShellGet"
         
         # Download using curl if available, fallback to Invoke-WebRequest
         $url = 'https://www.powershellgallery.com/api/v2/package/PowerShellGet/2.2.5'
         Write-Host -ForegroundColor DarkGray "[↓] $url"
-        $curlPath = Join-Path $Env:SystemRoot 'System32\curl.exe'
+        $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
         if (Test-Path $curlPath) {
             & $curlPath --fail --location --silent --show-error `
                 $url `
@@ -488,7 +500,7 @@ function winpe-InstallAzCopy {
         $Force
     )
 
-    $azcopyPath = "$Env:SystemRoot\System32\azcopy.exe"
+    $azcopyPath = "$env:SystemRoot\System32\azcopy.exe"
     
     if ($Force) {
         Write-Host -ForegroundColor Cyan "[→] Microsoft AzCopy -Force"
@@ -500,24 +512,24 @@ function winpe-InstallAzCopy {
     }
 
     try {
-        $tempZip = "$Env:TEMP\azcopy.zip"
-        $tempDir = "$Env:TEMP\azcopy"
+        $tempZip = "$env:TEMP\azcopy.zip"
+        $tempDir = "$env:TEMP\azcopy"
         
         # Determine download URL based on architecture
-        if ($Env:PROCESSOR_ARCHITECTURE -eq "ARM64") {
+        if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") {
             $downloadUrl = 'https://aka.ms/downloadazcopy-v10-windows-arm64'
         }
-        elseif ($Env:PROCESSOR_ARCHITECTURE -eq "AMD64") {
+        elseif ($env:PROCESSOR_ARCHITECTURE -eq "AMD64") {
             $downloadUrl = 'https://aka.ms/downloadazcopy-v10-windows'
         }
         else {
-            throw "Unsupported processor architecture: $Env:PROCESSOR_ARCHITECTURE"
+            throw "Unsupported processor architecture: $env:PROCESSOR_ARCHITECTURE"
         }
         Write-Host -ForegroundColor Cyan "[→] Microsoft AzCopy"
         Write-Host -ForegroundColor DarkGray "[↓] $downloadUrl"
 
         # Download using curl if available, fallback to Invoke-WebRequest
-        $curlPath = Join-Path $Env:SystemRoot 'System32\curl.exe'
+        $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
         if (Test-Path $curlPath) {
             & $curlPath --fail --location --silent --show-error `
                 $downloadUrl `
@@ -557,11 +569,11 @@ function winpe-InstallDotNetCore {
     param ()
 
     $dotNetCoreUrl = 'https://builds.dotnet.microsoft.com/dotnet/Runtime/10.0.1/dotnet-runtime-10.0.1-win-x64.zip'
-    $dotNetCoreZip = Join-Path -Path $Env:TEMP -ChildPath 'dotnet-runtime.zip'
-    $dotNetCoreDir = Join-Path -Path $Env:ProgramFiles -ChildPath 'dotnet'
+    $dotNetCoreZip = Join-Path -Path $env:TEMP -ChildPath 'dotnet-runtime.zip'
+    $dotNetCoreDir = Join-Path -Path $env:ProgramFiles -ChildPath 'dotnet'
 
     try {
-        $curlPath = Join-Path $Env:SystemRoot 'System32\curl.exe'
+        $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
         if (Test-Path $curlPath) {
             Write-Host -ForegroundColor Cyan "[→] Downloading .NET Runtime with curl"
             & $curlPath --fail --location --silent --show-error `
@@ -657,8 +669,8 @@ function winpe-InstallZip {
     param ()
 
     # requires both 7zr.exe and 7za.exe
-    $zip7rPath = "$Env:SystemRoot\System32\7zr.exe"
-    $zip7aPath = "$Env:SystemRoot\System32\7za.exe"
+    $zip7rPath = "$env:SystemRoot\System32\7zr.exe"
+    $zip7aPath = "$env:SystemRoot\System32\7za.exe"
     
     if ((Test-Path $zip7rPath) -and (Test-Path $zip7aPath)) {
         $zip = Get-Item -Path $zip7rPath
@@ -668,14 +680,14 @@ function winpe-InstallZip {
 
     try {
         $downloadUrl = 'https://github.com/ip7z/7zip/releases/download/25.01/7z2501-extra.7z'
-        $tempZip = "$Env:TEMP\7z2501-extra.7z"
-        $tempDir = "$Env:TEMP\7za"
+        $tempZip = "$env:TEMP\7z2501-extra.7z"
+        $tempDir = "$env:TEMP\7za"
 
         Write-Host -ForegroundColor Cyan "[→] 7-Zip [25.01]"
         Write-Host -ForegroundColor DarkGray "[↓] $downloadUrl"
         
         # Download using curl if available, fallback to Invoke-WebRequest
-        $curlPath = Join-Path $Env:SystemRoot 'System32\curl.exe'
+        $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
         if (Test-Path $curlPath) {
             & $curlPath --fail --location --silent --show-error `
                 $downloadUrl `
@@ -693,11 +705,11 @@ function winpe-InstallZip {
         Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force -ErrorAction Stop
         
         # Install
-        if ($Env:PROCESSOR_ARCHITECTURE -eq "AMD64") {
-            Copy-Item -Path "$tempDir\7za\x64\*" -Destination $Env:SystemRoot\System32 -Recurse -Force -ErrorAction Stop
+        if ($env:PROCESSOR_ARCHITECTURE -eq "AMD64") {
+            Copy-Item -Path "$tempDir\7za\x64\*" -Destination $env:SystemRoot\System32 -Recurse -Force -ErrorAction Stop
         }
-        elseif ($Env:PROCESSOR_ARCHITECTURE -eq "ARM64") {
-            Copy-Item -Path "$tempDir\7za\arm64\*" -Destination $Env:SystemRoot\System32 -Recurse -Force -ErrorAction Stop
+        elseif ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") {
+            Copy-Item -Path "$tempDir\7za\arm64\*" -Destination $env:SystemRoot\System32 -Recurse -Force -ErrorAction Stop
         }
 
         Write-Host -ForegroundColor Green "[✓] 7-Zip [25.01]"

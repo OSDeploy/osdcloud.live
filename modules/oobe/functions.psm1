@@ -5,7 +5,7 @@ function oobe-SetPowerShellProfile {
 
     $oobePowerShellProfile = @'
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-[System.Environment]::SetEnvironmentVariable('Path',$Env:Path + ";$Env:ProgramFiles\WindowsPowerShell\Scripts",'Process')
+[System.Environment]::SetEnvironmentVariable('Path',$env:Path + ";$env:ProgramFiles\WindowsPowerShell\Scripts",'Process')
 '@
 
     $profileDir = "$env:UserProfile\Documents\WindowsPowerShell"

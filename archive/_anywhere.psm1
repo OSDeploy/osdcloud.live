@@ -93,14 +93,14 @@ function osdcloud-SetPowerShellProfile {
     param ()
 $winpePowerShellProfile = @'
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-[System.Environment]::SetEnvironmentVariable('APPDATA',"$Env:UserProfile\AppData\Roaming",[System.EnvironmentVariableTarget]::Process)
-[System.Environment]::SetEnvironmentVariable('HOMEDRIVE',"$Env:SystemDrive",[System.EnvironmentVariableTarget]::Process)
-[System.Environment]::SetEnvironmentVariable('HOMEPATH',"$Env:UserProfile",[System.EnvironmentVariableTarget]::Process)
-[System.Environment]::SetEnvironmentVariable('LOCALAPPDATA',"$Env:UserProfile\AppData\Local",[System.EnvironmentVariableTarget]::Process)
+[System.Environment]::SetEnvironmentVariable('APPDATA',"$env:UserProfile\AppData\Roaming",[System.EnvironmentVariableTarget]::Process)
+[System.Environment]::SetEnvironmentVariable('HOMEDRIVE',"$env:SystemDrive",[System.EnvironmentVariableTarget]::Process)
+[System.Environment]::SetEnvironmentVariable('HOMEPATH',"$env:UserProfile",[System.EnvironmentVariableTarget]::Process)
+[System.Environment]::SetEnvironmentVariable('LOCALAPPDATA',"$env:UserProfile\AppData\Local",[System.EnvironmentVariableTarget]::Process)
 '@
 $oobePowerShellProfile = @'
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-[System.Environment]::SetEnvironmentVariable('Path',$Env:Path + ";$Env:ProgramFiles\WindowsPowerShell\Scripts",'Process')
+[System.Environment]::SetEnvironmentVariable('Path',$env:Path + ";$env:ProgramFiles\WindowsPowerShell\Scripts",'Process')
 '@
 
     if ($WindowsPhase -eq 'WinPE') {
@@ -114,8 +114,8 @@ $oobePowerShellProfile = @'
         if (-not (Test-Path $Profile.CurrentUserAllHosts)) {
             Write-Host -ForegroundColor Green "[✓] Set LocalAppData in PowerShell Profile [CurrentUserAllHosts]"
             $null = New-Item $Profile.CurrentUserAllHosts -ItemType File -Force
-            #[System.Environment]::SetEnvironmentVariable('Path',"$Env:LocalAppData\Microsoft\WindowsApps;$Env:ProgramFiles\WindowsPowerShell\Scripts;",'User')
-            #[System.Environment]::SetEnvironmentVariable('Path',$Env:Path + ";$Env:ProgramFiles\WindowsPowerShell\Scripts")
+            #[System.Environment]::SetEnvironmentVariable('Path',"$env:LocalAppData\Microsoft\WindowsApps;$env:ProgramFiles\WindowsPowerShell\Scripts;",'User')
+            #[System.Environment]::SetEnvironmentVariable('Path',$env:Path + ";$env:ProgramFiles\WindowsPowerShell\Scripts")
             #[Environment]::SetEnvironmentVariable("Path", $env:Path, [System.EnvironmentVariableTarget]::Machine)
             $oobePowerShellProfile | Set-Content -Path $Profile.CurrentUserAllHosts -Force -Encoding Unicode
         }
@@ -296,7 +296,7 @@ function osdcloud-UpdateModuleFilesManually {
         $DEVMode = $false
         ) 
     write-host "Manually Updating Several Module Files directly from GitHub" -ForegroundColor Cyan
-    $ModulePath = (Get-ChildItem -Path "$($Env:ProgramFiles)\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | select -Last 1).fullname
+    $ModulePath = (Get-ChildItem -Path "$($env:ProgramFiles)\WindowsPowerShell\Modules\osd" | Where-Object {$_.Attributes -match "Directory"} | select -Last 1).fullname
     write-host "Updating Files in $ModulePath"
     $OSDCloudGUIDevProjectPath = "Projects\OSDCloudDev"
     $OSDCloudGUIProjectPath = "Projects\OSDCloudGUI"
