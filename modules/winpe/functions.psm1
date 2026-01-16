@@ -59,44 +59,65 @@ function winpe-SetEnvironmentVariable {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
 
-    # Check if environment variables are already set
-    $envVarsSet = (Get-Item env:LOCALAPPDATA -ErrorAction Ignore) -and 
-                  (Get-Item env:APPDATA -ErrorAction Ignore) -and
-                  (Get-Item env:HOMEDRIVE -ErrorAction Ignore) -and
-                  (Get-Item env:HOMEPATH -ErrorAction Ignore)
-    
+    # Test Registry for existing environment variables
     $registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
     $registryVarsSet = (Get-ItemProperty -Path $registryPath -Name 'LOCALAPPDATA' -ErrorAction SilentlyContinue) -and
                        (Get-ItemProperty -Path $registryPath -Name 'APPDATA' -ErrorAction SilentlyContinue) -and
                        (Get-ItemProperty -Path $registryPath -Name 'HOMEDRIVE' -ErrorAction SilentlyContinue) -and
                        (Get-ItemProperty -Path $registryPath -Name 'HOMEPATH' -ErrorAction SilentlyContinue)
 
-    if ($envVarsSet -and $registryVarsSet) {
+    if ($registryVarsSet) {
+        Write-Host -ForegroundColor DarkGray "[✓] Environment Variables in Registry [APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA]"
+        return
+    }
+    else {
+        # Set in registry for persistence
+        try {
+            Set-ItemProperty -Path $registryPath -Name 'APPDATA' -Value "$Env:UserProfile\AppData\Roaming" -Force -ErrorAction Stop
+            Set-ItemProperty -Path $registryPath -Name 'HOMEDRIVE' -Value "$Env:SystemDrive" -Force -ErrorAction Stop
+            Set-ItemProperty -Path $registryPath -Name 'HOMEPATH' -Value "$Env:UserProfile" -Force -ErrorAction Stop
+            Set-ItemProperty -Path $registryPath -Name 'LOCALAPPDATA' -Value "$Env:UserProfile\AppData\Local" -Force -ErrorAction Stop
+        }
+        catch {
+            Write-Host -ForegroundColor Red "[✗] Set Environment Variables failed: $_"
+            throw
+        }
+    }
+
+
+    # Check if environment variables are already set
+    $envVarsSet = (Get-Item env:LOCALAPPDATA -ErrorAction Ignore) -and 
+                  (Get-Item env:APPDATA -ErrorAction Ignore) -and
+                  (Get-Item env:HOMEDRIVE -ErrorAction Ignore) -and
+                  (Get-Item env:HOMEPATH -ErrorAction Ignore)
+    
+
+
+    if ($envVarsSet) {
         Write-Host -ForegroundColor DarkGray "[✓] Environment Variables [APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA]"
         return
     }
 
-    Write-Host -ForegroundColor Cyan "[→] Set Environment Variables [APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA]"
-    Write-Verbose 'WinPE does not have the LocalAppData System Environment Variable'
-    Write-Verbose 'Setting environment variables for this PowerShell session and registry'
-    
     # Set for current process
     [System.Environment]::SetEnvironmentVariable('APPDATA', "$Env:UserProfile\AppData\Roaming", [System.EnvironmentVariableTarget]::Process)
     [System.Environment]::SetEnvironmentVariable('HOMEDRIVE', "$Env:SystemDrive", [System.EnvironmentVariableTarget]::Process)
     [System.Environment]::SetEnvironmentVariable('HOMEPATH', "$Env:UserProfile", [System.EnvironmentVariableTarget]::Process)
     [System.Environment]::SetEnvironmentVariable('LOCALAPPDATA', "$Env:UserProfile\AppData\Local", [System.EnvironmentVariableTarget]::Process)
-    
-    # Set in registry for persistence
-    try {
-        Set-ItemProperty -Path $registryPath -Name 'APPDATA' -Value "$Env:UserProfile\AppData\Roaming" -Force -ErrorAction Stop
-        Set-ItemProperty -Path $registryPath -Name 'HOMEDRIVE' -Value "$Env:SystemDrive" -Force -ErrorAction Stop
-        Set-ItemProperty -Path $registryPath -Name 'HOMEPATH' -Value "$Env:UserProfile" -Force -ErrorAction Stop
-        Set-ItemProperty -Path $registryPath -Name 'LOCALAPPDATA' -Value "$Env:UserProfile\AppData\Local" -Force -ErrorAction Stop
+    return
+
+    # Also set for current session
+    $registryPath | ForEach-Object {   
+        $k = Get-Item $_
+        $k.GetValueNames() | ForEach-Object {
+            $name = $_
+            $value = $k.GetValue($_)
+            Set-Item -Path Env:\$name -Value $value
+        }
     }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] Set Environment Variables failed: $_"
-        throw
-    }
+
+    Write-Host -ForegroundColor Cyan "[→] Set Environment Variables [APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA]"
+    Write-Verbose 'WinPE does not have the LocalAppData System Environment Variable'
+    Write-Verbose 'Setting environment variables for this PowerShell session and registry'
 }
 
 function winpe-SetPowerShellProfile {

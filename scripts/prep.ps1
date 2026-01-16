@@ -71,6 +71,7 @@ if ($WindowsPhase -eq 'WinPE') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
     winpe-SetExecutionPolicy
     winpe-SetEnvironmentVariable
+    Pause
     winpe-SetPowerShellProfile
     winpe-SetRealTimeClockUTC
     winpe-SetTimeServiceAutomatic
