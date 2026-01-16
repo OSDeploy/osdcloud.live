@@ -39,14 +39,14 @@ function winpe-SetExecutionPolicy {
     $currentPolicy = Get-ExecutionPolicy
     if ($currentPolicy -eq 'Bypass') {
         # Handle the case where the policy is already set to Bypass
-        Write-Host -ForegroundColor DarkGray "[✓] Test Execution Policy [Bypass]"
+        Write-Host -ForegroundColor DarkGray "[✓] Execution Policy [Bypass]"
         return
     }
 
     try {
-        Write-Host -ForegroundColor Cyan "[→] Set-ExecutionPolicy -ExecutionPolicy Bypass -Force"
+        Write-Host -ForegroundColor Cyan "[→] Execution Policy [Bypass]"
         Set-ExecutionPolicy -ExecutionPolicy Bypass -Force -ErrorAction Stop
-        # Write-Host -ForegroundColor DarkGray "[✓] Set-ExecutionPolicy -ExecutionPolicy Bypass -Force"
+        Write-Host -ForegroundColor DarkGray "[>] Set-ExecutionPolicy -ExecutionPolicy Bypass -Force"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] Set-ExecutionPolicy Failed: $_"
@@ -72,11 +72,11 @@ function winpe-SetEnvironmentVariable {
                        (Get-ItemProperty -Path $registryPath -Name 'HOMEPATH' -ErrorAction SilentlyContinue)
 
     if ($envVarsSet -and $registryVarsSet) {
-        Write-Host -ForegroundColor DarkGray "[✓] Test Environment Variables (APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA)"
+        Write-Host -ForegroundColor DarkGray "[✓] Test Environment Variables [APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA]"
         return
     }
 
-    Write-Host -ForegroundColor Cyan "[→] Set Environment Variables (APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA)"
+    Write-Host -ForegroundColor Cyan "[→] Set Environment Variables [APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA]"
     Write-Verbose 'WinPE does not have the LocalAppData System Environment Variable'
     Write-Verbose 'Setting environment variables for this PowerShell session and registry'
     
