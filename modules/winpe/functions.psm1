@@ -176,12 +176,7 @@ function winpe-SetEnvironmentVariable {
     [System.Environment]::SetEnvironmentVariable('HOMEPATH', "$env:UserProfile", [System.EnvironmentVariableTarget]::Process)
     [System.Environment]::SetEnvironmentVariable('LOCALAPPDATA', "$env:UserProfile\AppData\Local", [System.EnvironmentVariableTarget]::Process)
 
-
-
-
     return
-
-    }
 
     Write-Host -ForegroundColor Cyan "[→] Set Environment Variables [APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA]"
     Write-Verbose 'WinPE does not have the LocalAppData System Environment Variable'
