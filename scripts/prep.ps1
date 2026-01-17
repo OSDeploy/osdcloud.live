@@ -76,6 +76,7 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-SetRealTimeClockUTC
     winpe-SetTimeServiceAutomatic
     winpe-InstallCurl
+    winpe-InstallPackageManagement
     winpe-InstallPackageProviderNuGet
     winpe-InstallNuGet
     winpe-UpdatePackageManagement
