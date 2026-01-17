@@ -341,6 +341,62 @@ function winpe-InstallCurl {
     }
 }
 
+function winpe-InstallPackageManagement {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+
+    # Test if PackageManagement is already installed
+    $existingModule = Get-Module -Name PackageManagement -ListAvailable
+    
+    # If installed, return. Display version number of the latest installed version.
+    if ($existingModule) {
+        $latestVersion = ($existingModule | Sort-Object Version -Descending | Select-Object -First 1).Version
+        Write-Host -ForegroundColor DarkGray "[✓] PackageManagement [$latestVersion]"
+        return
+    }
+
+    try {
+        Write-Host -ForegroundColor Cyan "[→] PackageManagement [1.4.8.1]"
+        $tempZip = "$env:TEMP\packagemanagement.1.4.8.1.zip"
+        $tempDir = "$env:TEMP\1.4.8.1"
+        $moduleDir = "$env:ProgramFiles\WindowsPowerShell\Modules\PackageManagement"
+
+        $url = 'https://www.powershellgallery.com/api/v2/package/PackageManagement/1.4.8.1'
+        Write-Host -ForegroundColor DarkGray "[↓] $url"
+        
+        # Download using curl if available, fallback to Invoke-WebRequest
+        $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
+        if (Test-Path $curlPath) {
+            & $curlPath --fail --location --silent --show-error `
+                $url `
+                --output $tempZip
+            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $tempZip)) {
+                throw "curl download failed with exit code $LASTEXITCODE"
+            }
+        }
+        else {
+            Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $tempZip -ErrorAction Stop
+        }
+
+        $null = New-Item -Path $tempDir -ItemType Directory -Force
+        Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force -ErrorAction Stop
+
+        $null = New-Item -Path $moduleDir -ItemType Directory -Force -ErrorAction SilentlyContinue
+        Move-Item -Path $tempDir -Destination "$moduleDir\1.4.8.1" -Force -ErrorAction Stop
+
+        Import-Module PackageManagement -Force -Scope Global -ErrorAction Stop
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] PackageManagement [1.4.8.1] failed: $_"
+        throw
+    }
+    finally {
+        if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
+        if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+}
+
 function winpe-InstallPackageProviderNuget {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
