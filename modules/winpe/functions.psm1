@@ -43,6 +43,41 @@ function Send-SettingChange {
   [void] ([Win32.Nativemethods]::SendMessageTimeout($HWND_BROADCAST, $WM_SETTINGCHANGE, [UIntPtr]::Zero, "Environment", 2, 5000, [ref] $result))
 }
 
+function winpe-RepairRequiredFolders {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+
+    # Check for missing directories and create them
+    $directories = @(
+        "$env:UserProfile\AppData\Local",
+        "$env:UserProfile\AppData\Roaming",
+        "$env:UserProfile\Desktop",
+        "$env:UserProfile\Documents\WindowsPowerShell"
+    )
+
+    # Test if any directory is missing
+    $missingDirectory = $directories | Where-Object { -not (Test-Path -Path $_) }
+
+    if (-not $missingDirectory) {
+        Write-Host -ForegroundColor DarkGray "[✓] Repair Required Folders"
+        return
+    }
+
+    $directories | ForEach-Object {
+        if (-not (Test-Path -Path $_)) {
+            try {
+                Write-Host -ForegroundColor Cyan "[→] Repair Required Folders [$_]"
+                $null = New-Item -Path $_ -ItemType Directory -Force -ErrorAction Stop
+            }
+            catch {
+                Write-Host -ForegroundColor Red "[✗] Repair Required Folders [$_] failed: $_"
+                throw
+            }
+        }
+    }
+}
+
 function winpe-SetExecutionPolicy {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
