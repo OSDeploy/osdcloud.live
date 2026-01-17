@@ -146,6 +146,20 @@ function winpe-SetEnvironmentVariable {
         return
     }
 
+    # Update Environment Variables for current session
+    Write-Host -ForegroundColor Cyan "[→] Environment Variables [APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA]"
+    $registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
+    $registryPath | ForEach-Object {
+        $k = Get-Item $_
+        $k.GetValueNames() | ForEach-Object {
+            $name = $_
+            $value = $k.GetValue($_)
+            Set-Item -Path Env:\$name -Value $value
+        }
+    }
+
+    return
+
     # Set for current process
     Set-Item -Path "Env:\APPDATA" -Value "$env:UserProfile\AppData\Roaming" -ErrorAction SilentlyContinue
     Set-Item -Path "Env:\HOMEDRIVE" -Value "$env:SystemDrive" -ErrorAction SilentlyContinue
@@ -167,14 +181,6 @@ function winpe-SetEnvironmentVariable {
 
     return
 
-    # Also set for current session
-    $registryPath | ForEach-Object {   
-        $k = Get-Item $_
-        $k.GetValueNames() | ForEach-Object {
-            $name = $_
-            $value = $k.GetValue($_)
-            Set-Item -Path Env:\$name -Value $value
-        }
     }
 
     Write-Host -ForegroundColor Cyan "[→] Set Environment Variables [APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA]"
@@ -183,6 +189,58 @@ function winpe-SetEnvironmentVariable {
 }
 
 function winpe-SetPowerShellProfile {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+
+    $winpePowerShellProfile = @'
+# OSDCloud by Recast Software
+[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+$registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
+$registryPath | ForEach-Object {
+    $k = Get-Item $_
+    $k.GetValueNames() | ForEach-Object {
+        $name = $_
+        $value = $k.GetValue($_)
+        Set-Item -Path Env:\$name -Value $value
+    }
+}
+'@
+
+    $profileDir = "$PSHome"
+    $profilePath = "$PSHome\profile.ps1"
+
+    try {
+        if (Test-Path -Path $profilePath) {
+            $existingContent = Get-Content -Path $profilePath -Raw -ErrorAction Stop
+
+            # Search for string 'OSDCloud by Recast Software' to determine if content already exists
+            if ($existingContent -match 'OSDCloud by Recast Software') {
+                Write-Host -ForegroundColor DarkGray "[✓] PowerShell Profile"
+                return
+            }
+
+            Write-Host -ForegroundColor Cyan "[→] Set PowerShell Profile"
+            Write-Host -ForegroundColor DarkGray "[i] $profilePath"
+            Add-Content -Path $profilePath -Value ("`r`n" + $winpePowerShellProfile) -Encoding Unicode -ErrorAction Stop
+        }
+        else {
+            Write-Host -ForegroundColor Cyan "[→] Set PowerShell Profile"
+            Write-Host -ForegroundColor DarkGray "[i] $profilePath"
+            if (-not (Test-Path $profileDir)) {
+                $null = New-Item -Path $profileDir -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+            }
+
+            $winpePowerShellProfile | Set-Content -Path $profilePath -Force -Encoding Unicode
+        }
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] Set PowerShell Profile failed: $_"
+        throw
+    }
+}
+
+function winpe-SetPowerShellProfileOld {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
