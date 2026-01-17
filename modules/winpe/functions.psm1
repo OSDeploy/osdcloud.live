@@ -234,7 +234,7 @@ $registryPath | ForEach-Object {
             Add-Content -Path $profilePath -Value ("`r`n" + $winpePowerShellProfile) -Encoding Unicode -ErrorAction Stop
         }
         else {
-            Write-Host -ForegroundColor Cyan "[→] New PowerShell Profile for AllUsersAllHosts"
+            Write-Host -ForegroundColor Cyan "[→] Create new PowerShell Profile for AllUsersAllHosts"
             Write-Host -ForegroundColor DarkGray "[>] $profilePath"
             Write-Host -ForegroundColor DarkGray "[i] Resolves new environment variables added to Session Manager in the registry"
             if (-not (Test-Path $profileDir)) {
