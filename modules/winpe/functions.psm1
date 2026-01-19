@@ -218,17 +218,21 @@ function winpe-RepairEnvironmentSession {
             $currentValue = Get-Item "env:$name" -ErrorAction Stop | Select-Object -ExpandProperty Value
         }
         catch {
-            Write-Host -ForegroundColor Yellow "[!] Session Environment Variable [$name] should be set to [$value] but does not exist"
-            continue
+            $currentValue = $null
         }
 
         if ($currentValue -match $value) {
             Write-Host -ForegroundColor DarkGray "[✓] Session Environment Variable [$name] is set to [$value]"
             continue
         }
+        elseif ($null -eq $currentValue) {
+            Write-Host -ForegroundColor Yellow "[!] Session Environment Variable [$name] should be set to [$value] but does not exist"
+        }
+        else {
+            Write-Host -ForegroundColor Yellow "[!] Session Environment Variable [$name] is not set to [$value]"
+        }
 
         if (-not ($Force)) {
-            Write-Host -ForegroundColor Yellow "[!] Session Environment Variable [$name] is not set to [$value]"
             continue
         }
 
