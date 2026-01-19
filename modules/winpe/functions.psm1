@@ -383,41 +383,46 @@ function winpe-RepairTimeService {
     )
     Write-Host -ForegroundColor Cyan "[>_] $($MyInvocation.MyCommand.Name)"
 
+    # Time Service StartType
     try {
         # Can we connect to Time Service?
         $w32timeService = Get-Service -Name w32time -ErrorAction Stop
+
+        # Is the Time Service set to Automatic?
+        if ($w32timeService.StartType -eq 'Automatic') {
+            Write-Host -ForegroundColor DarkGray "[✓] Time Service StartType is set to Automatic"
+        }
+        else {
+            Write-Host -ForegroundColor DarkYellow "[!] Time Service StartType is NOT set to Automatic"
+        }
+
+        # Repair
+        if ($Force -and $w32timeService.StartType -ne 'Automatic') {
+            Set-Service -Name w32time -StartupType Automatic -ErrorAction Stop
+            Write-Host -ForegroundColor DarkCyan "[→] Time Service StartType has been set to Automatic"
+        }
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name) failed: $_"
         throw
     }
 
-    # Is the Time Service set to Automatic?
-    if ($w32timeService.StartType -eq 'Automatic') {
-        Write-Host -ForegroundColor DarkGray "[✓] Time Service StartType is set to Automatic"
-    }
-    else {
-        Write-Host -ForegroundColor DarkYellow "[!] Time Service StartType is NOT set to Automatic"
-    }
-
-    # Repair
-    if ($Force -and $w32timeService.StartType -ne 'Automatic') {
-        Set-Service -Name w32time -StartupType Automatic -ErrorAction Stop
-        Write-Host -ForegroundColor DarkCyan "[→] Time Service StartType has been set to Automatic"
-    }
-
-    # Is the Time Service running?
+    # Time Service Status
     try {
+        # Can we connect to Time Service?
         $w32timeService = Get-Service -Name w32time -ErrorAction Stop
+
+        # Is the Time Service Running?
         if ($w32timeService.Status -eq 'Running') {
-            Write-Host -ForegroundColor DarkGray "[✓] Time Service is [Running]"
+            Write-Host -ForegroundColor DarkGray "[✓] Time Service is Running (but should be restarted)"
+
             if ($Force) {
                 Restart-Service -Name w32time -ErrorAction Stop
                 Write-Host -ForegroundColor DarkCyan "[→] Time Service is being restarted"
             }
         }
         else {
-            Write-Host -ForegroundColor Yellow "[!] Time Service is NOT [Running]"
+            Write-Host -ForegroundColor Yellow "[!] Time Service is NOT Running, and should be started"
             if ($Force) {
                 Start-Service -Name w32time -ErrorAction Stop
                 Write-Host -ForegroundColor DarkCyan "[→] Time Service is being started"
