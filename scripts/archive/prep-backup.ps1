@@ -76,7 +76,7 @@ if ($WindowsPhase -eq 'WinPE') {
     # Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/osdcloudazure.psm1')
     # Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/secrets.psm1')
     winpe-RepairExecutionPolicy
-    winpe-SetEnvironmentVariable
+    winpe-RepairRegistryEnvironment
     winpe-SetPowerShellProfile
     winpe-SetRealTimeClockUTC
     winpe-InstallCurl

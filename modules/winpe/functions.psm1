@@ -8,7 +8,7 @@ environment variables, package management, and tool installation.
 
 Recommended execution order for initial setup:
     1. winpe-RepairExecutionPolicy
-    2. winpe-SetEnvironmentVariable
+    2. winpe-RepairRegistryEnvironment
     3. winpe-SetPowerShellProfile
     4. winpe-SetRealTimeClockUTC
     5. winpe-SetTimeServiceAutomatic
@@ -92,7 +92,7 @@ function winpe-RepairExecutionPolicy {
     }
 }
 
-function winpe-RepairUserShellFolders {
+function winpe-RepairUserShellFolder {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
@@ -113,28 +113,28 @@ function winpe-RepairUserShellFolders {
 
     foreach ($item in $requiredFolders) {
         if (Test-Path -Path $item) {
-            Write-Host -ForegroundColor DarkGray "[✓] Required Folder [$item]"
+            Write-Host -ForegroundColor DarkGray "[✓] User Shell Folder [$item]"
             continue
         }
 
         if (-not ($Force)) {
-            Write-Host -ForegroundColor Yellow "[!] Required Folder [$item] is missing"
+            Write-Host -ForegroundColor Yellow "[!] User Shell Folder [$item] is missing"
             continue
         }
 
         # Repair
         try {
-            Write-Host -ForegroundColor Cyan "[→] Required Folder [$item] repaired"
+            Write-Host -ForegroundColor Cyan "[→] User Shell Folder [$item] repaired"
             $null = New-Item -Path $item -ItemType Directory -Force -ErrorAction Stop
         }
         catch {
-            Write-Host -ForegroundColor Red "[✗] Required Folder [$item] repair failed: $_"
+            Write-Host -ForegroundColor Red "[✗] User Shell Folder [$item] repair failed: $_"
             throw
         }
     }
 }
 
-function winpe-SetEnvironmentVariable {
+function winpe-RepairRegistryEnvironment {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
@@ -144,7 +144,7 @@ function winpe-SetEnvironmentVariable {
 
     $registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
 
-    $requiredVariables = @{
+    $requiredVariables = [ordered]@{
         'APPDATA'       = "$env:UserProfile\AppData\Roaming"
         'HOMEDRIVE'     = "$env:SystemDrive"
         'HOMEPATH'      = "\windows\system32\config\systemprofile"
@@ -164,17 +164,17 @@ function winpe-SetEnvironmentVariable {
         }
 
         if (-not ($Force)) {
-            Write-Host -ForegroundColor Yellow "[!] Registry Environment Variable [$name] is missing or incorrect"
+            Write-Host -ForegroundColor Yellow "[!] Registry Environment Variable [$name] is not set to [$value]"
             continue
         }
 
         # Set in registry for persistence
         try {
-            Write-Host -ForegroundColor Cyan "[→] Registry Environment Variable [$name]"
+            Write-Host -ForegroundColor Cyan "[→] Registry Environment Variable [$name] set to [$value]"
             Set-ItemProperty -Path $registryPath -Name $name -Value $value -Force -ErrorAction Stop
         }
         catch {
-            Write-Host -ForegroundColor Red "[✗] Registry Environment Variable [$name] failed: $_"
+            Write-Host -ForegroundColor Red "[✗] Registry Environment Variable [$name] repair failed: $_"
             throw
         }
     }   

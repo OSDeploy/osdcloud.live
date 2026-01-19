@@ -70,8 +70,8 @@ Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [TLS 1.2]"
 if ($WindowsPhase -eq 'WinPE') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
     winpe-RepairExecutionPolicy
-    winpe-RepairUserShellFolders
-    winpe-SetEnvironmentVariable
+    winpe-RepairUserShellFolder
+    winpe-RepairRegistryEnvironment
     winpe-SetPowerShellProfile
     winpe-SetRealTimeClockUTC
     winpe-SetTimeServiceAutomatic
