@@ -159,7 +159,7 @@ function winpe-RepairEnvironmentRegistry {
         $currentValue = (Get-ItemProperty -Path $registryPath -Name $name -ErrorAction SilentlyContinue).$name
 
         if ($currentValue -eq $value) {
-            Write-Host -ForegroundColor DarkGray "[✓] Registry Environment Variable 1 [$name]"
+            Write-Host -ForegroundColor DarkGray "[✓] Registry Environment Variable [$name]"
             continue
         }
 
