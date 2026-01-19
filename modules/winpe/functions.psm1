@@ -38,6 +38,19 @@ function winpe-RepairTls {
         $Force
     )
 
+    if ([Net.ServicePointManager]::SecurityProtocol -band [Net.SecurityProtocolType]::Tls12) {
+        Write-Host "TLS 1.2 is already enabled"
+    } else {
+        Write-Host "TLS 1.2 is NOT enabled"
+    }
+
+    $currentProtocols = [Net.ServicePointManager]::SecurityProtocol
+    $hasTls12 = $currentProtocols -band [Net.SecurityProtocolType]::Tls12
+    Write-Host "Current protocols: $currentProtocols"
+    Write-Host "TLS 1.2 enabled: $($hasTls12 -ne 0)"
+
+    pause
+
     $SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol
 
     if ($SecurityProtocol -band [Net.SecurityProtocolType]::Tls12) {
