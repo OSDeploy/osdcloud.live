@@ -39,24 +39,25 @@ function winpe-RepairTls {
     )
 
     $SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol
+
     if ($SecurityProtocol -band [Net.SecurityProtocolType]::Tls12) {
         Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [Tls12]"
         return
     }
-    else {
-        Write-Host -ForegroundColor Yellow "[!] Transport Layer Security [Tls12] is not enabled"
+
+    if (-not ($Force)) {
+        Write-Host -ForegroundColor Yellow "[!] Transport Layer Security [$SecurityProtocol] should be set to Tls12"
+        return
     }
 
-    if ($Force) {
-        try {
-            [Net.ServicePointManager]::SecurityProtocol = $SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-            Write-Host -ForegroundColor DarkGray "[✓] Set Transport Layer Security [Tls12]"
-        }
-        catch {
-            Write-Host -ForegroundColor Red "[✗] Set Transport Layer Security [Tls12] failed: $_"
-            throw
-        }
-
+    # Repair
+    try {
+        Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [Tls12] repaired"
+        [Net.ServicePointManager]::SecurityProtocol = $SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] Transport Layer Security [Tls12] repair failed: $_"
+        throw
     }
 }
 
@@ -74,19 +75,20 @@ function winpe-RepairExecutionPolicy {
         Write-Host -ForegroundColor DarkGray "[✓] Execution Policy [Bypass]"
         return
     }
-    else {
-        Write-Host -ForegroundColor Yellow "[!] Execution Policy [Bypass] is not set"
+
+    if (-not ($Force)) {
+        Write-Host -ForegroundColor Yellow "[!] Execution Policy [$currentPolicy] should be set to Bypass"
+        return
     }
 
-    if ($Force) {
-        try {
-            Write-Host -ForegroundColor Cyan "[→] Set Execution Policy [Bypass]"
-            Set-ExecutionPolicy -ExecutionPolicy Bypass -Force -ErrorAction Stop
-        }
-        catch {
-            Write-Host -ForegroundColor Red "[✗] Set Execution Policy [Bypass] Failed: $_"
-            throw
-        }
+    # Repair
+    try {
+        Write-Host -ForegroundColor Cyan "[→] Execution Policy [Bypass] repaired"
+        Set-ExecutionPolicy -ExecutionPolicy Bypass -Force -ErrorAction Stop
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] Execution Policy [Bypass] repair failed: $_"
+        throw
     }
 }
 
@@ -111,21 +113,22 @@ function winpe-RepairRequiredFolders {
             continue
         }
 
-        Write-Host -ForegroundColor Yellow "[!] Required Folder: [$folder]"
-        if ($Force) {
-            try {
-                Write-Host -ForegroundColor Cyan "[→] Required Folder [$folder] repaired"
-                $null = New-Item -Path $folder -ItemType Directory -Force -ErrorAction Stop
-            }
-            catch {
-                Write-Host -ForegroundColor Red "[✗] Required Folder [$folder] repair failed: $_"
-                throw
-            }
+        if (-not ($Force)) {
+            Write-Host -ForegroundColor Yellow "[!] Required Folder [$folder] is missing"
+            continue
+        }
+
+        # Repair
+        try {
+            Write-Host -ForegroundColor Cyan "[→] Required Folder [$folder] repaired"
+            $null = New-Item -Path $folder -ItemType Directory -Force -ErrorAction Stop
+        }
+        catch {
+            Write-Host -ForegroundColor Red "[✗] Required Folder [$folder] repair failed: $_"
+            throw
         }
     }
 }
-
-
 
 function winpe-SetEnvironmentVariable {
     [CmdletBinding()]
