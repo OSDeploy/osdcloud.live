@@ -75,7 +75,7 @@ if ($WindowsPhase -eq 'WinPE') {
     # Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/azosdpad.psm1')
     # Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/osdcloudazure.psm1')
     # Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/secrets.psm1')
-    winpe-SetExecutionPolicy
+    winpe-TestExecutionPolicy
     winpe-SetEnvironmentVariable
     winpe-SetPowerShellProfile
     winpe-SetRealTimeClockUTC

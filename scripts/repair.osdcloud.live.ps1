@@ -1,9 +1,9 @@
 <#PSScriptInfo
-.VERSION 25.12.22
+.VERSION 26.01.18
 .GUID 0684aa00-9e31-461a-9821-6dd379aa9ae4
 .AUTHOR David Segura @OSDeploy
 .COMPANYNAME Recast Software
-.COPYRIGHT (c) 2025 David Segura | Recast Software. All rights reserved.
+.COPYRIGHT (c) 2026 David Segura | Recast Software. All rights reserved.
 .TAGS OSDeploy OSDCloud WinPE OOBE Windows AutoPilot
 .LICENSEURI 
 .PROJECTURI https://github.com/OSDeploy/osdcloud.live
@@ -13,9 +13,9 @@
 .EXTERNALSCRIPTDEPENDENCIES 
 .RELEASENOTES
 Script should be executed in a Command Prompt using the following command
-powershell Invoke-Expression -Command (Invoke-RestMethod -Uri osdcloud.live)
+powershell Invoke-Expression -Command (Invoke-RestMethod -Uri repair.osdcloud.live)
 This is abbreviated as
-powershell iex (irm osdcloud.live)
+powershell iex (irm repair.osdcloud.live)
 #>
 #Requires -RunAsAdministrator
 <#
@@ -24,17 +24,17 @@ powershell iex (irm osdcloud.live)
 .DESCRIPTION
     PowerShell Script which supports the OSDCloud environment
 .NOTES
-    Version 26.01.07
+    Version 26.01.18
 .LINK
-    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/scripts/prep.ps1
+    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/scripts/repair.osdcloud.live.ps1
 .EXAMPLE
-    powershell iex (irm osdcloud.live)
+    powershell iex (irm repair.osdcloud.live)
 #>
 [CmdletBinding()]
 param()
 $StartTime = Get-Date
-$ScriptName = 'osdcloud.live'
-$ScriptVersion = '26.01.07'
+$ScriptName = 'repair.osdcloud.live'
+$ScriptVersion = '26.01.18'
 
 #region Initialize
 $Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-$ScriptName.log"
@@ -69,8 +69,8 @@ Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [TLS 1.2]"
 #region WinPE
 if ($WindowsPhase -eq 'WinPE') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
-    winpe-SetExecutionPolicy
-    winpe-RepairRequiredFolders
+    winpe-TestExecutionPolicy
+    winpe-RequiredFolders
     winpe-SetEnvironmentVariable
     winpe-SetPowerShellProfile
     winpe-SetRealTimeClockUTC

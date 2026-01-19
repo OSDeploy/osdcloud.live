@@ -7,7 +7,7 @@ Functions for configuring the Windows PE environment, including execution policy
 environment variables, package management, and tool installation.
 
 Recommended execution order for initial setup:
-    1. winpe-SetExecutionPolicy
+    1. winpe-TestExecutionPolicy
     2. winpe-SetEnvironmentVariable
     3. winpe-SetPowerShellProfile
     4. winpe-SetRealTimeClockUTC
@@ -30,65 +30,78 @@ Functions are designed to be idempotent and can be safely re-run.
 Most functions will skip if the target is already configured/installed.
 #>
 
-Add-Type -Namespace Win32 -Name NativeMethods -MemberDefinition @"
-  [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-  public static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint Msg, UIntPtr wParam, string lParam, uint fuFlags, uint uTimeout, out UIntPtr lpdwResult);
-"@
-
-function Send-SettingChange {
-  $HWND_BROADCAST = [IntPtr] 0xffff;
-  $WM_SETTINGCHANGE = 0x1a;
-  $result = [UIntPtr]::Zero
-
-  [void] ([Win32.Nativemethods]::SendMessageTimeout($HWND_BROADCAST, $WM_SETTINGCHANGE, [UIntPtr]::Zero, "Environment", 2, 5000, [ref] $result))
-}
-
-function winpe-RepairRequiredFolders {
+function winpe-RequiredFolders {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Repair
+    )
 
-    # Check for missing directories and create them
-    $directories = @(
+    $requiredFolders = @(
         "$env:UserProfile\AppData\Local",
         "$env:UserProfile\AppData\Roaming",
         "$env:UserProfile\Desktop",
         "$env:UserProfile\Documents\WindowsPowerShell"
     )
 
-    # Test if any directory is missing
-    $missingDirectory = $directories | Where-Object { -not (Test-Path -Path $_) }
+    foreach ($folder in $requiredFolders) {
+        if (Test-Path -Path $folder) {
+            Write-Host -ForegroundColor DarkGray "[✓] Required Folder: $folder"
+            continue
+        }
 
-    if (-not $missingDirectory) {
-        Write-Host -ForegroundColor DarkGray "[✓] Repair Required Folders"
-        return
-    }
-
-    $directories | ForEach-Object {
-        if (-not (Test-Path -Path $_)) {
+        Write-Host -ForegroundColor Yellow "[!] Missing Required Folder: $folder"
+        if ($Repair) {
             try {
-                Write-Host -ForegroundColor Cyan "[→] Repair Required Folders [$_]"
-                $null = New-Item -Path $_ -ItemType Directory -Force -ErrorAction Stop
+                Write-Host -ForegroundColor Cyan "[→] Repair Required Folder [$folder]"
+                $null = New-Item -Path $folder -ItemType Directory -Force -ErrorAction Stop
             }
             catch {
-                Write-Host -ForegroundColor Red "[✗] Repair Required Folders [$_] failed: $_"
+                Write-Host -ForegroundColor Red "[✗] Repair Required Folder [$folder] failed: $_"
                 throw
             }
         }
     }
 }
 
-function winpe-SetExecutionPolicy {
+function winpe-TestExecutionPolicy {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Repair,
 
-    # Get the current execution policy
+        [System.Management.Automation.SwitchParameter]
+        $Interactive
+    )
+
+    # Default behavior: Test only (report status and exit)
+    if (-not $Repair) {
+        $currentPolicy = Get-ExecutionPolicy
+        if ($currentPolicy -eq 'Bypass') {
+            Write-Host -ForegroundColor DarkGray "[✓] Execution Policy [Bypass]"
+        }
+        else {
+            Write-Host -ForegroundColor Yellow "[!] Execution Policy [$currentPolicy]"
+        }
+        return
+    }
+
+    # Repair behavior
     $currentPolicy = Get-ExecutionPolicy
     if ($currentPolicy -eq 'Bypass') {
-        # Handle the case where the policy is already set to Bypass
         Write-Host -ForegroundColor DarkGray "[✓] Execution Policy [Bypass]"
         return
+    }
+
+    if ($Interactive) {
+        Write-Host -ForegroundColor Yellow "[?] Execution Policy needs to be set to Bypass"
+        $response = Read-Host "Continue? (Y/n)"
+        if ($response -eq 'n' -or $response -eq 'N') {
+            Write-Host -ForegroundColor DarkGray "[•] Skipped"
+            return
+        }
     }
 
     try {
@@ -895,4 +908,17 @@ function winpe-InstallZip {
         # if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
         # if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
+}
+
+Add-Type -Namespace Win32 -Name NativeMethods -MemberDefinition @"
+  [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+  public static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint Msg, UIntPtr wParam, string lParam, uint fuFlags, uint uTimeout, out UIntPtr lpdwResult);
+"@
+
+function Send-SettingChange {
+  $HWND_BROADCAST = [IntPtr] 0xffff;
+  $WM_SETTINGCHANGE = 0x1a;
+  $result = [UIntPtr]::Zero
+
+  [void] ([Win32.Nativemethods]::SendMessageTimeout($HWND_BROADCAST, $WM_SETTINGCHANGE, [UIntPtr]::Zero, "Environment", 2, 5000, [ref] $result))
 }
