@@ -160,7 +160,7 @@ function winpe-RepairEnvironmentRegistry {
 
         if ($currentValue -eq $value) {
             Write-Host -ForegroundColor DarkGray "[✓] Registry Environment Variable 1 [$name]"
-            # continue
+            continue
         }
 
         if ($currentValue.Value -eq $value) {
