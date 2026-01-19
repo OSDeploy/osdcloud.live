@@ -650,6 +650,34 @@ function winpe-InstallCurl {
 }
 
 function winpe-InstallPackageManagement {
+    <#
+    .SYNOPSIS
+    Installs or updates the PackageManagement module in WinPE.
+
+    .DESCRIPTION
+    Checks for the presence of the PackageManagement module. If missing, warns and exits
+    unless -Force is specified. With -Force, downloads version 1.4.8.1 from the PowerShell
+    Gallery, installs it under Program Files, and imports it globally. If already installed,
+    reports the latest installed version and does not reinstall.
+
+    .PARAMETER Force
+    When specified, performs installation/repair actions rather than only reporting status.
+
+    .EXAMPLE
+    winpe-InstallPackageManagement
+    Displays the current status of the PackageManagement module without making changes.
+
+    .EXAMPLE
+    winpe-InstallPackageManagement -Force
+    Downloads and installs PackageManagement 1.4.8.1, then imports the module.
+
+    .OUTPUTS
+    None. Writes status and progress messages to the host.
+
+    .NOTES
+    Designed for Windows PE. Uses curl when available, otherwise Invoke-WebRequest.
+    Safe to re-run; no changes are made if the desired state is already present.
+    #>
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
@@ -660,14 +688,25 @@ function winpe-InstallPackageManagement {
 
     # Test if PackageManagement is already installed
     $existingModule = Get-Module -Name PackageManagement -ListAvailable
-    
-    # If installed, return. Display version number of the latest installed version.
+
+    # Success
     if ($existingModule) {
+        Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
         $latestVersion = ($existingModule | Sort-Object Version -Descending | Select-Object -First 1).Version
-        Write-Host -ForegroundColor DarkGray "[✓] PackageManagement [$latestVersion]"
+        Write-Host -ForegroundColor DarkGray "PackageManagement $latestVersion is installed"
         return
     }
 
+    # Not installed
+    # Warning
+    if (-not $Force) {
+        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "PowerShell Module PackageManagement is NOT installed"
+        return
+    }
+    
+    # Repair / Install
+    Write-Host -ForegroundColor DarkCyan "[→] $($MyInvocation.MyCommand.Name)"
     try {
         Write-Host -ForegroundColor DarkCyan "[→] PackageManagement [1.4.8.1]"
         $tempZip = "$env:TEMP\packagemanagement.1.4.8.1.zip"
@@ -700,7 +739,8 @@ function winpe-InstallPackageManagement {
         Import-Module PackageManagement -Force -Scope Global -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] PackageManagement [1.4.8.1] failed: $_"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red $_
         throw
     }
     finally {
