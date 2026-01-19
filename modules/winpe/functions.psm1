@@ -8,7 +8,7 @@ environment variables, package management, and tool installation.
 
 Recommended execution order for initial setup:
     1. winpe-RepairExecutionPolicy
-    2. winpe-RepairRegistryEnvironment
+    2. winpe-RepairEnvironmentRegistry
     3. winpe-SetPowerShellProfile
     4. winpe-SetRealTimeClockUTC
     5. winpe-SetTimeServiceAutomatic
@@ -134,7 +134,7 @@ function winpe-RepairUserShellFolder {
     }
 }
 
-function winpe-RepairRegistryEnvironment {
+function winpe-RepairEnvironmentRegistry {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
@@ -156,12 +156,24 @@ function winpe-RepairRegistryEnvironment {
         $name = $item.Key
         $value = $item.Value
 
-        $existingValue = (Get-ItemProperty -Path $registryPath -Name $name -ErrorAction SilentlyContinue).$name
+        $currentValue = (Get-ItemProperty -Path $registryPath -Name $name -ErrorAction SilentlyContinue).$name
 
-        if ($existingValue -eq $value) {
-            Write-Host -ForegroundColor DarkGray "[✓] Registry Environment Variable [$name]"
-            continue
+        if ($currentValue -eq $value) {
+            Write-Host -ForegroundColor DarkGray "[✓] Registry Environment Variable 1 [$name]"
+            # continue
         }
+
+        if ($currentValue.Value -eq $value) {
+            Write-Host -ForegroundColor DarkGray "[✓] Registry Environment Variable 2 [$name]"
+            # continue
+        }
+
+        if ($currentValue.Value -match $value) {
+            Write-Host -ForegroundColor DarkGray "[✓] Registry Environment Variable 3 [$name]"
+            # continue
+        }
+
+        continue
 
         if (-not ($Force)) {
             Write-Host -ForegroundColor Yellow "[!] Registry Environment Variable [$name] is not set to [$value]"
@@ -181,7 +193,7 @@ function winpe-RepairRegistryEnvironment {
 }
 
 
-function winpe-RepairSessionEnvironment {
+function winpe-RepairEnvironmentSession {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
@@ -194,16 +206,15 @@ function winpe-RepairSessionEnvironment {
         'HOMEDRIVE'     = "$env:SystemDrive"
         'HOMEPATH'      = "\windows\system32\config\systemprofile"
         'LOCALAPPDATA'  = "$env:UserProfile\AppData\Local"
-        'USERPROFILE'   = "$env:UserProfile"
     }
 
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
 
-        $existingValue = Get-Item env:$name -ErrorAction Ignore
+        $currentValue = Get-Item "env:$name" -ErrorAction Ignore
 
-        if ($existingValue -eq $value) {
+        if ($currentValue -match $value) {
             Write-Host -ForegroundColor DarkGray "[✓] Session Environment Variable [$name]"
             continue
         }
