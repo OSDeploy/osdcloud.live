@@ -107,18 +107,18 @@ function winpe-RepairRequiredFolders {
 
     foreach ($folder in $requiredFolders) {
         if (Test-Path -Path $folder) {
-            Write-Host -ForegroundColor DarkGray "[✓] Required Folder: $folder"
+            Write-Host -ForegroundColor DarkGray "[✓] Required Folder [$folder]"
             continue
         }
 
-        Write-Host -ForegroundColor Yellow "[!] Missing Required Folder: $folder"
+        Write-Host -ForegroundColor Yellow "[!] Required Folder: [$folder]"
         if ($Force) {
             try {
-                Write-Host -ForegroundColor Cyan "[→] Repair Required Folder [$folder]"
+                Write-Host -ForegroundColor Cyan "[→] Required Folder [$folder] repaired"
                 $null = New-Item -Path $folder -ItemType Directory -Force -ErrorAction Stop
             }
             catch {
-                Write-Host -ForegroundColor Red "[✗] Repair Required Folder [$folder] failed: $_"
+                Write-Host -ForegroundColor Red "[✗] Required Folder [$folder] repair failed: $_"
                 throw
             }
         }
