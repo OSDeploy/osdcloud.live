@@ -40,17 +40,23 @@ function winpe-RepairTls {
 
     $SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol
     if ($SecurityProtocol -band [Net.SecurityProtocolType]::Tls12) {
-        Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security (TLS) 1.2"
+        Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [Tls12]"
         return
     }
-    try {
-        Write-Host -ForegroundColor Cyan "[→] Transport Layer Security (TLS) 1.2"
-        [Net.ServicePointManager]::SecurityProtocol = $SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-        Write-Host -ForegroundColor DarkGray "[>] [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12"
+    else {
+        Write-Host -ForegroundColor Yellow "[!] Transport Layer Security [Tls12] is not enabled"
     }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] Transport Layer Security (TLS) 1.2 failed: $_"
-        throw
+
+    if ($Force) {
+        try {
+            [Net.ServicePointManager]::SecurityProtocol = $SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+            Write-Host -ForegroundColor DarkGray "[✓] Set Transport Layer Security [Tls12]"
+        }
+        catch {
+            Write-Host -ForegroundColor Red "[✗] Set Transport Layer Security [Tls12] failed: $_"
+            throw
+        }
+
     }
 }
 
@@ -69,7 +75,7 @@ function winpe-RepairExecutionPolicy {
         return
     }
     else {
-        Write-Host -ForegroundColor Yellow "[!] Execution Policy [$currentPolicy]"
+        Write-Host -ForegroundColor Yellow "[!] Execution Policy [Bypass] is not set"
     }
 
     if ($Force) {
