@@ -83,7 +83,8 @@ function winpe-RepairExecutionPolicy {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-
+    Write-Host -ForegroundColor DarkGray "[▶] [$($MyInvocation.MyCommand.Name)]"
+    
     $currentPolicy = Get-ExecutionPolicy
 
     if ($currentPolicy -eq 'Bypass') {
@@ -114,6 +115,7 @@ function winpe-RepairUserShellFolder {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
+    Write-Host -ForegroundColor DarkGray "[▶] [$($MyInvocation.MyCommand.Name)]"
 
     $requiredFolders = @(
         "$env:ProgramFiles\WindowsPowerShell\Modules",
@@ -156,6 +158,7 @@ function winpe-RepairEnvironmentRegistry {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
+    Write-Host -ForegroundColor DarkGray "[▶] [$($MyInvocation.MyCommand.Name)]"
 
     $registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
 
@@ -174,22 +177,22 @@ function winpe-RepairEnvironmentRegistry {
         $currentValue = (Get-ItemProperty -Path $registryPath -Name $name -ErrorAction SilentlyContinue).$name
 
         if ($currentValue -eq $value) {
-            Write-Host -ForegroundColor DarkGray "[✓] Registry Environment Variable [$name]"
+            Write-Host -ForegroundColor DarkGray "[✓] Registry Environment [$name]"
             continue
         }
 
         if (-not ($Force)) {
-            Write-Host -ForegroundColor Yellow "[!] Registry Environment Variable [$name] is not set to [$value]"
+            Write-Host -ForegroundColor Yellow "[!] Registry Environment [$name] is not set to [$value]"
             continue
         }
 
         # Set in registry for persistence
         try {
-            Write-Host -ForegroundColor Cyan "[→] Registry Environment Variable [$name] set to [$value]"
+            Write-Host -ForegroundColor Cyan "[→] Registry Environment [$name] set to [$value]"
             Set-ItemProperty -Path $registryPath -Name $name -Value $value -Force -ErrorAction Stop
         }
         catch {
-            Write-Host -ForegroundColor Red "[✗] Registry Environment Variable [$name] repair failed: $_"
+            Write-Host -ForegroundColor Red "[✗] Registry Environment [$name] repair failed: $_"
             throw
         }
     }
@@ -202,6 +205,7 @@ function winpe-RepairEnvironmentSession {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
+    Write-Host -ForegroundColor DarkGray "[▶] [$($MyInvocation.MyCommand.Name)]"
 
     $requiredEnvironment = [ordered]@{
         'APPDATA'       = "$env:UserProfile\AppData\Roaming"
@@ -222,14 +226,14 @@ function winpe-RepairEnvironmentSession {
         }
 
         if (-not $currentValue) {
-            Write-Host -ForegroundColor Yellow "[!] Session Environment Variable [$name] should be set to [$value] but does not exist"
+            Write-Host -ForegroundColor Yellow "[!] Session Environment [$name] should be set to [$value] but does not exist"
         }
         elseif ($currentValue -eq $value) {
-            Write-Host -ForegroundColor DarkGray "[✓] Session Environment Variable [$name] is set to [$value]"
+            Write-Host -ForegroundColor DarkGray "[✓] Session Environment [$name] is set to [$value]"
             continue
         }
         else {
-            Write-Host -ForegroundColor Yellow "[!] Session Environment Variable [$name] is not set to [$value]"
+            Write-Host -ForegroundColor Yellow "[!] Session Environment [$name] is not set to [$value]"
         }
 
         if (-not ($Force)) {
@@ -237,11 +241,11 @@ function winpe-RepairEnvironmentSession {
         }
 
         try {
-            Write-Host -ForegroundColor Cyan "[→] Session Environment Variable [$name] set to [$value]"
+            Write-Host -ForegroundColor Cyan "[→] Session Environment [$name] set to [$value]"
             Set-Item -Path "env:$name" -Value $value -ErrorAction Stop
         }
         catch {
-            Write-Host -ForegroundColor Red "[✗] Session Environment Variable [$name] repair failed: $_"
+            Write-Host -ForegroundColor Red "[✗] Session Environment [$name] repair failed: $_"
             throw
         }
     }
@@ -300,6 +304,7 @@ function winpe-SetPowerShellProfile {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
+    Write-Host -ForegroundColor DarkGray "[▶] [$($MyInvocation.MyCommand.Name)]"
 
     if ($PROFILE.CurrentUserAllHosts -ne "$Home\profile.ps1") {
         Write-Host -ForegroundColor Cyan "[→] Repair path for PowerShell Profile CurrentUserAllHosts"
