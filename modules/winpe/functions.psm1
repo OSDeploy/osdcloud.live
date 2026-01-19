@@ -83,7 +83,7 @@ function winpe-RepairExecutionPolicy {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host -ForegroundColor Cyan "[>_] $($MyInvocation.MyCommand.Name)"
+    Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
     
     $currentPolicy = Get-ExecutionPolicy
 
@@ -115,7 +115,7 @@ function winpe-RepairUserShellFolder {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host -ForegroundColor Cyan "[>_] $($MyInvocation.MyCommand.Name)"
+    Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
 
     $requiredFolders = @(
         "$env:ProgramFiles\WindowsPowerShell\Modules",
@@ -158,7 +158,7 @@ function winpe-RepairEnvironmentRegistry {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host -ForegroundColor Cyan "[>_] $($MyInvocation.MyCommand.Name)"
+    Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
 
     $registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
 
@@ -205,7 +205,7 @@ function winpe-RepairEnvironmentSession {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host -ForegroundColor Cyan "[>_] $($MyInvocation.MyCommand.Name)"
+    Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
 
     $requiredEnvironment = [ordered]@{
         'APPDATA'       = "$env:UserProfile\AppData\Roaming"
@@ -261,7 +261,7 @@ function winpe-RepairPowerShellProfile {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host -ForegroundColor Cyan "[>_] $($MyInvocation.MyCommand.Name)"
+    Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
 
     if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\profile.ps1") {
         if ($Force) {
@@ -347,7 +347,7 @@ function winpe-RepairRealTimeClockUTC {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host -ForegroundColor Cyan "[>_] $($MyInvocation.MyCommand.Name)"
+    Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
 
     # Test if RealTimeIsUniversal is already set
     $realTimeIsUniversal = Get-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -ErrorAction SilentlyContinue
@@ -358,7 +358,7 @@ function winpe-RepairRealTimeClockUTC {
     }
 
     if (-not ($Force)) {
-        Write-Host -ForegroundColor Yellow "[!] RealTime Clock is NOT set to [UTC]"
+        Write-Host -ForegroundColor DarkGray "[!] RealTime Clock is NOT set to [UTC]"
         return
     }
 
@@ -381,7 +381,7 @@ function winpe-RepairTimeService {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host -ForegroundColor Cyan "[>_] $($MyInvocation.MyCommand.Name)"
+    Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
 
     # Time Service StartType
     try {
@@ -393,7 +393,7 @@ function winpe-RepairTimeService {
             Write-Host -ForegroundColor DarkGray "[✓] Time Service StartType is set to Automatic"
         }
         else {
-            Write-Host -ForegroundColor DarkYellow "[!] Time Service StartType is NOT set to Automatic"
+            Write-Host -ForegroundColor DarkGray "[!] Time Service StartType is NOT set to Automatic"
         }
 
         # Repair
@@ -442,7 +442,7 @@ function winpe-InstallCurl {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host -ForegroundColor Cyan "[>_] $($MyInvocation.MyCommand.Name)"
+    Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
 
     $curlPath = "$env:SystemRoot\System32\curl.exe"
     
