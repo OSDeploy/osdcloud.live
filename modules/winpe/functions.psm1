@@ -225,21 +225,24 @@ function winpe-RepairEnvironmentSession {
             $currentValue = $null
         }
 
-        if (-not $currentValue) {
-            Write-Host -ForegroundColor Yellow "[!] Session Environment [$name] should be set to [$value] but does not exist"
-        }
-        elseif ($currentValue -eq $value) {
+        # No change needed
+        if ($currentValue -eq $value) {
             Write-Host -ForegroundColor DarkGray "[✓] Session Environment [$name] is set to [$value]"
             continue
         }
-        else {
-            Write-Host -ForegroundColor Yellow "[!] Session Environment [$name] is not set to [$value]"
-        }
 
+        # Informational only
         if (-not ($Force)) {
+            if (-not $currentValue) {
+                Write-Host -ForegroundColor Yellow "[!] Session Environment [$name] should be set to [$value] but does not exist"
+            }
+            else {
+                Write-Host -ForegroundColor Yellow "[!] Session Environment [$name] is not set to [$value]"
+            }
             continue
         }
 
+        # Repair
         try {
             Write-Host -ForegroundColor Cyan "[→] Session Environment [$name] set to [$value]"
             Set-Item -Path "env:$name" -Value $value -ErrorAction Stop
@@ -249,55 +252,6 @@ function winpe-RepairEnvironmentSession {
             throw
         }
     }
-
-    <#
-    # Check if environment variables are already set
-    $envVarsSet = (Get-Item env:LOCALAPPDATA -ErrorAction Ignore) -and 
-                  (Get-Item env:APPDATA -ErrorAction Ignore) -and
-                  (Get-Item env:HOMEDRIVE -ErrorAction Ignore) -and
-                  (Get-Item env:HOMEPATH -ErrorAction Ignore)
-    
-    if ($envVarsSet) {
-        Write-Host -ForegroundColor DarkGray "[✓] Environment Variables [APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA]"
-        return
-    }
-
-    # Update Environment Variables for current session
-    Write-Host -ForegroundColor Cyan "[→] Environment Variables [APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA]"
-    $registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
-    $registryPath | ForEach-Object {
-        $k = Get-Item $_
-        $k.GetValueNames() | ForEach-Object {
-            $name = $_
-            $value = $k.GetValue($_)
-            Set-Item -Path Env:\$name -Value $value
-        }
-    }
-
-    return
-
-    # Set for current process
-    Set-Item -Path "Env:\APPDATA" -Value "$env:UserProfile\AppData\Roaming" -ErrorAction SilentlyContinue
-    Set-Item -Path "Env:\HOMEDRIVE" -Value "$env:SystemDrive" -ErrorAction SilentlyContinue
-    Set-Item -Path "Env:\HOMEPATH" -Value "$env:UserProfile" -ErrorAction SilentlyContinue
-    Set-Item -Path "Env:\LOCALAPPDATA" -Value "$env:UserProfile\AppData\Local" -ErrorAction SilentlyContinue
-
-    Write-Host -ForegroundColor DarkGray "[✓] Environment Variables 3 [APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA]"
-
-    return
-
-
-    [System.Environment]::SetEnvironmentVariable('APPDATA', "$env:UserProfile\AppData\Roaming", [System.EnvironmentVariableTarget]::Process)
-    [System.Environment]::SetEnvironmentVariable('HOMEDRIVE', "$env:SystemDrive", [System.EnvironmentVariableTarget]::Process)
-    [System.Environment]::SetEnvironmentVariable('HOMEPATH', "$env:UserProfile", [System.EnvironmentVariableTarget]::Process)
-    [System.Environment]::SetEnvironmentVariable('LOCALAPPDATA', "$env:UserProfile\AppData\Local", [System.EnvironmentVariableTarget]::Process)
-
-    return
-
-    Write-Host -ForegroundColor Cyan "[→] Set Environment Variables [APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA]"
-    Write-Verbose 'WinPE does not have the LocalAppData System Environment Variable'
-    Write-Verbose 'Setting environment variables for this PowerShell session and registry'
-    #>
 }
 
 function winpe-SetPowerShellProfile {
