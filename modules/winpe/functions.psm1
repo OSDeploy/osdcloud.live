@@ -11,9 +11,9 @@ Recommended execution order for initial setup:
     2. winpe-RepairUserShellFolder
     3. winpe-RepairEnvironmentRegistry
     4. winpe-RepairEnvironmentSession
-    5. winpe-SetPowerShellProfile
-    6. winpe-SetRealTimeClockUTC
-    7. winpe-SetTimeServiceAutomatic
+    5. winpe-RepairPowerShellProfile
+    6. winpe-RepairRealTimeClockUTC
+    7. winpe-RepairTimeService
     8. winpe-InstallCurl
     9. winpe-InstallPackageProviderNuget
     10. winpe-InstallNuGet
@@ -83,7 +83,7 @@ function winpe-RepairExecutionPolicy {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host -ForegroundColor Gray "[+] [$($MyInvocation.MyCommand.Name)]"
+    Write-Host -ForegroundColor DarkGray "[+] $($MyInvocation.MyCommand.Name)"
     
     $currentPolicy = Get-ExecutionPolicy
 
@@ -99,7 +99,7 @@ function winpe-RepairExecutionPolicy {
 
     # Repair
     try {
-        Write-Host -ForegroundColor Cyan "[→] Execution Policy [Bypass] repaired"
+        Write-Host -ForegroundColor DarkCyan "[→] Execution Policy [Bypass] repaired"
         Set-ExecutionPolicy -ExecutionPolicy Bypass -Force -ErrorAction Stop
     }
     catch {
@@ -115,7 +115,7 @@ function winpe-RepairUserShellFolder {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host -ForegroundColor Gray "[+] [$($MyInvocation.MyCommand.Name)]"
+    Write-Host -ForegroundColor DarkGray "[+] $($MyInvocation.MyCommand.Name)"
 
     $requiredFolders = @(
         "$env:ProgramFiles\WindowsPowerShell\Modules",
@@ -141,7 +141,7 @@ function winpe-RepairUserShellFolder {
 
         # Repair
         try {
-            Write-Host -ForegroundColor Cyan "[→] User Shell Folder [$item] repaired"
+            Write-Host -ForegroundColor DarkCyan "[→] User Shell Folder [$item] repaired"
             $null = New-Item -Path $item -ItemType Directory -Force -ErrorAction Stop
         }
         catch {
@@ -158,7 +158,7 @@ function winpe-RepairEnvironmentRegistry {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host -ForegroundColor Gray "[+] [$($MyInvocation.MyCommand.Name)]"
+    Write-Host -ForegroundColor DarkGray "[+] $($MyInvocation.MyCommand.Name)"
 
     $registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
 
@@ -188,7 +188,7 @@ function winpe-RepairEnvironmentRegistry {
 
         # Set in registry for persistence
         try {
-            Write-Host -ForegroundColor Cyan "[→] Registry Environment [$name] set to [$value]"
+            Write-Host -ForegroundColor DarkCyan "[→] Registry Environment [$name] set to [$value]"
             Set-ItemProperty -Path $registryPath -Name $name -Value $value -Force -ErrorAction Stop
         }
         catch {
@@ -205,7 +205,7 @@ function winpe-RepairEnvironmentSession {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host -ForegroundColor Gray "[+] [$($MyInvocation.MyCommand.Name)]"
+    Write-Host -ForegroundColor DarkGray "[+] $($MyInvocation.MyCommand.Name)"
 
     $requiredEnvironment = [ordered]@{
         'APPDATA'       = "$env:UserProfile\AppData\Roaming"
@@ -244,7 +244,7 @@ function winpe-RepairEnvironmentSession {
 
         # Repair
         try {
-            Write-Host -ForegroundColor Cyan "[→] Session Environment [$name] set to [$value]"
+            Write-Host -ForegroundColor DarkCyan "[→] Session Environment [$name] set to [$value]"
             Set-Item -Path "env:$name" -Value $value -ErrorAction Stop
         }
         catch {
@@ -254,19 +254,19 @@ function winpe-RepairEnvironmentSession {
     }
 }
 
-function winpe-SetPowerShellProfile {
+function winpe-RepairPowerShellProfile {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host -ForegroundColor Gray "[+] [$($MyInvocation.MyCommand.Name)]"
+    Write-Host -ForegroundColor DarkGray "[+] $($MyInvocation.MyCommand.Name)"
 
     if ($PROFILE.CurrentUserAllHosts -ne "$Home\profile.ps1") {
         if ($Force) {
             $PROFILE.CurrentUserAllHosts = "$Home\profile.ps1"
-            Write-Host -ForegroundColor Cyan "[→] PowerShell Profile CurrentUserAllHosts Path updated to [$($PROFILE.CurrentUserAllHosts)]"
+            Write-Host -ForegroundColor DarkCyan "[→] PowerShell Profile CurrentUserAllHosts Path updated to [$($PROFILE.CurrentUserAllHosts)]"
         }
         else {
             Write-Host -ForegroundColor Yellow "[!] PowerShell Profile CurrentUserAllHosts Path is incorrectly set to [$($PROFILE.CurrentUserAllHosts)]"
@@ -277,7 +277,7 @@ function winpe-SetPowerShellProfile {
     if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Microsoft.PowerShell_profile.ps1") {
         if ($Force) {
             $PROFILE.CurrentUserCurrentHost = "$Home\Microsoft.PowerShell_profile.ps1"
-            Write-Host -ForegroundColor Cyan "[→] PowerShell Profile CurrentUserCurrentHost Path updated to [$($PROFILE.CurrentUserCurrentHost)]"
+            Write-Host -ForegroundColor DarkCyan "[→] PowerShell Profile CurrentUserCurrentHost Path updated to [$($PROFILE.CurrentUserCurrentHost)]"
         }
         else {
             Write-Host -ForegroundColor Yellow "[!] PowerShell Profile CurrentUserCurrentHost Path is incorrectly set to [$($PROFILE.CurrentUserCurrentHost)]"
@@ -317,7 +317,7 @@ $registryPath | ForEach-Object {
             }
 
             if ($Force) {
-                Write-Host -ForegroundColor Cyan "[→] Add to existing PowerShell Profile for AllUsersAllHosts"
+                Write-Host -ForegroundColor DarkCyan "[→] Add to existing PowerShell Profile for AllUsersAllHosts"
                 Write-Host -ForegroundColor DarkGray "[i] Resolves new environment variables added to Session Manager in the registry"
                 Add-Content -Path $profilePath -Value ("`r`n" + $winpePowerShellProfile) -Encoding Unicode -ErrorAction Stop
             }
@@ -325,7 +325,7 @@ $registryPath | ForEach-Object {
         else {
             Write-Host -ForegroundColor DarkGray "[✓] PowerShell Profile does not exist with OSDCloud update for new sessions"
             if ($Force) {
-                Write-Host -ForegroundColor Cyan "[→] Create new PowerShell Profile for AllUsersAllHosts"
+                Write-Host -ForegroundColor DarkCyan "[→] Create new PowerShell Profile for AllUsersAllHosts"
                 Write-Host -ForegroundColor DarkGray "[i] Resolves new environment variables added to Session Manager in the registry"
                 if (-not (Test-Path $profileDir)) {
                     $null = New-Item -Path $profileDir -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
@@ -340,59 +340,93 @@ $registryPath | ForEach-Object {
     }
 }
 
-function winpe-SetRealTimeClockUTC {
+function winpe-RepairRealTimeClockUTC {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Force
+    )
+    Write-Host -ForegroundColor DarkGray "[+] $($MyInvocation.MyCommand.Name)"
 
     # Test if RealTimeIsUniversal is already set
     $realTimeIsUniversal = Get-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -ErrorAction SilentlyContinue
 
     if ($realTimeIsUniversal -and ($realTimeIsUniversal.RealTimeIsUniversal -eq 1)) {
-        Write-Host -ForegroundColor DarkGray "[✓] RealTime Clock [UTC]"
+        Write-Host -ForegroundColor DarkGray "[✓] RealTime Clock is set to [UTC]"
         return
     }
-    else {
-        try {
-            Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -Value 1 -Type DWord -ErrorAction Stop
-            Write-Host -ForegroundColor Cyan "[→] Set RealTime Clock [UTC]"
-        }
-        catch {
-            Write-Host -ForegroundColor Red "[✗] Set RealTime Clock [UTC] failed: $_"
-            throw
-        }
+
+    if (-not ($Force)) {
+        Write-Host -ForegroundColor Yellow "[!] RealTime Clock is NOT set to [UTC]"
+        return
+    }
+
+    # Repair
+    
+    try {
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -Value 1 -Type DWord -ErrorAction Stop
+        Write-Host -ForegroundColor DarkCyan "[→] Set RealTime Clock to [UTC]"
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] Set RealTime Clock to [UTC] failed: $_"
+        throw
     }
 }
 
-function winpe-SetTimeServiceAutomatic {
+function winpe-RepairTimeService {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Force
+    )
+    Write-Host -ForegroundColor DarkGray "[+] $($MyInvocation.MyCommand.Name)"
 
+    # Time Service StartType should be Automatic
     try {
+        # Can we connect to Time Service?
         $w32timeService = Get-Service -Name w32time -ErrorAction Stop
-        if ($w32timeService.StartType -ne 'Automatic') {
-            Set-Service -Name w32time -StartupType Automatic -ErrorAction Stop
-            Write-Host -ForegroundColor Cyan "[→] Time Service [Automatic]"
+
+        # Is the Time Service set to Automatic?
+        if ($w32timeService.StartType -eq 'Automatic') {
+            Write-Host -ForegroundColor DarkGray "[✓] Time Service StartType is set to [Automatic]"
         }
         else {
-            Write-Host -ForegroundColor DarkGray "[✓] Time Service [Automatic]"
+            Write-Host -ForegroundColor Yellow "[!] Time Service StartType is NOT set to [Automatic]"
+
+            # Repair
+            if ($Force) {
+                Set-Service -Name w32time -StartupType Automatic -ErrorAction Stop
+                Write-Host -ForegroundColor DarkCyan "[→] Time Service StartType has been set to [Automatic]"
+            }
         }
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] Time Service [Automatic] failed: $_"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name) failed: $_"
         throw
     }
 
+    # Time Service should be Running
     try {
         $w32timeService = Get-Service -Name w32time -ErrorAction Stop
+        if ($w32timeService.Status -eq 'Running') {
+            Write-Host -ForegroundColor DarkGray "[✓] Time Service Status is [Running]"
+            if ($Force) {
+                Restart-Service -Name w32time -ErrorAction Stop
+                Write-Host -ForegroundColor DarkCyan "[→] Time Service is being restarted"
+            }
+        }
         if ($w32timeService.Status -ne 'Running') {
-            Start-Service -Name w32time -ErrorAction Stop
-            Write-Host -ForegroundColor DarkGray "[✓] Time Service [Restart]"
+            Write-Host -ForegroundColor DarkGray "[✓] Time Service Status is NOT [Running]"
+            if ($Force) {
+                Start-Service -Name w32time -ErrorAction Stop
+                Write-Host -ForegroundColor DarkCyan "[→] Time Service is being started"
+            }
         }
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] Time Service [Restart] failed: $_"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name) failed: $_"
         throw
     }
 }
@@ -404,11 +438,12 @@ function winpe-InstallCurl {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
+    Write-Host -ForegroundColor DarkGray "[+] $($MyInvocation.MyCommand.Name)"
 
     $curlPath = "$env:SystemRoot\System32\curl.exe"
     
     if ($Force) {
-        Write-Host -ForegroundColor Cyan "[→] Install Curl -Force"
+        Write-Host -ForegroundColor DarkCyan "[→] Install Curl -Force"
     }
     elseif (Test-Path $curlPath) {
         $curl = Get-Item -Path $curlPath
@@ -417,7 +452,7 @@ function winpe-InstallCurl {
     }
 
     try {
-        Write-Host -ForegroundColor Cyan "[→] Install Curl"
+        Write-Host -ForegroundColor DarkCyan "[→] Install Curl"
         $tempZip = "$env:TEMP\curl.zip"
         $tempDir = "$env:TEMP\curl"
         
@@ -462,7 +497,7 @@ function winpe-InstallPackageManagement {
     }
 
     try {
-        Write-Host -ForegroundColor Cyan "[→] PackageManagement [1.4.8.1]"
+        Write-Host -ForegroundColor DarkCyan "[→] PackageManagement [1.4.8.1]"
         $tempZip = "$env:TEMP\packagemanagement.1.4.8.1.zip"
         $tempDir = "$env:TEMP\1.4.8.1"
         $moduleDir = "$env:ProgramFiles\WindowsPowerShell\Modules\PackageManagement"
@@ -515,7 +550,7 @@ function winpe-InstallPackageProviderNuget {
     }
 
     try {
-        Write-Host -ForegroundColor Cyan "[→] Package Provider NuGet"
+        Write-Host -ForegroundColor DarkCyan "[→] Package Provider NuGet"
         Write-Host -ForegroundColor DarkGray "[>] Install-PackageProvider -Name NuGet -Force -Scope AllUsers"
         Install-PackageProvider -Name NuGet -Force -Scope AllUsers -ErrorAction Stop | Out-Null
     }
@@ -537,7 +572,7 @@ function winpe-InstallNuGet {
     try {
         $nugetExeFilePath = Join-Path -Path $nugetPath -ChildPath $NuGetExeName
         if (-not (Test-Path -Path $nugetExeFilePath)) {
-            Write-Host -ForegroundColor Cyan "[→] NuGet [$nugetExeFilePath]"
+            Write-Host -ForegroundColor DarkCyan "[→] NuGet [$nugetExeFilePath]"
             Write-Host -ForegroundColor DarkGray "[↓] $NuGetClientSourceURL"
             if (-not (Test-Path -Path $nugetPath)) {
                 $null = New-Item -Path $nugetPath -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
@@ -577,7 +612,7 @@ function winpe-UpdatePackageManagement {
     }
 
     try {
-        Write-Host -ForegroundColor Cyan "[→] PackageManagement [1.4.8.1]"
+        Write-Host -ForegroundColor DarkCyan "[→] PackageManagement [1.4.8.1]"
         $tempZip = "$env:TEMP\packagemanagement.1.4.8.1.zip"
         $tempDir = "$env:TEMP\1.4.8.1"
         $moduleDir = "$env:ProgramFiles\WindowsPowerShell\Modules\PackageManagement"
@@ -630,7 +665,7 @@ function winpe-UpdatePowerShellGet {
     }
 
     try {
-        Write-Host -ForegroundColor Cyan "[→] PowerShellGet [2.2.5]"
+        Write-Host -ForegroundColor DarkCyan "[→] PowerShellGet [2.2.5]"
         $tempZip = "$env:TEMP\powershellget.2.2.5.zip"
         $tempDir = "$env:TEMP\2.2.5"
         $moduleDir = "$env:ProgramFiles\WindowsPowerShell\Modules\PowerShellGet"
@@ -691,7 +726,7 @@ function winpe-TrustPSGallery {
     }
 
     try {
-        Write-Host -ForegroundColor Cyan "[→] Trust PSGallery"
+        Write-Host -ForegroundColor DarkCyan "[→] Trust PSGallery"
         Write-Host -ForegroundColor DarkGray "[>] Set-PSRepository -Name PSGallery -InstallationPolicy Trusted"
         Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction Stop
     }
@@ -712,7 +747,7 @@ function winpe-InstallAzCopy {
     $azcopyPath = "$env:SystemRoot\System32\azcopy.exe"
     
     if ($Force) {
-        Write-Host -ForegroundColor Cyan "[→] Microsoft AzCopy -Force"
+        Write-Host -ForegroundColor DarkCyan "[→] Microsoft AzCopy -Force"
     }
     elseif (Test-Path $azcopyPath) {
         $azcopy = Get-Item -Path $azcopyPath
@@ -734,7 +769,7 @@ function winpe-InstallAzCopy {
         else {
             throw "Unsupported processor architecture: $env:PROCESSOR_ARCHITECTURE"
         }
-        Write-Host -ForegroundColor Cyan "[→] Microsoft AzCopy"
+        Write-Host -ForegroundColor DarkCyan "[→] Microsoft AzCopy"
         Write-Host -ForegroundColor DarkGray "[↓] $downloadUrl"
 
         # Download using curl if available, fallback to Invoke-WebRequest
@@ -784,7 +819,7 @@ function winpe-InstallDotNetCore {
     try {
         $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
         if (Test-Path $curlPath) {
-            Write-Host -ForegroundColor Cyan "[→] Downloading .NET Runtime with curl"
+            Write-Host -ForegroundColor DarkCyan "[→] Downloading .NET Runtime with curl"
             & $curlPath --fail --location --silent --show-error `
                 $dotNetCoreUrl `
                 --output $dotNetCoreZip
@@ -793,12 +828,12 @@ function winpe-InstallDotNetCore {
             }
         }
         else {
-            Write-Host -ForegroundColor Cyan "[→] Downloading .NET Runtime with Invoke-WebRequest"
+            Write-Host -ForegroundColor DarkCyan "[→] Downloading .NET Runtime with Invoke-WebRequest"
             Invoke-WebRequest -UseBasicParsing -Uri $dotNetCoreUrl -OutFile $dotNetCoreZip -ErrorAction Stop
         }
         Write-Host -ForegroundColor Green "[✓] .NET Runtime downloaded successfully"
 
-        Write-Host -ForegroundColor Cyan "[→] Extracting .NET Runtime"
+        Write-Host -ForegroundColor DarkCyan "[→] Extracting .NET Runtime"
         if (-not (Test-Path $dotNetCoreDir)) {
             $null = New-Item -Path $dotNetCoreDir -ItemType Directory -Force
         }
@@ -836,7 +871,7 @@ function winpe-InstallPowerShellModule {
             $GalleryModule = Find-Module -Name $Name -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
             
             if ($GalleryModule -and ([version]$GalleryModule.Version -gt [version]$InstalledModule.Version)) {
-                Write-Host -ForegroundColor Cyan "[→] Install-Module -Name $Name -Force -Scope AllUsers -SkipPublisherCheck -AllowClobber [$($GalleryModule.Version)]"
+                Write-Host -ForegroundColor DarkCyan "[→] Install-Module -Name $Name -Force -Scope AllUsers -SkipPublisherCheck -AllowClobber [$($GalleryModule.Version)]"
                 Install-Module -Name $Name -Force -Scope AllUsers -SkipPublisherCheck -AllowClobber -ErrorAction Stop -WarningAction SilentlyContinue
                 Write-Host -ForegroundColor Green "[✓] $Name $($GalleryModule.Version) installed successfully"
                 return
@@ -855,7 +890,7 @@ function winpe-InstallPowerShellModule {
 
     # Module not installed or forced, install it
     try {
-        Write-Host -ForegroundColor Cyan "[→] Installing $Name [AllUsers]"
+        Write-Host -ForegroundColor DarkCyan "[→] Installing $Name [AllUsers]"
         $GalleryModule = Find-Module -Name $Name -ErrorAction Stop -WarningAction SilentlyContinue
         
         if (-not $GalleryModule) {
@@ -892,7 +927,7 @@ function winpe-InstallZip {
         $tempZip = "$env:TEMP\7z2501-extra.7z"
         $tempDir = "$env:TEMP\7za"
 
-        Write-Host -ForegroundColor Cyan "[→] 7-Zip [25.01]"
+        Write-Host -ForegroundColor DarkCyan "[→] 7-Zip [25.01]"
         Write-Host -ForegroundColor DarkGray "[↓] $downloadUrl"
         
         # Download using curl if available, fallback to Invoke-WebRequest
