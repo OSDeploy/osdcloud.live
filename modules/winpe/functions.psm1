@@ -83,7 +83,7 @@ function winpe-RepairExecutionPolicy {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host -ForegroundColor DarkGray "[▶] [$($MyInvocation.MyCommand.Name)]"
+    Write-Host -ForegroundColor Gray "[+] [$($MyInvocation.MyCommand.Name)]"
     
     $currentPolicy = Get-ExecutionPolicy
 
@@ -115,7 +115,7 @@ function winpe-RepairUserShellFolder {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host -ForegroundColor DarkGray "[▶] [$($MyInvocation.MyCommand.Name)]"
+    Write-Host -ForegroundColor Gray "[+] [$($MyInvocation.MyCommand.Name)]"
 
     $requiredFolders = @(
         "$env:ProgramFiles\WindowsPowerShell\Modules",
@@ -158,7 +158,7 @@ function winpe-RepairEnvironmentRegistry {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host -ForegroundColor DarkGray "[▶] [$($MyInvocation.MyCommand.Name)]"
+    Write-Host -ForegroundColor Gray "[+] [$($MyInvocation.MyCommand.Name)]"
 
     $registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
 
@@ -205,7 +205,7 @@ function winpe-RepairEnvironmentSession {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host -ForegroundColor DarkGray "[▶] [$($MyInvocation.MyCommand.Name)]"
+    Write-Host -ForegroundColor Gray "[+] [$($MyInvocation.MyCommand.Name)]"
 
     $requiredEnvironment = [ordered]@{
         'APPDATA'       = "$env:UserProfile\AppData\Roaming"
@@ -257,19 +257,32 @@ function winpe-RepairEnvironmentSession {
 function winpe-SetPowerShellProfile {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
-    Write-Host -ForegroundColor DarkGray "[▶] [$($MyInvocation.MyCommand.Name)]"
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Force
+    )
+    Write-Host -ForegroundColor Gray "[+] [$($MyInvocation.MyCommand.Name)]"
 
     if ($PROFILE.CurrentUserAllHosts -ne "$Home\profile.ps1") {
-        Write-Host -ForegroundColor Cyan "[→] Repair path for PowerShell Profile CurrentUserAllHosts"
-        $PROFILE.CurrentUserAllHosts = "$Home\profile.ps1"
-        Write-Host -ForegroundColor DarkGray "[>] $($PROFILE.CurrentUserAllHosts)"
+        if ($Force) {
+            $PROFILE.CurrentUserAllHosts = "$Home\profile.ps1"
+            Write-Host -ForegroundColor Cyan "[→] PowerShell Profile CurrentUserAllHosts Path updated to [$($PROFILE.CurrentUserAllHosts)]"
+        }
+        else {
+            Write-Host -ForegroundColor Yellow "[!] PowerShell Profile CurrentUserAllHosts Path is incorrectly set to [$($PROFILE.CurrentUserAllHosts)]"
+            return
+        }
     }
 
     if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Microsoft.PowerShell_profile.ps1") {
-        Write-Host -ForegroundColor Cyan "[→] Repair path for PowerShell Profile CurrentUserCurrentHost"
-        $PROFILE.CurrentUserCurrentHost = "$Home\Microsoft.PowerShell_profile.ps1"
-        Write-Host -ForegroundColor DarkGray "[>] $($PROFILE.CurrentUserCurrentHost)"
+        if ($Force) {
+            $PROFILE.CurrentUserCurrentHost = "$Home\Microsoft.PowerShell_profile.ps1"
+            Write-Host -ForegroundColor Cyan "[→] PowerShell Profile CurrentUserCurrentHost Path updated to [$($PROFILE.CurrentUserCurrentHost)]"
+        }
+        else {
+            Write-Host -ForegroundColor Yellow "[!] PowerShell Profile CurrentUserCurrentHost Path is incorrectly set to [$($PROFILE.CurrentUserCurrentHost)]"
+            return
+        }
     }
 
 
@@ -296,77 +309,29 @@ $registryPath | ForEach-Object {
 
             # Search for string 'OSDCloud by Recast Software' to determine if content already exists
             if ($existingContent -match 'OSDCloud by Recast Software') {
-                # Write-Host -ForegroundColor DarkGray "[✓] PowerShell Profile"
+                Write-Host -ForegroundColor DarkGray "[✓] PowerShell Profile contains OSDCloud update for new sessions"
                 return
             }
-
-            Write-Host -ForegroundColor Cyan "[→] Add to existing PowerShell Profile for AllUsersAllHosts"
-            Write-Host -ForegroundColor DarkGray "[>] $profilePath"
-            Write-Host -ForegroundColor DarkGray "[i] Resolves new environment variables added to Session Manager in the registry"
-            Add-Content -Path $profilePath -Value ("`r`n" + $winpePowerShellProfile) -Encoding Unicode -ErrorAction Stop
-        }
-        else {
-            Write-Host -ForegroundColor Cyan "[→] Create new PowerShell Profile for AllUsersAllHosts"
-            Write-Host -ForegroundColor DarkGray "[>] $profilePath"
-            Write-Host -ForegroundColor DarkGray "[i] Resolves new environment variables added to Session Manager in the registry"
-            if (-not (Test-Path $profileDir)) {
-                $null = New-Item -Path $profileDir -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-            }
-
-            $winpePowerShellProfile | Set-Content -Path $profilePath -Force -Encoding Unicode
-        }
-    }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] Set PowerShell Profile failed: $_"
-        throw
-    }
-}
-
-function winpe-SetPowerShellProfileOld {
-    [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
-
-    $winpePowerShellProfile = @'
-[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-[System.Environment]::SetEnvironmentVariable('APPDATA',"$env:UserProfile\AppData\Roaming",[System.EnvironmentVariableTarget]::Process)
-[System.Environment]::SetEnvironmentVariable('HOMEDRIVE',"$env:SystemDrive",[System.EnvironmentVariableTarget]::Process)
-[System.Environment]::SetEnvironmentVariable('HOMEPATH',"$env:UserProfile",[System.EnvironmentVariableTarget]::Process)
-[System.Environment]::SetEnvironmentVariable('LOCALAPPDATA',"$env:UserProfile\AppData\Local",[System.EnvironmentVariableTarget]::Process)
-'@
-
-    $profileDir = "$PSHome"
-    $profilePath = "$PSHome\profile.ps1"
-
-    try {
-        if (Test-Path -Path $profilePath) {
-            $existingContent = Get-Content -Path $profilePath -Raw -ErrorAction Stop
-            $linesToAdd = @()
-            
-            foreach ($line in $winpePowerShellProfile -split "`n") {
-                $trimmedLine = $line.Trim()
-                if ($trimmedLine -and -not ($existingContent -match [regex]::Escape($trimmedLine))) {
-                    $linesToAdd += $line
-                }
-            }
-            
-            if ($linesToAdd.Count -gt 0) {
-                Write-Host -ForegroundColor Cyan "[→] Set PowerShell Profile"
-                Write-Host -ForegroundColor DarkGray "[i] $profilePath"
-                Add-Content -Path $profilePath -Value ("`r`n" + ($linesToAdd -join "`r`n")) -Encoding Unicode -ErrorAction Stop
-            }
             else {
-                Write-Host -ForegroundColor DarkGray "[✓] PowerShell Profile"
+                Write-Host -ForegroundColor DarkGray "[✓] PowerShell Profile does not contain OSDCloud update for new sessions"
+            }
+
+            if ($Force) {
+                Write-Host -ForegroundColor Cyan "[→] Add to existing PowerShell Profile for AllUsersAllHosts"
+                Write-Host -ForegroundColor DarkGray "[i] Resolves new environment variables added to Session Manager in the registry"
+                Add-Content -Path $profilePath -Value ("`r`n" + $winpePowerShellProfile) -Encoding Unicode -ErrorAction Stop
             }
         }
         else {
-            Write-Host -ForegroundColor Cyan "[→] Set PowerShell Profile"
-            Write-Host -ForegroundColor DarkGray "[i] $profilePath"
-            if (-not (Test-Path $profileDir)) {
-                $null = New-Item -Path $profileDir -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+            Write-Host -ForegroundColor DarkGray "[✓] PowerShell Profile does not exist with OSDCloud update for new sessions"
+            if ($Force) {
+                Write-Host -ForegroundColor Cyan "[→] Create new PowerShell Profile for AllUsersAllHosts"
+                Write-Host -ForegroundColor DarkGray "[i] Resolves new environment variables added to Session Manager in the registry"
+                if (-not (Test-Path $profileDir)) {
+                    $null = New-Item -Path $profileDir -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+                }
+                $winpePowerShellProfile | Set-Content -Path $profilePath -Force -Encoding Unicode
             }
-
-            $winpePowerShellProfile | Set-Content -Path $profilePath -Force -Encoding Unicode
         }
     }
     catch {

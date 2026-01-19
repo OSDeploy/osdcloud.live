@@ -71,8 +71,8 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-RepairUserShellFolder -Force
     winpe-RepairEnvironmentRegistry -Force
     winpe-RepairEnvironmentSession -Force
+    winpe-SetPowerShellProfile -Force
     Pause
-    winpe-SetPowerShellProfile
     winpe-SetRealTimeClockUTC
     winpe-SetTimeServiceAutomatic
     winpe-InstallCurl
