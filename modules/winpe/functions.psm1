@@ -83,6 +83,7 @@ function winpe-RepairExecutionPolicy {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
+    Write-Host ""
 
     try {
         $currentPolicy = Get-ExecutionPolicy -ErrorAction Stop
@@ -101,7 +102,7 @@ function winpe-RepairExecutionPolicy {
 
     # Informational only
     if (-not ($Force)) {
-        Write-Host -ForegroundColor DarkYellow "[!] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor DarkGray "Execution Policy is set to $currentPolicy"
         Write-Host -ForegroundColor DarkGray "It is recommended that Execution Policy is set to Bypass in WinPE for proper scripting functionality"
         return
@@ -127,6 +128,7 @@ function winpe-RepairUserShellFolder {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
+    Write-Host ""
 
     $requiredFolders = @(
         "$env:ProgramFiles\WindowsPowerShell\Modules",
@@ -139,7 +141,6 @@ function winpe-RepairUserShellFolder {
         "$env:SystemRoot\system32\WindowsPowerShell\v1.0\Scripts"
     )
 
-    # Test if all the folders exist and return a 1 if any are missing
     $repair = $false
     foreach ($folder in $requiredFolders) {
         if (-not (Test-Path -Path $folder)) {
@@ -148,32 +149,43 @@ function winpe-RepairUserShellFolder {
         }
     }
 
+    # No repair needed
     if (-not $repair) {
         Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor DarkGray "All required User Shell Folders exist"
         return
     }
 
-    foreach ($item in $requiredFolders) {
-        if (Test-Path -Path $item) {
-            # Write-Host -ForegroundColor DarkGray "[✓] User Shell Folder [$item]"
-            continue
-        }
+    # Informational only
+    if (-not ($Force)) {
+        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "One or more required User Shell Folders are missing:"
+        foreach ($item in $requiredFolders) {
+            if (Test-Path -Path $item) {
+                continue
+            }
 
-        if (-not ($Force)) {
-            Write-Host -ForegroundColor Yellow "[!] User Shell Folder [$item] is missing"
-            continue
+            Write-Host -ForegroundColor DarkGray "Inform: $item"
         }
+    }
 
-        # Repair
-        try {
-            Write-Host -ForegroundColor DarkCyan "[→] User Shell Folder [$item] repaired"
-            $null = New-Item -Path $item -ItemType Directory -Force -ErrorAction Stop
-        }
-        catch {
-            Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
-            Write-Host -ForegroundColor Red $_
-            throw
+    # Repair
+    if ($Force) {
+        Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
+        foreach ($item in $requiredFolders) {
+            if (Test-Path -Path $item) {
+                continue
+            }
+
+            try {
+                Write-Host -ForegroundColor DarkGray "Repair: $item"
+                $null = New-Item -Path $item -ItemType Directory -Force -ErrorAction Stop
+            }
+            catch {
+                Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+                Write-Host -ForegroundColor Red $_
+                throw
+            }
         }
     }
 }
@@ -185,6 +197,8 @@ function winpe-RepairEnvironmentRegistry {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
+    Write-Host ""
+
     Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
 
     $registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
@@ -232,6 +246,7 @@ function winpe-RepairEnvironmentSession {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
+    Write-Host ""
     Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
 
     $requiredEnvironment = [ordered]@{
@@ -288,6 +303,7 @@ function winpe-RepairPowerShellProfile {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
+    Write-Host ""
     Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
 
     if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\profile.ps1") {

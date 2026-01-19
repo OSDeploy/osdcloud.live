@@ -67,19 +67,12 @@ Write-Host -ForegroundColor DarkGray "[✓] $ScriptName $ScriptVersion ($Windows
 if ($WindowsPhase -eq 'WinPE') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
     # winpe-RepairTls
-    Write-Host ""
     winpe-RepairExecutionPolicy -Force
-    Write-Host ""
     winpe-RepairUserShellFolder -Force
-    Write-Host ""
     winpe-RepairEnvironmentRegistry -Force
-    Write-Host ""
     winpe-RepairEnvironmentSession -Force
-    Write-Host ""
     winpe-RepairPowerShellProfile -Force
-    Write-Host ""
     winpe-RepairRealTimeClockUTC -Force
-    Write-Host ""
     winpe-RepairTimeService -Force
     Pause
     winpe-InstallCurl
