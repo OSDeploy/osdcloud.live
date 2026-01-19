@@ -263,9 +263,9 @@ function winpe-RepairPowerShellProfile {
     )
     Write-Host -ForegroundColor DarkGray "[+] $($MyInvocation.MyCommand.Name)"
 
-    if ($PROFILE.CurrentUserAllHosts -ne "$Home\profile.ps1") {
+    if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\profile.ps1") {
         if ($Force) {
-            $PROFILE.CurrentUserAllHosts = "$Home\profile.ps1"
+            $PROFILE.CurrentUserAllHosts = "$Home\Documents\profile.ps1"
             Write-Host -ForegroundColor DarkCyan "[→] PowerShell Profile CurrentUserAllHosts Path updated to [$($PROFILE.CurrentUserAllHosts)]"
         }
         else {
@@ -274,9 +274,9 @@ function winpe-RepairPowerShellProfile {
         }
     }
 
-    if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Microsoft.PowerShell_profile.ps1") {
+    if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\Microsoft.PowerShell_profile.ps1") {
         if ($Force) {
-            $PROFILE.CurrentUserCurrentHost = "$Home\Microsoft.PowerShell_profile.ps1"
+            $PROFILE.CurrentUserCurrentHost = "$Home\Documents\Microsoft.PowerShell_profile.ps1"
             Write-Host -ForegroundColor DarkCyan "[→] PowerShell Profile CurrentUserCurrentHost Path updated to [$($PROFILE.CurrentUserCurrentHost)]"
         }
         else {
@@ -381,44 +381,43 @@ function winpe-RepairTimeService {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host -ForegroundColor DarkGray "[+] $($MyInvocation.MyCommand.Name)"
+    Write-Host -ForegroundColor Cyan "[+] $($MyInvocation.MyCommand.Name)"
 
-    # Time Service StartType should be Automatic
     try {
         # Can we connect to Time Service?
         $w32timeService = Get-Service -Name w32time -ErrorAction Stop
-
-        # Is the Time Service set to Automatic?
-        if ($w32timeService.StartType -eq 'Automatic') {
-            Write-Host -ForegroundColor DarkGray "[✓] Time Service StartType is set to [Automatic]"
-        }
-        else {
-            Write-Host -ForegroundColor Yellow "[!] Time Service StartType is NOT set to [Automatic]"
-
-            # Repair
-            if ($Force) {
-                Set-Service -Name w32time -StartupType Automatic -ErrorAction Stop
-                Write-Host -ForegroundColor DarkCyan "[→] Time Service StartType has been set to [Automatic]"
-            }
-        }
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name) failed: $_"
         throw
     }
 
-    # Time Service should be Running
+    # Is the Time Service set to Automatic?
+    if ($w32timeService.StartType -eq 'Automatic') {
+        Write-Host -ForegroundColor DarkGray "[✓] Time Service StartType is set to Automatic"
+    }
+    else {
+        Write-Host -ForegroundColor DarkYellow "[!] Time Service StartType is NOT set to Automatic"
+    }
+
+    # Repair
+    if ($Force -and $w32timeService.StartType -ne 'Automatic') {
+        Set-Service -Name w32time -StartupType Automatic -ErrorAction Stop
+        Write-Host -ForegroundColor DarkCyan "[→] Time Service StartType has been set to Automatic"
+    }
+
+    # Is the Time Service running?
     try {
         $w32timeService = Get-Service -Name w32time -ErrorAction Stop
         if ($w32timeService.Status -eq 'Running') {
-            Write-Host -ForegroundColor DarkGray "[✓] Time Service Status is [Running]"
+            Write-Host -ForegroundColor DarkGray "[✓] Time Service is [Running]"
             if ($Force) {
                 Restart-Service -Name w32time -ErrorAction Stop
                 Write-Host -ForegroundColor DarkCyan "[→] Time Service is being restarted"
             }
         }
-        if ($w32timeService.Status -ne 'Running') {
-            Write-Host -ForegroundColor DarkGray "[✓] Time Service Status is NOT [Running]"
+        else {
+            Write-Host -ForegroundColor Yellow "[!] Time Service is NOT [Running]"
             if ($Force) {
                 Start-Service -Name w32time -ErrorAction Stop
                 Write-Host -ForegroundColor DarkCyan "[→] Time Service is being started"
