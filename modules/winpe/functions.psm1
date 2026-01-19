@@ -144,7 +144,7 @@ function winpe-RepairRegistryEnvironment {
 
     $registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
 
-    $requiredVariables = [ordered]@{
+    $requiredEnvironment = [ordered]@{
         'APPDATA'       = "$env:UserProfile\AppData\Roaming"
         'HOMEDRIVE'     = "$env:SystemDrive"
         'HOMEPATH'      = "\windows\system32\config\systemprofile"
@@ -152,7 +152,7 @@ function winpe-RepairRegistryEnvironment {
         'USERPROFILE'   = "$env:UserProfile"
     }
 
-    foreach ($item in $requiredVariables.GetEnumerator()) {
+    foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
 
@@ -188,9 +188,46 @@ function winpe-RepairSessionEnvironment {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
+
+    $requiredEnvironment = [ordered]@{
+        'APPDATA'       = "$env:UserProfile\AppData\Roaming"
+        'HOMEDRIVE'     = "$env:SystemDrive"
+        'HOMEPATH'      = "\windows\system32\config\systemprofile"
+        'LOCALAPPDATA'  = "$env:UserProfile\AppData\Local"
+        'USERPROFILE'   = "$env:UserProfile"
+    }
+
+    foreach ($item in $requiredEnvironment.GetEnumerator()) {
+        $name = $item.Key
+        $value = $item.Value
+
+        $existingValue = Get-Item env:$name -ErrorAction Ignore
+
+        if ($existingValue -eq $value) {
+            Write-Host -ForegroundColor DarkGray "[✓] Session Environment Variable [$name]"
+            continue
+        }
+
+        if (-not ($Force)) {
+            Write-Host -ForegroundColor Yellow "[!] Session Environment Variable [$name] is not set to [$value]"
+            continue
+        }
+
+        try {
+            Write-Host -ForegroundColor Cyan "[→] Session Environment Variable [$name] set to [$value]"
+            Set-Item -Path "env:$name" -Value $value -ErrorAction Stop
+        }
+        catch {
+            Write-Host -ForegroundColor Red "[✗] Session Environment Variable [$name] repair failed: $_"
+            throw
+        }
+    }
+
+
+
+
+
     <#
-
-
     # Check if environment variables are already set
     $envVarsSet = (Get-Item env:LOCALAPPDATA -ErrorAction Ignore) -and 
                   (Get-Item env:APPDATA -ErrorAction Ignore) -and
