@@ -83,17 +83,24 @@ function winpe-RepairExecutionPolicy {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host -ForegroundColor DarkGray "$($MyInvocation.MyCommand.Name)"
-    
-    $currentPolicy = Get-ExecutionPolicy
 
+    try {
+        $currentPolicy = Get-ExecutionPolicy -ErrorAction Stop
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name) failed: $_"
+        throw
+    }
+    
     if ($currentPolicy -eq 'Bypass') {
+        Write-Host -ForegroundColor DarkGray "$($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor DarkGray "[✓] Execution Policy is set to Bypass"
         return
     }
 
     # Informational only
     if (-not ($Force)) {
+        Write-Host -ForegroundColor Gray "$($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor DarkGray "[!] Execution Policy is set to $currentPolicy"
         Write-Host -ForegroundColor DarkGray "[i] It is recommended that Execution Policy is set to Bypass in WinPE for proper scripting functionality"
         return
@@ -101,6 +108,7 @@ function winpe-RepairExecutionPolicy {
 
     # Repair
     try {
+        Write-Host -ForegroundColor Cyan "$($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor DarkCyan "[→] Set-ExecutionPolicy -ExecutionPolicy Bypass -Force"
         Set-ExecutionPolicy -ExecutionPolicy Bypass -Force -ErrorAction Stop
     }
