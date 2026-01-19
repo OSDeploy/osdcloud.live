@@ -113,7 +113,7 @@ function winpe-RepairExecutionPolicy {
     # Repair
     try {
         Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkCyan "Set-ExecutionPolicy -ExecutionPolicy Bypass -Force"
+        Write-Host -ForegroundColor DarkGray "Set-ExecutionPolicy -ExecutionPolicy Bypass -Force"
         Set-ExecutionPolicy -ExecutionPolicy Bypass -Force -ErrorAction Stop
     }
     catch {
@@ -372,6 +372,9 @@ function winpe-RepairPowerShellProfile {
         $Force
     )
     Write-Host ""
+    
+    $profileDir = $PSHome
+    $profilePath = Join-Path -Path $PSHome -ChildPath 'profile.ps1'
 
     # Test if a repair is needed
     $needsProfileRepair = $false
@@ -449,9 +452,6 @@ $registryPath | ForEach-Object {
 }
 '@
 
-    $profileDir = "$PSHome"
-    $profilePath = "$PSHome\profile.ps1"
-
     try {
         if (Test-Path -Path $profilePath) {
             Write-Host -ForegroundColor DarkGray "Add to existing PowerShell Profile for AllUsersAllHosts"
@@ -482,29 +482,33 @@ function winpe-RepairRealTimeClockUTC {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
+    Write-Host ""
 
     # Test if RealTimeIsUniversal is already set
     $realTimeIsUniversal = Get-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -ErrorAction SilentlyContinue
 
     if ($realTimeIsUniversal -and ($realTimeIsUniversal.RealTimeIsUniversal -eq 1)) {
-        Write-Host -ForegroundColor DarkGray "[✓] RealTime Clock is set to [UTC]"
+        Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "RealTime Clock is set to UTC"
         return
     }
 
+    # Warning only
     if (-not ($Force)) {
-        Write-Host -ForegroundColor DarkGray "[!] RealTime Clock is NOT set to [UTC]"
+        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "RealTime Clock is NOT set to UTC"
         return
     }
 
     # Repair
-    
+    Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
     try {
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -Value 1 -Type DWord -ErrorAction Stop
-        Write-Host -ForegroundColor DarkCyan "[→] Set RealTime Clock to [UTC]"
+        Write-Host -ForegroundColor DarkGray "RealTime Clock is set to UTC"
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] Set RealTime Clock to [UTC] failed: $_"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red $_
         throw
     }
 }
