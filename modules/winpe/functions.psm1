@@ -8,17 +8,19 @@ environment variables, package management, and tool installation.
 
 Recommended execution order for initial setup:
     1. winpe-RepairExecutionPolicy
-    2. winpe-RepairEnvironmentRegistry
-    3. winpe-SetPowerShellProfile
-    4. winpe-SetRealTimeClockUTC
-    5. winpe-SetTimeServiceAutomatic
-    6. winpe-InstallCurl
-    7. winpe-InstallPackageProviderNuget
-    8. winpe-InstallNuGet
-    9. winpe-UpdatePackageManagement
-    10. winpe-UpdatePowerShellGet
-    11. winpe-TrustPSGallery
-    12. winpe-InstallAzCopy
+    2. winpe-RepairUserShellFolder
+    3. winpe-RepairEnvironmentRegistry
+    4. winpe-RepairEnvironmentSession
+    5. winpe-SetPowerShellProfile
+    6. winpe-SetRealTimeClockUTC
+    7. winpe-SetTimeServiceAutomatic
+    8. winpe-InstallCurl
+    9. winpe-InstallPackageProviderNuget
+    10. winpe-InstallNuGet
+    11. winpe-UpdatePackageManagement
+    12. winpe-UpdatePowerShellGet
+    13. winpe-TrustPSGallery
+    14. winpe-InstallAzCopy
 
 Additional functions (can be run after the core setup above):
     - winpe-InstallPowerShellModule -Name <ModuleName>
@@ -212,10 +214,16 @@ function winpe-RepairEnvironmentSession {
         $name = $item.Key
         $value = $item.Value
 
-        $currentValue = Get-Item "env:$name" -ErrorAction Ignore
+        try {
+            $currentValue = Get-Item "env:$name" -ErrorAction Stop | Select-Object -ExpandProperty Value
+        }
+        catch {
+            Write-Host -ForegroundColor Yellow "[!] Session Environment Variable [$name] should be set to [$value] but does not exist"
+            continue
+        }
 
         if ($currentValue -match $value) {
-            Write-Host -ForegroundColor DarkGray "[✓] Session Environment Variable [$name]"
+            Write-Host -ForegroundColor DarkGray "[✓] Session Environment Variable [$name] is set to [$value]"
             continue
         }
 
@@ -233,10 +241,6 @@ function winpe-RepairEnvironmentSession {
             throw
         }
     }
-
-
-
-
 
     <#
     # Check if environment variables are already set
