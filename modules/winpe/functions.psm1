@@ -7,7 +7,7 @@ Functions for configuring the Windows PE environment, including execution policy
 environment variables, package management, and tool installation.
 
 Recommended execution order for initial setup:
-    1. winpe-TestExecutionPolicy
+    1. winpe-RepairExecutionPolicy
     2. winpe-SetEnvironmentVariable
     3. winpe-SetPowerShellProfile
     4. winpe-SetRealTimeClockUTC
@@ -30,50 +30,36 @@ Functions are designed to be idempotent and can be safely re-run.
 Most functions will skip if the target is already configured/installed.
 #>
 
-function winpe-RequiredFolders {
+function winpe-RepairTls {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
-        $Repair
+        $Force
     )
 
-    $requiredFolders = @(
-        "$env:UserProfile\AppData\Local",
-        "$env:UserProfile\AppData\Roaming",
-        "$env:UserProfile\Desktop",
-        "$env:UserProfile\Documents\WindowsPowerShell"
-    )
-
-    foreach ($folder in $requiredFolders) {
-        if (Test-Path -Path $folder) {
-            Write-Host -ForegroundColor DarkGray "[✓] Required Folder: $folder"
-            continue
-        }
-
-        Write-Host -ForegroundColor Yellow "[!] Missing Required Folder: $folder"
-        if ($Repair) {
-            try {
-                Write-Host -ForegroundColor Cyan "[→] Repair Required Folder [$folder]"
-                $null = New-Item -Path $folder -ItemType Directory -Force -ErrorAction Stop
-            }
-            catch {
-                Write-Host -ForegroundColor Red "[✗] Repair Required Folder [$folder] failed: $_"
-                throw
-            }
-        }
+    $SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol
+    if ($SecurityProtocol -band [Net.SecurityProtocolType]::Tls12) {
+        Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security (TLS) 1.2"
+        return
+    }
+    try {
+        Write-Host -ForegroundColor Cyan "[→] Transport Layer Security (TLS) 1.2"
+        [Net.ServicePointManager]::SecurityProtocol = $SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+        Write-Host -ForegroundColor DarkGray "[>] [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12"
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] Transport Layer Security (TLS) 1.2 failed: $_"
+        throw
     }
 }
 
-function winpe-TestExecutionPolicy {
+function winpe-RepairExecutionPolicy {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
-        $Repair,
-
-        [System.Management.Automation.SwitchParameter]
-        $Interactive
+        $Force
     )
 
     # Default behavior: Test only (report status and exit)
@@ -114,6 +100,43 @@ function winpe-TestExecutionPolicy {
         throw
     }
 }
+
+function winpe-RepairRequiredFolders {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Force
+    )
+
+    $requiredFolders = @(
+        "$env:UserProfile\AppData\Local",
+        "$env:UserProfile\AppData\Roaming",
+        "$env:UserProfile\Desktop",
+        "$env:UserProfile\Documents\WindowsPowerShell"
+    )
+
+    foreach ($folder in $requiredFolders) {
+        if (Test-Path -Path $folder) {
+            Write-Host -ForegroundColor DarkGray "[✓] Required Folder: $folder"
+            continue
+        }
+
+        Write-Host -ForegroundColor Yellow "[!] Missing Required Folder: $folder"
+        if ($Force) {
+            try {
+                Write-Host -ForegroundColor Cyan "[→] Repair Required Folder [$folder]"
+                $null = New-Item -Path $folder -ItemType Directory -Force -ErrorAction Stop
+            }
+            catch {
+                Write-Host -ForegroundColor Red "[✗] Repair Required Folder [$folder] failed: $_"
+                throw
+            }
+        }
+    }
+}
+
+
 
 function winpe-SetEnvironmentVariable {
     [CmdletBinding()]

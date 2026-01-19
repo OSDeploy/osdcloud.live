@@ -57,32 +57,39 @@ $isElevated = ([Security.Principal.WindowsPrincipal] [Security.Principal.Windows
 Write-Host -ForegroundColor DarkGray "[✓] $ScriptName $ScriptVersion ($WindowsPhase)"
 #endregion
 
-#region Admin Elevation
-#endregion
-
-#region Transport Layer Security (TLS) 1.2
-Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [TLS 1.2]"
-# Write-Host -ForegroundColor DarkGray "[✓] [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12"
-[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-#endregion
-
 #region WinPE
 if ($WindowsPhase -eq 'WinPE') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
-    winpe-TestExecutionPolicy
-    winpe-RequiredFolders
+    winpe-RepairTls
+    Pause
+    winpe-RepairExecutionPolicy
+    Pause
+    winpe-RepairRequiredFolders
+    Pause
     winpe-SetEnvironmentVariable
+    Pause
     winpe-SetPowerShellProfile
+    Pause
     winpe-SetRealTimeClockUTC
+    Pause
     winpe-SetTimeServiceAutomatic
+    Pause
     winpe-InstallCurl
+    Pause
     winpe-InstallPackageManagement
+    Pause
     winpe-InstallPackageProviderNuGet
+    Pause
     winpe-InstallNuGet
+    Pause
     winpe-UpdatePackageManagement
+    Pause
     winpe-UpdatePowerShellGet
+    Pause
     winpe-TrustPSGallery
+    Pause
     winpe-InstallAzCopy
+    Pause
     # winpe-InstallPowerShellModule -Name OSD
     # winpe-InstallPowerShellModule -Name OSDCloud
     if (-not (Get-Command 'curl.exe' -ErrorAction SilentlyContinue)) {
@@ -105,6 +112,9 @@ if ($WindowsPhase -eq 'WinPE') {
 
 #region Specialize
 if ($WindowsPhase -eq 'Specialize') {
+    Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [TLS 1.2]"
+    # Write-Host -ForegroundColor DarkGray "[✓] [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12"
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
     Invoke-Expression -Command (Invoke-RestMethod -Uri https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/specialize/functions.ps1)
     $null = Stop-Transcript -ErrorAction Ignore
 }
@@ -112,6 +122,9 @@ if ($WindowsPhase -eq 'Specialize') {
 
 #region AuditMode
 if ($WindowsPhase -eq 'AuditMode') {
+    Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [TLS 1.2]"
+    # Write-Host -ForegroundColor DarkGray "[✓] [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12"
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
     Invoke-Expression -Command (Invoke-RestMethod -Uri https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/auditmode/functions.ps1)
     $null = Stop-Transcript -ErrorAction Ignore
 }
@@ -119,6 +132,9 @@ if ($WindowsPhase -eq 'AuditMode') {
 
 #region OOBE
 if ($WindowsPhase -eq 'OOBE') {
+    Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [TLS 1.2]"
+    # Write-Host -ForegroundColor DarkGray "[✓] [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12"
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
     if ($isElevated) {
         Write-Host -ForegroundColor Green "[✓] Running as $whoiam (Admin Elevated)"
     }
@@ -132,6 +148,9 @@ if ($WindowsPhase -eq 'OOBE') {
 
 #region Windows
 if ($WindowsPhase -eq 'Windows') {
+    Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [TLS 1.2]"
+    # Write-Host -ForegroundColor DarkGray "[✓] [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12"
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
     if ($isElevated) {
         Write-Host -ForegroundColor Green "[✓] Running as $whoiam (Admin Elevated)"
     }
