@@ -60,11 +60,10 @@ Write-Host -ForegroundColor DarkGray "[✓] $ScriptName $ScriptVersion ($Windows
 #region WinPE
 if ($WindowsPhase -eq 'WinPE') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
-    winpe-RepairTls -Force
-    winpe-RepairExecutionPolicy -Force
-    winpe-RepairUserShellFolder -Force
+    winpe-RepairTls
+    winpe-RepairExecutionPolicy
+    winpe-RepairUserShellFolder
     winpe-RepairEnvironmentRegistry
-    Pause
     winpe-RepairEnvironmentSession
     Pause
     winpe-SetPowerShellProfile

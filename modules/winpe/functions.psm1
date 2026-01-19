@@ -180,7 +180,6 @@ function winpe-RepairEnvironmentRegistry {
     }
 }
 
-
 function winpe-RepairEnvironmentSession {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
