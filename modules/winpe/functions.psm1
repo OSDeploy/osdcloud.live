@@ -9,8 +9,8 @@ environment variables, package management, and tool installation.
 Recommended execution order for initial setup:
     1. winpe-RepairExecutionPolicy
     2. winpe-RepairUserShellFolder
-    3. winpe-RepairEnvironmentRegistry
-    4. winpe-RepairEnvironmentSession
+    3. winpe-RepairRegistryEnvironment
+    4. winpe-RepairSessionEnvironment
     5. winpe-RepairPowerShellProfile
     6. winpe-RepairRealTimeClockUTC
     7. winpe-RepairTimeService
@@ -192,7 +192,7 @@ function winpe-RepairUserShellFolder {
     }
 }
 
-function winpe-RepairEnvironmentRegistry {
+function winpe-RepairRegistryEnvironment {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
@@ -200,10 +200,8 @@ function winpe-RepairEnvironmentRegistry {
         $Force
     )
     Write-Host ""
-    Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
 
     $registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
-
     $requiredEnvironment = [ordered]@{
         'APPDATA'       = "$env:UserProfile\AppData\Roaming"
         'HOMEDRIVE'     = "$env:SystemDrive"
@@ -226,6 +224,13 @@ function winpe-RepairEnvironmentRegistry {
         }
     }
 
+    # Success
+    if (-not $needsRepair) {
+        Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "All required Environment variables exist in the Registry"
+        return
+    }
+
     # Warning only
     if (-not ($Force)) {
         Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
@@ -237,7 +242,7 @@ function winpe-RepairEnvironmentRegistry {
             $currentValue = (Get-ItemProperty -Path $registryPath -Name $name -ErrorAction SilentlyContinue).$name
 
             if ($currentValue -ne $value) {
-                Write-Host -ForegroundColor DarkGray "[$name] should be set to [$value]"
+                Write-Host -ForegroundColor DarkGray "$name = $value"
             }
         }
         return
@@ -246,7 +251,7 @@ function winpe-RepairEnvironmentRegistry {
     # Repair
     if ($Force) {
         Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "One or more required Environment variables are missing from the Registry:"
+        Write-Host -ForegroundColor DarkGray "Adding missing Environment variables to the Registry:"
         foreach ($item in $requiredEnvironment.GetEnumerator()) {
             $name = $item.Key
             $value = $item.Value
@@ -255,7 +260,7 @@ function winpe-RepairEnvironmentRegistry {
 
             if ($currentValue -ne $value) {
                 try {
-                    Write-Host -ForegroundColor DarkGray "[$name] is set to [$value]"
+                    Write-Host -ForegroundColor DarkGray "$name = $value"
                     Set-ItemProperty -Path $registryPath -Name $name -Value $value -Force -ErrorAction Stop
                 }
                 catch {
@@ -268,7 +273,7 @@ function winpe-RepairEnvironmentRegistry {
     }
 }
 
-function winpe-RepairEnvironmentSession {
+function winpe-RepairSessionEnvironment {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
@@ -283,6 +288,32 @@ function winpe-RepairEnvironmentSession {
         'HOMEDRIVE'     = "$env:SystemDrive"
         'HOMEPATH'      = "\windows\system32\config\systemprofile"
         'LOCALAPPDATA'  = "$env:UserProfile\AppData\Local"
+    }
+
+    # Test if a repair is needed
+    $needsRepair = $false
+    foreach ($item in $requiredEnvironment.GetEnumerator()) {
+        $name = $item.Key
+        $value = $item.Value
+
+        try {
+            $currentValue = Get-Item "env:$name" -ErrorAction Stop | Select-Object -ExpandProperty Value
+        }
+        catch {
+            $currentValue = $null
+        }
+
+        if ($currentValue -ne $value) {
+            $needsRepair = $true
+            break
+        }
+    }
+
+    # Success
+    if (-not $needsRepair) {
+        Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "All required Environment variables exist in the current PowerShell Session"
+        return
     }
 
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
@@ -315,7 +346,7 @@ function winpe-RepairEnvironmentSession {
 
         # Repair
         try {
-            Write-Host -ForegroundColor DarkCyan "[→] Session Environment [$name] set to [$value]"
+            Write-Host -ForegroundColor DarkGray "[→] Session Environment [$name] set to [$value]"
             Set-Item -Path "env:$name" -Value $value -ErrorAction Stop
         }
         catch {
