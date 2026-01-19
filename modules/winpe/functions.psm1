@@ -224,7 +224,7 @@ function winpe-RepairEnvironmentSession {
         if (-not $currentValue) {
             Write-Host -ForegroundColor Yellow "[!] Session Environment Variable [$name] should be set to [$value] but does not exist"
         }
-        elseif ($currentValue -match $value) {
+        elseif ($currentValue -eq $value) {
             Write-Host -ForegroundColor DarkGray "[✓] Session Environment Variable [$name] is set to [$value]"
             continue
         }
