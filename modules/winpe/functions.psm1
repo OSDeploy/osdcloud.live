@@ -416,7 +416,7 @@ function winpe-RepairPowerShellProfile {
             }
         }
         if ($needsProfileCreated) {
-            Write-Host -ForegroundColor DarkGray "PowerShell Profile does not contain OSDCloud update for new sessions"
+            Write-Host -ForegroundColor DarkGray "PowerShell Profile requires a solution to enable registry environment variables in new sessions"
         }
         return
     }
@@ -520,57 +520,73 @@ function winpe-RepairTimeService {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
+    Write-Host ""
+
+    # Can we connect to Time Service?
+    try {
+        $w32timeService = Get-Service -Name w32time -ErrorAction Stop
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red $_
+        throw
+    }
+
+    # Test if the Time Service is correctly configured
+    if (($w32timeService.StartType -eq 'Automatic') -and ($w32timeService.Status -eq 'Running')) {
+        Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "Time Service is set to Automatic and Running"
+        return
+    }
+
+    # Warning
+    if (-not ($Force)) {
+        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+        if ($w32timeService.StartType -ne 'Automatic') {
+            Write-Host -ForegroundColor DarkGray "Time Service StartType is NOT set to Automatic"
+        }
+        if ($w32timeService.Status -ne 'Running') {
+            Write-Host -ForegroundColor DarkGray "Time Service is NOT Running"
+        }
+        return
+    }
+
+    # Repair
     Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
 
-    # Time Service StartType
-    try {
-        # Can we connect to Time Service?
-        $w32timeService = Get-Service -Name w32time -ErrorAction Stop
-
-        # Is the Time Service set to Automatic?
-        if ($w32timeService.StartType -eq 'Automatic') {
-            Write-Host -ForegroundColor DarkGray "[✓] Time Service StartType is set to Automatic"
-        }
-        else {
-            Write-Host -ForegroundColor DarkGray "[!] Time Service StartType is NOT set to Automatic"
-        }
-
-        # Repair
-        if ($Force -and $w32timeService.StartType -ne 'Automatic') {
+    if ($w32timeService.StartType -ne 'Automatic') {
+        try {
             Set-Service -Name w32time -StartupType Automatic -ErrorAction Stop
-            Write-Host -ForegroundColor DarkCyan "[→] Time Service StartType has been set to Automatic"
+            Write-Host -ForegroundColor DarkGray "Time Service StartType has been set to Automatic"
+        }
+        catch {
+            Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+            Write-Host -ForegroundColor Red $_
+            throw
         }
     }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name) failed: $_"
-        throw
-    }
 
-    # Time Service Status
-    try {
-        # Can we connect to Time Service?
-        $w32timeService = Get-Service -Name w32time -ErrorAction Stop
-
-        # Is the Time Service Running?
-        if ($w32timeService.Status -eq 'Running') {
-            Write-Host -ForegroundColor DarkGray "[✓] Time Service is Running (but should be restarted)"
-
-            if ($Force) {
-                Restart-Service -Name w32time -ErrorAction Stop
-                Write-Host -ForegroundColor DarkCyan "[→] Time Service is being restarted"
-            }
+    if ($w32timeService.Status -eq 'Running') {
+        Write-Host -ForegroundColor DarkGray "Time Service is being restarted"
+        try {
+            Restart-Service -Name w32time -ErrorAction Stop
         }
-        else {
-            Write-Host -ForegroundColor DarkGray "[!] Time Service is NOT Running, and should be started"
-            if ($Force) {
-                Start-Service -Name w32time -ErrorAction Stop
-                Write-Host -ForegroundColor DarkCyan "[→] Time Service is being started"
-            }
+        catch {
+            Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+            Write-Host -ForegroundColor Red $_
+            throw
         }
     }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name) failed: $_"
-        throw
+    else {
+        Write-Host -ForegroundColor DarkGray "Time Service is being started"
+        try {
+            Start-Service -Name w32time -ErrorAction Stop
+        }
+        catch {
+            Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+            Write-Host -ForegroundColor Red $_
+            throw
+        }
     }
 }
 
@@ -581,6 +597,7 @@ function winpe-InstallCurl {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
+    Write-Host ""
     Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
 
     $curlPath = "$env:SystemRoot\System32\curl.exe"
