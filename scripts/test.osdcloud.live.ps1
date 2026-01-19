@@ -64,6 +64,7 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-RepairExecutionPolicy
     winpe-RepairUserShellFolder
     winpe-RepairRegistryEnvironment
+    winpe-RepairSessionEnvironment
     Pause
     winpe-SetPowerShellProfile
     Pause

@@ -177,34 +177,18 @@ function winpe-RepairRegistryEnvironment {
             Write-Host -ForegroundColor Red "[✗] Registry Environment Variable [$name] repair failed: $_"
             throw
         }
-    }   
+    }
+}
 
 
+function winpe-RepairSessionEnvironment {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Force
+    )
     <#
-    $registryVarsSet = (Get-ItemProperty -Path $registryPath -Name 'LOCALAPPDATA' -ErrorAction SilentlyContinue) -and
-                       (Get-ItemProperty -Path $registryPath -Name 'APPDATA' -ErrorAction SilentlyContinue) -and
-                       (Get-ItemProperty -Path $registryPath -Name 'HOMEDRIVE' -ErrorAction SilentlyContinue) -and
-                       (Get-ItemProperty -Path $registryPath -Name 'HOMEPATH' -ErrorAction SilentlyContinue)
-
-    if ($registryVarsSet) {
-        Write-Host -ForegroundColor DarkGray "[✓] Registry Environment Variables [APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA]"
-        return
-    }
-    else {
-        # Set in registry for persistence
-        try {
-            
-            Write-Host -ForegroundColor Cyan "[→] Registry Environment Variables [APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA]"
-            Set-ItemProperty -Path $registryPath -Name 'APPDATA' -Value "$env:UserProfile\AppData\Roaming" -Force -ErrorAction Stop
-            Set-ItemProperty -Path $registryPath -Name 'HOMEDRIVE' -Value "$env:SystemDrive" -Force -ErrorAction Stop
-            Set-ItemProperty -Path $registryPath -Name 'HOMEPATH' -Value "$env:UserProfile" -Force -ErrorAction Stop
-            Set-ItemProperty -Path $registryPath -Name 'LOCALAPPDATA' -Value "$env:UserProfile\AppData\Local" -Force -ErrorAction Stop
-        }
-        catch {
-            Write-Host -ForegroundColor Red "[✗] Registry Environment Variables failed: $_"
-            throw
-        }
-    }
 
 
     # Check if environment variables are already set
