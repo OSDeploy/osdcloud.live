@@ -173,7 +173,7 @@ function winpe-RepairUserShellFolder {
 
     # Repair
     if ($Force) {
-        Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
         foreach ($item in $requiredFolders) {
             if (Test-Path -Path $item) {
                 continue
@@ -249,7 +249,7 @@ function winpe-RepairRegistryEnvironment {
     }
 
     # Repair
-    Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
+    Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
     Write-Host -ForegroundColor DarkGray "Adding missing Environment variables to the Registry:"
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
@@ -336,7 +336,7 @@ function winpe-RepairSessionEnvironment {
     }
 
     #Repair
-    Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
+    Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
     Write-Host -ForegroundColor DarkGray "Adding missing Environment variables to the current PowerShell Session:"
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
@@ -422,7 +422,7 @@ function winpe-RepairPowerShellProfile {
     }
 
     # Repair
-    Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
+    Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
     if ($needsProfileRepair) {
         Write-Host -ForegroundColor DarkGray "Updating PowerShell Profile paths:"
         if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\profile.ps1") {
@@ -501,7 +501,7 @@ function winpe-RepairRealTimeClockUTC {
     }
 
     # Repair
-    Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
+    Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
     try {
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -Value 1 -Type DWord -ErrorAction Stop
         Write-Host -ForegroundColor DarkGray "RealTime Clock is set to UTC"
@@ -552,7 +552,7 @@ function winpe-RepairTimeService {
     }
 
     # Repair
-    Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
+    Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
 
     if ($w32timeService.StartType -ne 'Automatic') {
         try {
@@ -598,27 +598,34 @@ function winpe-InstallCurl {
         $Force
     )
     Write-Host ""
-    Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
 
     $curlPath = "$env:SystemRoot\System32\curl.exe"
-    
-    if ($Force) {
-        Write-Host -ForegroundColor DarkCyan "[→] Install Curl -Force"
-    }
-    elseif (Test-Path $curlPath) {
+
+    # Test if Curl is already installed
+    if (Test-Path $curlPath) {
         $curl = Get-Item -Path $curlPath
-        Write-Host -ForegroundColor DarkGray "[✓] Curl [$($curl.VersionInfo.FileVersion)]"
+        Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "Curl [$($curl.VersionInfo.FileVersion)] is installed at $curlPath"
         return
     }
 
+    # Warning only
+    if (-not ($Force)) {
+        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "Curl is NOT installed at $curlPath"
+        return
+    }
+
+    # Repair
+
     try {
-        Write-Host -ForegroundColor DarkCyan "[→] Install Curl"
+        Write-Host -ForegroundColor DarkCyan "[→] $($MyInvocation.MyCommand.Name)"
         $tempZip = "$env:TEMP\curl.zip"
         $tempDir = "$env:TEMP\curl"
         
         # Download
         $url = 'https://curl.se/windows/latest.cgi?p=win64-mingw.zip'
-        Write-Host -ForegroundColor DarkGray "[↓] $url"
+        Write-Host -ForegroundColor DarkGray "$url"
         Invoke-WebRequest -UseBasicParsing -Uri $url `
             -OutFile $tempZip -ErrorAction Stop
         
@@ -631,7 +638,8 @@ function winpe-InstallCurl {
             ForEach-Object { Copy-Item -Path $_ -Destination $curlPath -Force -ErrorAction Stop }
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] Install Curl failed: $_"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red $_
         throw
     }
     finally {
@@ -644,7 +652,11 @@ function winpe-InstallCurl {
 function winpe-InstallPackageManagement {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Force
+    )
+    Write-Host ""
 
     # Test if PackageManagement is already installed
     $existingModule = Get-Module -Name PackageManagement -ListAvailable
