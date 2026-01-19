@@ -71,7 +71,7 @@ function winpe-RepairTls {
         [Net.ServicePointManager]::SecurityProtocol = $SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] Transport Layer Security [Tls12] repair failed: $_"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name) failed: $_"
         throw
     }
 }
@@ -83,27 +83,29 @@ function winpe-RepairExecutionPolicy {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
+    Write-Host -ForegroundColor DarkGray "[>] $($MyInvocation.MyCommand.Name)"
     
     $currentPolicy = Get-ExecutionPolicy
 
     if ($currentPolicy -eq 'Bypass') {
-        Write-Host -ForegroundColor DarkGray "[✓] Execution Policy [Bypass]"
+        Write-Host -ForegroundColor DarkGray "[✓] Execution Policy is set to Bypass"
         return
     }
 
+    # Informational only
     if (-not ($Force)) {
-        Write-Host -ForegroundColor Yellow "[!] Execution Policy [$currentPolicy] should be set to Bypass"
+        Write-Host -ForegroundColor DarkGray "[!] Execution Policy is set to $currentPolicy"
+        Write-Host -ForegroundColor DarkGray "[i] It is recommended that Execution Policy is set to Bypass in WinPE for proper scripting functionality"
         return
     }
 
     # Repair
     try {
-        Write-Host -ForegroundColor DarkCyan "[→] Execution Policy [Bypass] repaired"
+        Write-Host -ForegroundColor DarkCyan "[→] Set-ExecutionPolicy -ExecutionPolicy Bypass -Force"
         Set-ExecutionPolicy -ExecutionPolicy Bypass -Force -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] Execution Policy [Bypass] repair failed: $_"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name) failed: $_"
         throw
     }
 }
@@ -145,7 +147,7 @@ function winpe-RepairUserShellFolder {
             $null = New-Item -Path $item -ItemType Directory -Force -ErrorAction Stop
         }
         catch {
-            Write-Host -ForegroundColor Red "[✗] User Shell Folder [$item] repair failed: $_"
+            Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name) failed: $_"
             throw
         }
     }
@@ -422,7 +424,7 @@ function winpe-RepairTimeService {
             }
         }
         else {
-            Write-Host -ForegroundColor Yellow "[!] Time Service is NOT Running, and should be started"
+            Write-Host -ForegroundColor DarkGray "[!] Time Service is NOT Running, and should be started"
             if ($Force) {
                 Start-Service -Name w32time -ErrorAction Stop
                 Write-Host -ForegroundColor DarkCyan "[→] Time Service is being started"
