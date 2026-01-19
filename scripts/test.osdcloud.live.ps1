@@ -57,6 +57,12 @@ $isElevated = ([Security.Principal.WindowsPrincipal] [Security.Principal.Windows
 Write-Host -ForegroundColor DarkGray "[✓] $ScriptName $ScriptVersion ($WindowsPhase)"
 #endregion
 
+#region Transport Layer Security (TLS) 1.2
+Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [TLS 1.2]"
+# Write-Host -ForegroundColor DarkGray "[✓] [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12"
+[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+#endregion
+
 #region WinPE
 if ($WindowsPhase -eq 'WinPE') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')

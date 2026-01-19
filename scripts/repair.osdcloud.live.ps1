@@ -57,9 +57,6 @@ $isElevated = ([Security.Principal.WindowsPrincipal] [Security.Principal.Windows
 Write-Host -ForegroundColor DarkGray "[✓] $ScriptName $ScriptVersion ($WindowsPhase)"
 #endregion
 
-#region Admin Elevation
-#endregion
-
 #region Transport Layer Security (TLS) 1.2
 Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [TLS 1.2]"
 # Write-Host -ForegroundColor DarkGray "[✓] [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12"
@@ -69,9 +66,13 @@ Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [TLS 1.2]"
 #region WinPE
 if ($WindowsPhase -eq 'WinPE') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
-    winpe-RepairExecutionPolicy
-    winpe-RepairUserShellFolder
-    winpe-RepairEnvironmentRegistry
+    # winpe-RepairTls
+    winpe-RepairExecutionPolicy -Force
+    winpe-RepairUserShellFolder -Force
+    winpe-RepairEnvironmentRegistry -Force
+    Pause
+    winpe-RepairEnvironmentSession -Force
+    Pause
     winpe-SetPowerShellProfile
     winpe-SetRealTimeClockUTC
     winpe-SetTimeServiceAutomatic
