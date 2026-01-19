@@ -62,42 +62,25 @@ function winpe-RepairExecutionPolicy {
         $Force
     )
 
-    # Default behavior: Test only (report status and exit)
-    if (-not $Repair) {
-        $currentPolicy = Get-ExecutionPolicy
-        if ($currentPolicy -eq 'Bypass') {
-            Write-Host -ForegroundColor DarkGray "[✓] Execution Policy [Bypass]"
-        }
-        else {
-            Write-Host -ForegroundColor Yellow "[!] Execution Policy [$currentPolicy]"
-        }
-        return
-    }
-
-    # Repair behavior
     $currentPolicy = Get-ExecutionPolicy
+
     if ($currentPolicy -eq 'Bypass') {
         Write-Host -ForegroundColor DarkGray "[✓] Execution Policy [Bypass]"
         return
     }
+    else {
+        Write-Host -ForegroundColor Yellow "[!] Execution Policy [$currentPolicy]"
+    }
 
-    if ($Interactive) {
-        Write-Host -ForegroundColor Yellow "[?] Execution Policy needs to be set to Bypass"
-        $response = Read-Host "Continue? (Y/n)"
-        if ($response -eq 'n' -or $response -eq 'N') {
-            Write-Host -ForegroundColor DarkGray "[•] Skipped"
-            return
+    if ($Force) {
+        try {
+            Write-Host -ForegroundColor Cyan "[→] Set Execution Policy [Bypass]"
+            Set-ExecutionPolicy -ExecutionPolicy Bypass -Force -ErrorAction Stop
         }
-    }
-
-    try {
-        Write-Host -ForegroundColor Cyan "[→] Set Execution Policy [Bypass]"
-        Set-ExecutionPolicy -ExecutionPolicy Bypass -Force -ErrorAction Stop
-        Write-Host -ForegroundColor DarkGray "[>] Set-ExecutionPolicy -ExecutionPolicy Bypass -Force"
-    }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] Set-ExecutionPolicy Failed: $_"
-        throw
+        catch {
+            Write-Host -ForegroundColor Red "[✗] Set Execution Policy [Bypass] Failed: $_"
+            throw
+        }
     }
 }
 
