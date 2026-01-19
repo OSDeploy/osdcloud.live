@@ -85,8 +85,9 @@ function winpe-RepairExecutionPolicy {
     )
     Write-Host ""
 
+    # Get the current execution policy
     try {
-        $currentPolicy = Get-ExecutionPolicy -ErrorAction Stop
+        $executionPolicy = Get-ExecutionPolicy -ErrorAction Stop
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
@@ -94,16 +95,17 @@ function winpe-RepairExecutionPolicy {
         throw
     }
     
-    if ($currentPolicy -eq 'Bypass') {
+    # Success
+    if ($executionPolicy -eq 'Bypass') {
         Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor DarkGray "Execution Policy is set to Bypass"
         return
     }
 
-    # Informational only
+    # Warning only
     if (-not ($Force)) {
         Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "Execution Policy is set to $currentPolicy"
+        Write-Host -ForegroundColor DarkGray "Execution Policy is set to $executionPolicy"
         Write-Host -ForegroundColor DarkGray "It is recommended that Execution Policy is set to Bypass in WinPE for proper scripting functionality"
         return
     }
@@ -141,22 +143,23 @@ function winpe-RepairUserShellFolder {
         "$env:SystemRoot\system32\WindowsPowerShell\v1.0\Scripts"
     )
 
-    $repair = $false
+    # Test for missing folders
+    $needsRepair = $false
     foreach ($folder in $requiredFolders) {
         if (-not (Test-Path -Path $folder)) {
-            $repair = $true
+            $needsRepair = $true
             break
         }
     }
 
-    # No repair needed
-    if (-not $repair) {
+    # Success
+    if (-not $needsRepair) {
         Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor DarkGray "All required User Shell Folders exist"
         return
     }
 
-    # Informational only
+    # Warning only
     if (-not ($Force)) {
         Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor DarkGray "One or more required User Shell Folders are missing:"
@@ -164,8 +167,7 @@ function winpe-RepairUserShellFolder {
             if (Test-Path -Path $item) {
                 continue
             }
-
-            Write-Host -ForegroundColor DarkGray "Inform: $item"
+            Write-Host -ForegroundColor DarkGray $item
         }
     }
 
@@ -178,7 +180,7 @@ function winpe-RepairUserShellFolder {
             }
 
             try {
-                Write-Host -ForegroundColor DarkGray "Repair: $item"
+                Write-Host -ForegroundColor DarkGray $item
                 $null = New-Item -Path $item -ItemType Directory -Force -ErrorAction Stop
             }
             catch {
@@ -198,7 +200,6 @@ function winpe-RepairEnvironmentRegistry {
         $Force
     )
     Write-Host ""
-
     Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
 
     $registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
@@ -211,30 +212,58 @@ function winpe-RepairEnvironmentRegistry {
         'USERPROFILE'   = "$env:UserProfile"
     }
 
+    # Test if a repair is needed
+    $needsRepair = $false
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
 
         $currentValue = (Get-ItemProperty -Path $registryPath -Name $name -ErrorAction SilentlyContinue).$name
 
-        if ($currentValue -eq $value) {
-            Write-Host -ForegroundColor DarkGray "[✓] Registry Environment [$name]"
-            continue
+        if ($currentValue -ne $value) {
+            $needsRepair = $true
+            break
         }
+    }
 
-        if (-not ($Force)) {
-            Write-Host -ForegroundColor Yellow "[!] Registry Environment [$name] is not set to [$value]"
-            continue
-        }
+    # Warning only
+    if (-not ($Force)) {
+        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "One or more required Environment variables are missing from the Registry:"
+        foreach ($item in $requiredEnvironment.GetEnumerator()) {
+            $name = $item.Key
+            $value = $item.Value
 
-        # Set in registry for persistence
-        try {
-            Write-Host -ForegroundColor DarkCyan "[→] Registry Environment [$name] set to [$value]"
-            Set-ItemProperty -Path $registryPath -Name $name -Value $value -Force -ErrorAction Stop
+            $currentValue = (Get-ItemProperty -Path $registryPath -Name $name -ErrorAction SilentlyContinue).$name
+
+            if ($currentValue -ne $value) {
+                Write-Host -ForegroundColor DarkGray "[$name] should be set to [$value]"
+            }
         }
-        catch {
-            Write-Host -ForegroundColor Red "[✗] Registry Environment [$name] repair failed: $_"
-            throw
+        return
+    }
+
+    # Repair
+    if ($Force) {
+        Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "One or more required Environment variables are missing from the Registry:"
+        foreach ($item in $requiredEnvironment.GetEnumerator()) {
+            $name = $item.Key
+            $value = $item.Value
+
+            $currentValue = (Get-ItemProperty -Path $registryPath -Name $name -ErrorAction SilentlyContinue).$name
+
+            if ($currentValue -ne $value) {
+                try {
+                    Write-Host -ForegroundColor DarkGray "[$name] is set to [$value]"
+                    Set-ItemProperty -Path $registryPath -Name $name -Value $value -Force -ErrorAction Stop
+                }
+                catch {
+                    Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+                    Write-Host -ForegroundColor Red $_
+                    throw
+                }
+            }
         }
     }
 }
