@@ -46,7 +46,7 @@ function winpe-RepairTls {
     }
 
     if (-not ($Force)) {
-        Write-Host -ForegroundColor Yellow "[!] Transport Layer Security [$SecurityProtocol] should be set to Tls12"
+        Write-Host -ForegroundColor Yellow "[!] Transport Layer Security should be set to Tls12"
         return
     }
 
@@ -92,7 +92,7 @@ function winpe-RepairExecutionPolicy {
     }
 }
 
-function winpe-RepairRequiredFolders {
+function winpe-RepairUserShellFolders {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
@@ -101,30 +101,34 @@ function winpe-RepairRequiredFolders {
     )
 
     $requiredFolders = @(
+        "$env:ProgramFiles\WindowsPowerShell\Modules",
+        "$env:ProgramFiles\WindowsPowerShell\Scripts",
         "$env:UserProfile\AppData\Local",
         "$env:UserProfile\AppData\Roaming",
         "$env:UserProfile\Desktop",
-        "$env:UserProfile\Documents\WindowsPowerShell"
+        "$env:UserProfile\Documents\WindowsPowerShell",
+        "$env:SystemRoot\system32\WindowsPowerShell\v1.0\Modules",
+        "$env:SystemRoot\system32\WindowsPowerShell\v1.0\Scripts"
     )
 
-    foreach ($folder in $requiredFolders) {
-        if (Test-Path -Path $folder) {
-            Write-Host -ForegroundColor DarkGray "[✓] Required Folder [$folder]"
+    foreach ($item in $requiredFolders) {
+        if (Test-Path -Path $item) {
+            Write-Host -ForegroundColor DarkGray "[✓] Required Folder [$item]"
             continue
         }
 
         if (-not ($Force)) {
-            Write-Host -ForegroundColor Yellow "[!] Required Folder [$folder] is missing"
+            Write-Host -ForegroundColor Yellow "[!] Required Folder [$item] is missing"
             continue
         }
 
         # Repair
         try {
-            Write-Host -ForegroundColor Cyan "[→] Required Folder [$folder] repaired"
-            $null = New-Item -Path $folder -ItemType Directory -Force -ErrorAction Stop
+            Write-Host -ForegroundColor Cyan "[→] Required Folder [$item] repaired"
+            $null = New-Item -Path $item -ItemType Directory -Force -ErrorAction Stop
         }
         catch {
-            Write-Host -ForegroundColor Red "[✗] Required Folder [$folder] repair failed: $_"
+            Write-Host -ForegroundColor Red "[✗] Required Folder [$item] repair failed: $_"
             throw
         }
     }
@@ -133,10 +137,50 @@ function winpe-RepairRequiredFolders {
 function winpe-SetEnvironmentVariable {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Force
+    )
 
-    # Test Registry for existing environment variables
     $registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
+
+    $requiredVariables = @{
+        'APPDATA'       = "$env:UserProfile\AppData\Roaming"
+        'HOMEDRIVE'     = "$env:SystemDrive"
+        'HOMEPATH'      = "\windows\system32\config\systemprofile"
+        'LOCALAPPDATA'  = "$env:UserProfile\AppData\Local"
+        'USERPROFILE'   = "$env:UserProfile"
+    }
+
+    foreach ($item in $requiredVariables.GetEnumerator()) {
+        $name = $item.Key
+        $value = $item.Value
+
+        $existingValue = (Get-ItemProperty -Path $registryPath -Name $name -ErrorAction SilentlyContinue).$name
+
+        if ($existingValue -eq $value) {
+            Write-Host -ForegroundColor DarkGray "[✓] Registry Environment Variable [$name]"
+            continue
+        }
+
+        if (-not ($Force)) {
+            Write-Host -ForegroundColor Yellow "[!] Registry Environment Variable [$name] is missing or incorrect"
+            continue
+        }
+
+        # Set in registry for persistence
+        try {
+            Write-Host -ForegroundColor Cyan "[→] Registry Environment Variable [$name]"
+            Set-ItemProperty -Path $registryPath -Name $name -Value $value -Force -ErrorAction Stop
+        }
+        catch {
+            Write-Host -ForegroundColor Red "[✗] Registry Environment Variable [$name] failed: $_"
+            throw
+        }
+    }   
+
+
+    <#
     $registryVarsSet = (Get-ItemProperty -Path $registryPath -Name 'LOCALAPPDATA' -ErrorAction SilentlyContinue) -and
                        (Get-ItemProperty -Path $registryPath -Name 'APPDATA' -ErrorAction SilentlyContinue) -and
                        (Get-ItemProperty -Path $registryPath -Name 'HOMEDRIVE' -ErrorAction SilentlyContinue) -and
@@ -209,6 +253,7 @@ function winpe-SetEnvironmentVariable {
     Write-Host -ForegroundColor Cyan "[→] Set Environment Variables [APPDATA, HOMEDRIVE, HOMEPATH, LOCALAPPDATA]"
     Write-Verbose 'WinPE does not have the LocalAppData System Environment Variable'
     Write-Verbose 'Setting environment variables for this PowerShell session and registry'
+    #>
 }
 
 function winpe-SetPowerShellProfile {
