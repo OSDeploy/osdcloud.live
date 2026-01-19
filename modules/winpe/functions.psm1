@@ -88,32 +88,34 @@ function winpe-RepairExecutionPolicy {
         $currentPolicy = Get-ExecutionPolicy -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name) failed: $_"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red $_
         throw
     }
     
     if ($currentPolicy -eq 'Bypass') {
-        Write-Host -ForegroundColor DarkGray "$($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "[✓] Execution Policy is set to Bypass"
+        Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "Execution Policy is set to Bypass"
         return
     }
 
     # Informational only
     if (-not ($Force)) {
-        Write-Host -ForegroundColor Gray "$($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "[!] Execution Policy is set to $currentPolicy"
-        Write-Host -ForegroundColor DarkGray "[i] It is recommended that Execution Policy is set to Bypass in WinPE for proper scripting functionality"
+        Write-Host -ForegroundColor DarkYellow "[!] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "Execution Policy is set to $currentPolicy"
+        Write-Host -ForegroundColor DarkGray "It is recommended that Execution Policy is set to Bypass in WinPE for proper scripting functionality"
         return
     }
 
     # Repair
     try {
-        Write-Host -ForegroundColor Cyan "$($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkCyan "[→] Set-ExecutionPolicy -ExecutionPolicy Bypass -Force"
+        Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkCyan "Set-ExecutionPolicy -ExecutionPolicy Bypass -Force"
         Set-ExecutionPolicy -ExecutionPolicy Bypass -Force -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name) failed: $_"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red $_
         throw
     }
 }
@@ -125,7 +127,6 @@ function winpe-RepairUserShellFolder {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host -ForegroundColor DarkGray "$($MyInvocation.MyCommand.Name)"
 
     $requiredFolders = @(
         "$env:ProgramFiles\WindowsPowerShell\Modules",
@@ -138,9 +139,24 @@ function winpe-RepairUserShellFolder {
         "$env:SystemRoot\system32\WindowsPowerShell\v1.0\Scripts"
     )
 
+    # Test if all the folders exist and return a 1 if any are missing
+    $repair = $false
+    foreach ($folder in $requiredFolders) {
+        if (-not (Test-Path -Path $folder)) {
+            $repair = $true
+            break
+        }
+    }
+
+    if (-not $repair) {
+        Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "All required User Shell Folders exist"
+        return
+    }
+
     foreach ($item in $requiredFolders) {
         if (Test-Path -Path $item) {
-            Write-Host -ForegroundColor DarkGray "[✓] User Shell Folder [$item]"
+            # Write-Host -ForegroundColor DarkGray "[✓] User Shell Folder [$item]"
             continue
         }
 
@@ -155,7 +171,8 @@ function winpe-RepairUserShellFolder {
             $null = New-Item -Path $item -ItemType Directory -Force -ErrorAction Stop
         }
         catch {
-            Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name) failed: $_"
+            Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+            Write-Host -ForegroundColor Red $_
             throw
         }
     }
