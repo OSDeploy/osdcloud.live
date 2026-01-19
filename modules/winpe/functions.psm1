@@ -83,7 +83,7 @@ function winpe-RepairExecutionPolicy {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host -ForegroundColor DarkGray "[>] $($MyInvocation.MyCommand.Name)"
+    Write-Host -ForegroundColor DarkGray "$($MyInvocation.MyCommand.Name)"
     
     $currentPolicy = Get-ExecutionPolicy
 
@@ -117,7 +117,7 @@ function winpe-RepairUserShellFolder {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host -ForegroundColor Cyan "[>] $($MyInvocation.MyCommand.Name)"
+    Write-Host -ForegroundColor DarkGray "$($MyInvocation.MyCommand.Name)"
 
     $requiredFolders = @(
         "$env:ProgramFiles\WindowsPowerShell\Modules",
