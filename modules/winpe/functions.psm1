@@ -95,8 +95,8 @@ function winpe-RepairExecutionPolicy {
     
     # Success
     if ($executionPolicy -eq 'Bypass') {
-        Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        # Write-Host -ForegroundColor DarkGray "Execution Policy is set to Bypass"
+        # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "[✓] PowerShell Execution Policy is set to Bypass"
         return
     }
     Write-Host ""
@@ -151,8 +151,8 @@ function winpe-RepairUserShellFolder {
 
     # Success
     if (-not $needsRepair) {
-        Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        # Write-Host -ForegroundColor DarkGray "All required User Shell Folders exist"
+        # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "[✓] All required User Shell Folders exist"
         return
     }
     Write-Host ""
@@ -197,8 +197,6 @@ function winpe-RepairRegistryEnvironment {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host ""
-
     $registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
     $requiredEnvironment = [ordered]@{
         'APPDATA'       = "$env:UserProfile\AppData\Roaming"
@@ -224,10 +222,11 @@ function winpe-RepairRegistryEnvironment {
 
     # Success
     if (-not $needsRepair) {
-        Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "All required Environment variables exist in the Registry"
+        #Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "[✓] All required Environment variables exist in the Registry"
         return
     }
+    Write-Host ""
 
     # Warning only
     if (-not ($Force)) {
@@ -276,8 +275,6 @@ function winpe-RepairSessionEnvironment {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host ""
-
     $requiredEnvironment = [ordered]@{
         'APPDATA'       = "$env:UserProfile\AppData\Roaming"
         'HOMEDRIVE'     = "$env:SystemDrive"
@@ -306,10 +303,11 @@ function winpe-RepairSessionEnvironment {
 
     # Success
     if (-not $needsRepair) {
-        Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "All required Environment variables exist in the current PowerShell Session"
+        # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "[✓] All required Environment variables exist in the current PowerShell Session"
         return
     }
+    Write-Host ""
 
     # Warning only
     if (-not ($Force)) {
@@ -369,8 +367,6 @@ function winpe-RepairPowerShellProfile {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host ""
-    
     $profileDir = $PSHome
     $profilePath = Join-Path -Path $PSHome -ChildPath 'profile.ps1'
 
@@ -396,10 +392,11 @@ function winpe-RepairPowerShellProfile {
 
     # Success
     if (-not $needsProfileRepair -and -not $needsProfileCreated) {
-        Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "PowerShell Profile is correctly configured"
+        # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "[✓] PowerShell Profiles are correctly configured"
         return
     }
+    Write-Host ""
 
     # Warning only
     if (-not ($Force)) {
@@ -750,6 +747,14 @@ function winpe-RepairPackageManagement {
         if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
         if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
+    # Test if PackageManagement is already installed
+    $existingModule = Get-Module -Name PackageManagement -ListAvailable
+
+    # Success
+    if ($existingModule) {
+        $latestVersion = ($existingModule | Sort-Object Version -Descending | Select-Object -First 1).Version
+        Write-Host -ForegroundColor DarkGray "PackageManagement [$latestVersion] is installed"
+    }
 }
 
 function winpe-RepairNugetPackageProvider {
@@ -840,7 +845,7 @@ function winpe-RepairNugetExe {
         # Warning only
         if (-not ($Force)) {
             Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-            Write-Host -ForegroundColor DarkGray "NuGet.exe is NOT installed at $nugetExeFilePath"
+            Write-Host -ForegroundColor DarkGray "NuGet.exe is NOT installed"
             return
         }
 
