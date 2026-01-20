@@ -83,8 +83,6 @@ function winpe-RepairExecutionPolicy {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host ""
-
     # Get the current execution policy
     try {
         $executionPolicy = Get-ExecutionPolicy -ErrorAction Stop
@@ -98,9 +96,10 @@ function winpe-RepairExecutionPolicy {
     # Success
     if ($executionPolicy -eq 'Bypass') {
         Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "Execution Policy is set to Bypass"
+        # Write-Host -ForegroundColor DarkGray "Execution Policy is set to Bypass"
         return
     }
+    Write-Host ""
 
     # Warning only
     if (-not ($Force)) {
@@ -130,8 +129,6 @@ function winpe-RepairUserShellFolder {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host ""
-
     $requiredFolders = @(
         "$env:ProgramFiles\WindowsPowerShell\Modules",
         "$env:ProgramFiles\WindowsPowerShell\Scripts",
@@ -155,9 +152,10 @@ function winpe-RepairUserShellFolder {
     # Success
     if (-not $needsRepair) {
         Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "All required User Shell Folders exist"
+        # Write-Host -ForegroundColor DarkGray "All required User Shell Folders exist"
         return
     }
+    Write-Host ""
 
     # Warning only
     if (-not ($Force)) {
