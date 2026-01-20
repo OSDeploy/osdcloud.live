@@ -84,6 +84,7 @@ function winpe-TestExecutionPolicy {
     # Get the current execution policy
     try {
         $executionPolicy = Get-ExecutionPolicy -ErrorAction Stop
+        
         # Success
         if ($executionPolicy -eq 'Bypass') {
             Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Execution Policy is set to Bypass"
