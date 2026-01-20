@@ -203,7 +203,6 @@ function winpe-RepairUserShellFolder {
         }
 
         try {
-            Write-Host -ForegroundColor DarkGray $item
             $null = New-Item -Path $item -ItemType Directory -Force -ErrorAction Stop
         }
         catch {
