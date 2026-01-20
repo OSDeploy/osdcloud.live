@@ -75,9 +75,9 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-RepairRealTimeClockUTC -Force
     winpe-RepairTimeService -Force
     winpe-RepairCurl -Force
-    winpe-RepairPackageManagement
-    winpe-RepairNugetPackageProvider
-    winpe-RepairNugetExe
+    winpe-RepairPackageManagement -Force
+    winpe-RepairNugetPackageProvider -Force
+    winpe-RepairNugetExe -Force
     Pause
     winpe-UpdatePackageManagement
     winpe-UpdatePowerShellGet
