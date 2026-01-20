@@ -16,7 +16,7 @@ Recommended execution order for initial setup:
     7. winpe-RepairTimeService
     8. winpe-InstallCurl
     9. winpe-InstallPackageProviderNuget
-    10. winpe-InstallNuGet
+    10. winpe-RepairNugetExe
     11. winpe-UpdatePackageManagement
     12. winpe-UpdatePowerShellGet
     13. winpe-TrustPSGallery
@@ -758,9 +758,15 @@ function winpe-InstallPackageProviderNuget {
     )
     Write-Host ""
 
-    # Test if NuGet PackageProvider is already installed
-    $provider = Get-PackageProvider -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq 'NuGet' }
+    # Test if Get-PackageProvider cmdlet is available
+    if (-not (Get-Command -Name Get-PackageProvider -ErrorAction SilentlyContinue)) {
+        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "Get-PackageProvider cmdlet is NOT available, PackageManagement Module is not installed"
+        return
+    }
 
+    # Test if NuGet Package Provider is already installed
+    $provider = Get-PackageProvider -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq 'NuGet' }
     if ($provider) {
         Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor DarkGray "Package Provider NuGet [$($provider.Version)]"
@@ -786,10 +792,14 @@ function winpe-InstallPackageProviderNuget {
     }
 }
 
-function winpe-InstallNuGet {
+function winpe-RepairNugetExe {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Force
+    )
+    Write-Host ""
 
     $NuGetClientSourceURL = 'https://nuget.org/nuget.exe'
     $NuGetExeName = 'NuGet.exe'

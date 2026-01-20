@@ -77,7 +77,7 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-InstallCurl
     winpe-InstallPackageManagement
     winpe-InstallPackageProviderNuGet
-    winpe-InstallNuGet
+    winpe-RepairNugetExe
     Pause
     winpe-UpdatePackageManagement
     winpe-UpdatePowerShellGet
