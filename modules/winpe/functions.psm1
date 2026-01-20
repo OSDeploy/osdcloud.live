@@ -456,11 +456,11 @@ function winpe-RepairPowerShellProfilePath {
     # Repair
     if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
         $PROFILE.CurrentUserAllHosts = "$Home\Documents\WindowsPowerShell\profile.ps1"
-        Write-Host -ForegroundColor DarkGray "[Updated] CurrentUserAllHosts: [$($PROFILE.CurrentUserAllHosts)]"
+        Write-Host -ForegroundColor DarkGray "[REPAIR] CurrentUserAllHosts: [$($PROFILE.CurrentUserAllHosts)]"
     }
     if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1") {
         $PROFILE.CurrentUserCurrentHost = "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1"
-        Write-Host -ForegroundColor DarkGray "[Updated] CurrentUserCurrentHost: [$($PROFILE.CurrentUserCurrentHost)]"
+        Write-Host -ForegroundColor DarkGray "[REPAIR] CurrentUserCurrentHost: [$($PROFILE.CurrentUserCurrentHost)]"
     }
 
     $results = winpe-TestPowerShellProfilePath
@@ -725,7 +725,7 @@ function winpe-RepairTimeService {
     if ($w32timeService.StartType -ne 'Automatic') {
         try {
             Set-Service -Name w32time -StartupType Automatic -ErrorAction Stop
-            Write-Host -ForegroundColor DarkGray "[Repair] Time Service [w32time] StartType is set to Automatic"
+            Write-Host -ForegroundColor DarkGray "[REPAIR] Time Service [w32time] StartType is set to Automatic"
         }
         catch {
             Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
@@ -735,7 +735,7 @@ function winpe-RepairTimeService {
     }
 
     if ($w32timeService.Status -eq 'Running') {
-        Write-Host -ForegroundColor DarkGray "[Repair] Time Service [w32time] is being restarted"
+        Write-Host -ForegroundColor DarkGray "[REPAIR] Time Service [w32time] is being restarted"
         try {
             Restart-Service -Name w32time -ErrorAction Stop
         }
@@ -746,7 +746,7 @@ function winpe-RepairTimeService {
         }
     }
     else {
-        Write-Host -ForegroundColor DarkGray "[Repair] Time Service [w32time] is being started"
+        Write-Host -ForegroundColor DarkGray "[REPAIR] Time Service [w32time] is being started"
         try {
             Start-Service -Name w32time -ErrorAction Stop
         }
@@ -834,9 +834,11 @@ function winpe-TestPackageManagement {
     if ($installedModule) {
         $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
         Write-Host -ForegroundColor Green "[✓] PackageManagement PowerShell Module is installed [$latestVersion]"
+        return 0
     }
     else {
         Write-Host -ForegroundColor Red "[✗] PackageManagement PowerShell Module is NOT installed"
+        return 1
     }
 }
 
@@ -871,31 +873,16 @@ function winpe-RepairPackageManagement {
     #>
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param (
-        [System.Management.Automation.SwitchParameter]
-        $Force
-    )
-    # Test if PackageManagement is already installed
-    $installedModule = Get-Module -Name PackageManagement -ListAvailable
+    param ()
+    # Test
+    $remediate = winpe-TestPackageManagement
 
     # Success
-    if ($installedModule) {
-        # Write-Host -ForegroundColor Green "[✓] $($MyInvocation.MyCommand.Name)"
-        $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
-        Write-Host -ForegroundColor Green "[✓] PackageManagement PowerShell Module is installed [$latestVersion]"
+    if ($remediate -eq 0) {
         return
     }
 
-    # Not installed
-    # Warning
-    if (-not $Force) {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is NOT installed"
-        return
-    }
-    
-    # Repair / Install
-    Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
+    # Repair
     try {
         $tempZip = "$env:TEMP\packagemanagement.1.4.8.1.zip"
         $tempDir = "$env:TEMP\1.4.8.1"
@@ -935,14 +922,8 @@ function winpe-RepairPackageManagement {
         if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
         if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
-    # Test if PackageManagement is already installed
-    $installedModule = Get-Module -Name PackageManagement -ListAvailable
-
-    # Success
-    if ($installedModule) {
-        $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
-        Write-Host -ForegroundColor Green "[✓] PackageManagement PowerShell Module is installed [$latestVersion]"
-    }
+    
+    $results = winpe-TestPackageManagement
 }
 
 function winpe-TestNuGetPackageProvider {
