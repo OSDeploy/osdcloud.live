@@ -78,11 +78,11 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-RepairPackageManagement
     winpe-RepairNugetPackageProvider
     winpe-RepairNugetExe
-    Pause
     winpe-UpdatePackageManagement
     winpe-UpdatePowerShellGet
     winpe-TrustPSGallery
     winpe-InstallAzCopy
+    Pause
     # winpe-InstallPowerShellModule -Name OSD
     # winpe-InstallPowerShellModule -Name OSDCloud
     if (-not (Get-Command 'curl.exe' -ErrorAction SilentlyContinue)) {

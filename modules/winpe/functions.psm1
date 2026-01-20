@@ -881,15 +881,23 @@ function winpe-RepairNugetExe {
 function winpe-UpdatePackageManagement {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Force
+    )
+    Write-Host ""
     
     $existingModule = Get-Module -Name PackageManagement -ListAvailable | Where-Object { $_.Version -ge '1.4.8.1' }
-    
+
+    # Success
     if ($existingModule) {
-        Write-Host -ForegroundColor DarkGray "[✓] PackageManagement [$($existingModule.Version)]"
+        Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
+        $latestVersion = ($existingModule | Sort-Object Version -Descending | Select-Object -First 1).Version
+        Write-Host -ForegroundColor DarkGray "PackageManagement [$latestVersion] is installed"
         return
     }
 
+    # Requires Update
     try {
         Write-Host -ForegroundColor DarkCyan "[→] PackageManagement [1.4.8.1]"
         $tempZip = "$env:TEMP\packagemanagement.1.4.8.1.zip"
