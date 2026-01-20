@@ -84,26 +84,59 @@ function winpe-TestExecutionPolicy {
     # Get the current execution policy
     try {
         $executionPolicy = Get-ExecutionPolicy -ErrorAction Stop
+        # Success
+        if ($executionPolicy -eq 'Bypass') {
+            Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Execution Policy is set to Bypass"
+            return 0
+        }
+
+        # Failure
+        Write-Host -ForegroundColor Red "[✗] PowerShell Execution Policy is NOT set to Bypass"
+        Write-Host -ForegroundColor DarkGray "PowerShell Execution Policy is set to $executionPolicy"
+        Write-Host -ForegroundColor DarkGray "OSDCloud scripting will fail if not properly configured to Bypass"
+        return 1
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
-    
-    # Success
-    if ($executionPolicy -eq 'Bypass') {
-        Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Execution Policy is set to Bypass"
-        return
-    }
-
-    # Failure
-    Write-Host -ForegroundColor Red "[✗] PowerShell Execution Policy is NOT set to Bypass"
-    Write-Host -ForegroundColor DarkGray "PowerShell Execution Policy is set to $executionPolicy"
-    Write-Host -ForegroundColor DarkGray "OSDCloud scripting will fail if not properly configured to Bypass"
 }
 
 function winpe-RepairExecutionPolicy {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+
+    # Test
+    $repairNeeded = winpe-TestExecutionPolicy
+    if ($repairNeeded -eq 0) {
+        return
+    }
+
+    # Repair
+    try {
+        Set-ExecutionPolicy -ExecutionPolicy Bypass -Force -ErrorAction Stop
+        $executionPolicy = Get-ExecutionPolicy -ErrorAction Stop
+        if ($executionPolicy -eq 'Bypass') {
+            Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Execution Policy is set to Bypass"
+        }
+        else {
+            Write-Host -ForegroundColor Red "[✗] PowerShell Execution Policy is NOT set to Bypass"
+            Write-Host -ForegroundColor DarkGray "PowerShell Execution Policy is set to $executionPolicy"
+        }
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red $_
+        throw
+    }
+    finally {
+        Remove-Variable -Name executionPolicy -ErrorAction SilentlyContinue
+    }
+}
+
+function winpe-RepairExecutionPolicyToo {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
