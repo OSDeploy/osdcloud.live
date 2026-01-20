@@ -752,7 +752,6 @@ function winpe-TestTimeService {
         Write-Host -ForegroundColor DarkGreen "[✓] Time Service [w32time] is set to Automatic and is Running"
     }
     else {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
         if ($w32timeService.StartType -ne 'Automatic') {
             Write-Host -ForegroundColor Red "[✗] Time Service [w32time] StartType is NOT set to Automatic"
         }
