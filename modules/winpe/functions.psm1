@@ -911,7 +911,7 @@ function winpe-UpdatePackageManagement {
         $moduleDir = "$env:ProgramFiles\WindowsPowerShell\Modules\PackageManagement"
 
         $url = 'https://www.powershellgallery.com/api/v2/package/PackageManagement/1.4.8.1'
-        Write-Host -ForegroundColor DarkGray "[↓] $url"
+        Write-Host -ForegroundColor DarkGray $url
         
         # Download using curl if available, fallback to Invoke-WebRequest
         $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
@@ -976,7 +976,7 @@ function winpe-UpdatePowerShellGet {
         
         # Download using curl if available, fallback to Invoke-WebRequest
         $url = 'https://www.powershellgallery.com/api/v2/package/PowerShellGet/2.2.5'
-        Write-Host -ForegroundColor DarkGray "[↓] $url"
+        Write-Host -ForegroundColor DarkGray $url
         $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
         if (Test-Path $curlPath) {
             & $curlPath --fail --location --silent --show-error `
@@ -1048,8 +1048,8 @@ function winpe-TrustPSGallery {
 
     try {
         Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "[>] Set-PSRepository -Name PSGallery -InstallationPolicy Trusted"
         Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction Stop
+        Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Gallery PSRepository Installation Policy is Trusted"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
@@ -1261,7 +1261,7 @@ function winpe-InstallZip {
         $tempDir = "$env:TEMP\7za"
 
         Write-Host -ForegroundColor DarkCyan "[→] 7-Zip [25.01]"
-        Write-Host -ForegroundColor DarkGray "[↓] $downloadUrl"
+        Write-Host -ForegroundColor DarkGray $downloadUrl
         
         # Download using curl if available, fallback to Invoke-WebRequest
         $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'

@@ -86,7 +86,7 @@ if ($WindowsPhase -eq 'WinPE') {
     # winpe-InstallPowerShellModule -Name OSDCloud
     $EndTime = Get-Date
     $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
-    Write-Host -ForegroundColor DarkGray "[i] Ready in $TotalSeconds seconds"
+    Write-Host -ForegroundColor DarkGray "[i] Finished in $TotalSeconds seconds"
     $null = Stop-Transcript -ErrorAction Ignore
 }
 #endregion
