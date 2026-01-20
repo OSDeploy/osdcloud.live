@@ -454,11 +454,11 @@ function winpe-RepairPowerShellProfilePath {
     # Repair
     if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
         $PROFILE.CurrentUserAllHosts = "$Home\Documents\WindowsPowerShell\profile.ps1"
-        Write-Host -ForegroundColor DarkGray "CurrentUserAllHosts: [$($PROFILE.CurrentUserAllHosts)]"
+        Write-Host -ForegroundColor DarkGray "[Updated] CurrentUserAllHosts: [$($PROFILE.CurrentUserAllHosts)]"
     }
     if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1") {
         $PROFILE.CurrentUserCurrentHost = "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1"
-        Write-Host -ForegroundColor DarkGray "CurrentUserCurrentHost: [$($PROFILE.CurrentUserCurrentHost)]"
+        Write-Host -ForegroundColor DarkGray "[Updated] CurrentUserCurrentHost: [$($PROFILE.CurrentUserCurrentHost)]"
     }
 
     $results = winpe-TestPowerShellProfilePath
@@ -535,9 +535,6 @@ $registryPath | ForEach-Object {
         }
     }
     else {
-        Write-Host -ForegroundColor DarkGray "PowerShell Profile does not exist with OSDCloud update for new sessions"
-        Write-Host -ForegroundColor DarkGray "Create new PowerShell Profile for AllUsersAllHosts"
-        Write-Host -ForegroundColor DarkGray "Resolves new environment variables added to Session Manager in the registry"
         if (-not (Test-Path $profileDir)) {
             $null = New-Item -Path $profileDir -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
         }
@@ -639,46 +636,36 @@ function winpe-TestRealTimeClockUTC {
 
     if ($realTimeIsUniversal -and ($realTimeIsUniversal.RealTimeIsUniversal -eq 1)) {
         Write-Host -ForegroundColor Green "[✓] RealTime Clock is set to UTC"
+        return 0
     }
     else {
         Write-Host -ForegroundColor Red "[✗] RealTime Clock is NOT set to UTC"
+        return 1
     }
 }
 
 function winpe-RepairRealTimeClockUTC {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param (
-        [System.Management.Automation.SwitchParameter]
-        $Force
-    )
-    # Test if RealTimeIsUniversal is already set
-    $realTimeIsUniversal = Get-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -ErrorAction SilentlyContinue
+    param ()
 
-    if ($realTimeIsUniversal -and ($realTimeIsUniversal.RealTimeIsUniversal -eq 1)) {
-        # Write-Host -ForegroundColor Green "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor Green "[✓] RealTime Clock is set to UTC"
-        return
-    }
-
-    # Warning only
-    if (-not ($Force)) {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "RealTime Clock is NOT set to UTC"
+    # Test
+    $remediate = winpe-TestRealTimeClockUTC
+    if ($remediate -eq 0) {
         return
     }
 
     # Repair
-    Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
     try {
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -Value 1 -Type DWord -ErrorAction Stop
-        Write-Host -ForegroundColor DarkGray "RealTime Clock is set to UTC"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
+
+    $results = winpe-TestRealTimeClockUTC
 }
 
 function winpe-TestTimeService {
@@ -698,6 +685,7 @@ function winpe-TestTimeService {
     # Test if the Time Service is correctly configured
     if (($w32timeService.StartType -eq 'Automatic') -and ($w32timeService.Status -eq 'Running')) {
         Write-Host -ForegroundColor Green "[✓] Time Service [w32time] is set to Automatic and is Running"
+        return 0
     }
     else {
         if ($w32timeService.StartType -ne 'Automatic') {
@@ -706,6 +694,7 @@ function winpe-TestTimeService {
         if ($w32timeService.Status -ne 'Running') {
             Write-Host -ForegroundColor Red "[✗] Time Service [w32time] is NOT Running"
         }
+        return 1
     }
 }
 
@@ -716,7 +705,15 @@ function winpe-RepairTimeService {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    # Can we connect to Time Service?
+    # Test
+    $remediate = winpe-TestTimeService
+
+    # Success
+    if ($remediate -eq 0) {
+        return
+    }
+
+    # Repair
     try {
         $w32timeService = Get-Service -Name w32time -ErrorAction Stop
     }
@@ -726,32 +723,10 @@ function winpe-RepairTimeService {
         throw
     }
 
-    # Test if the Time Service is correctly configured
-    if (($w32timeService.StartType -eq 'Automatic') -and ($w32timeService.Status -eq 'Running')) {
-        # Write-Host -ForegroundColor Green "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor Green "[✓] Time Service [w32time] is set to Automatic and is Running"
-        return
-    }
-
-    # Warning
-    if (-not ($Force)) {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        if ($w32timeService.StartType -ne 'Automatic') {
-            Write-Host -ForegroundColor DarkGray "Time Service [w32time] StartType is NOT set to Automatic"
-        }
-        if ($w32timeService.Status -ne 'Running') {
-            Write-Host -ForegroundColor DarkGray "Time Service [w32time] is NOT Running"
-        }
-        return
-    }
-
-    # Repair
-    Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
-
     if ($w32timeService.StartType -ne 'Automatic') {
         try {
             Set-Service -Name w32time -StartupType Automatic -ErrorAction Stop
-            Write-Host -ForegroundColor DarkGray "Time Service [w32time] StartType is now set to Automatic"
+            Write-Host -ForegroundColor DarkGray "[Repair] Time Service [w32time] StartType is set to Automatic"
         }
         catch {
             Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
@@ -761,7 +736,7 @@ function winpe-RepairTimeService {
     }
 
     if ($w32timeService.Status -eq 'Running') {
-        Write-Host -ForegroundColor DarkGray "Time Service [w32time] is being restarted"
+        Write-Host -ForegroundColor DarkGray "[Repair] Time Service [w32time] is being restarted"
         try {
             Restart-Service -Name w32time -ErrorAction Stop
         }
@@ -772,7 +747,7 @@ function winpe-RepairTimeService {
         }
     }
     else {
-        Write-Host -ForegroundColor DarkGray "Time Service [w32time] is being started"
+        Write-Host -ForegroundColor DarkGray "[Repair] Time Service [w32time] is being started"
         try {
             Start-Service -Name w32time -ErrorAction Stop
         }
@@ -782,6 +757,8 @@ function winpe-RepairTimeService {
             throw
         }
     }
+
+    $results = winpe-TestTimeService
 }
 
 function winpe-TestCurl {
