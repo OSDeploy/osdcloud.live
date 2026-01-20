@@ -54,7 +54,7 @@ else {
 $whoiam = [system.security.principal.windowsidentity]::getcurrent().name
 $isElevated = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
 
-Write-Host -ForegroundColor DarkGray "[✓] $ScriptName $ScriptVersion ($WindowsPhase)"
+Write-Host -ForegroundColor DarkGray "$ScriptName $ScriptVersion ($WindowsPhase)"
 #endregion
 
 #region Transport Layer Security (TLS) 1.2
