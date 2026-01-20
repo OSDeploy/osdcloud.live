@@ -197,6 +197,7 @@ function winpe-RepairUserShellFolder {
     }
 
     # Repair
+    Write-Host -ForegroundColor Cyan "[→] Repairing User Shell Folders"
     foreach ($item in $requiredFolders) {
         if (Test-Path -Path $item) {
             continue
