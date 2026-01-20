@@ -789,7 +789,7 @@ function winpe-RepairNugetPackageProvider {
     $provider = Get-PackageProvider -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq 'NuGet' }
     if ($provider) {
         Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "PackageProvider NuGet $($provider.Version) is installed"
+        Write-Host -ForegroundColor DarkGray "PackageProvider NuGet [$($provider.Version)] is installed"
         return
     }
 
@@ -872,6 +872,12 @@ function winpe-RepairNugetExe {
                 Write-Host -ForegroundColor Red $_
                 throw
             }
+        }
+
+        if (Test-Path $nugetExeFilePath) {
+            $nugetExe = Get-Item -Path $nugetExeFilePath
+            Write-Host -ForegroundColor DarkGray "NuGet.exe [$($nugetExe.VersionInfo.FileVersion)] is installed"
+            return
         }
     }
 }
