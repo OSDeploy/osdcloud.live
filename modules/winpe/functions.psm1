@@ -106,7 +106,7 @@ function winpe-RepairExecutionPolicy {
     if (-not ($Force)) {
         Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor DarkGray "Execution Policy is set to $executionPolicy"
-        Write-Host -ForegroundColor DarkGray "It is recommended that Execution Policy is set to Bypass in WinPE for proper scripting functionality"
+        Write-Host -ForegroundColor DarkGray "Execution Policy should be set to Bypass for installing Package Providers"
         return
     }
 
@@ -535,7 +535,7 @@ function winpe-RepairTimeService {
     # Test if the Time Service is correctly configured
     if (($w32timeService.StartType -eq 'Automatic') -and ($w32timeService.Status -eq 'Running')) {
         Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "Time Service is set to Automatic and Running"
+        Write-Host -ForegroundColor DarkGray "Time Service [w32time] is set to Automatic and Running"
         return
     }
 
@@ -543,10 +543,10 @@ function winpe-RepairTimeService {
     if (-not ($Force)) {
         Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
         if ($w32timeService.StartType -ne 'Automatic') {
-            Write-Host -ForegroundColor DarkGray "Time Service StartType is NOT set to Automatic"
+            Write-Host -ForegroundColor DarkGray "Time Service [w32time] StartType is NOT set to Automatic"
         }
         if ($w32timeService.Status -ne 'Running') {
-            Write-Host -ForegroundColor DarkGray "Time Service is NOT Running"
+            Write-Host -ForegroundColor DarkGray "Time Service [w32time] is NOT Running"
         }
         return
     }
@@ -557,7 +557,7 @@ function winpe-RepairTimeService {
     if ($w32timeService.StartType -ne 'Automatic') {
         try {
             Set-Service -Name w32time -StartupType Automatic -ErrorAction Stop
-            Write-Host -ForegroundColor DarkGray "Time Service StartType has been set to Automatic"
+            Write-Host -ForegroundColor DarkGray "Time Service [w32time] StartType has been set to Automatic"
         }
         catch {
             Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
@@ -567,7 +567,7 @@ function winpe-RepairTimeService {
     }
 
     if ($w32timeService.Status -eq 'Running') {
-        Write-Host -ForegroundColor DarkGray "Time Service is being restarted"
+        Write-Host -ForegroundColor DarkGray "Time Service [w32time] is being restarted"
         try {
             Restart-Service -Name w32time -ErrorAction Stop
         }
@@ -578,7 +578,7 @@ function winpe-RepairTimeService {
         }
     }
     else {
-        Write-Host -ForegroundColor DarkGray "Time Service is being started"
+        Write-Host -ForegroundColor DarkGray "Time Service [w32time] is being started"
         try {
             Start-Service -Name w32time -ErrorAction Stop
         }
@@ -605,7 +605,7 @@ function winpe-RepairCurl {
     if (Test-Path $curlPath) {
         $curl = Get-Item -Path $curlPath
         Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "Curl [$($curl.VersionInfo.FileVersion)] is installed at $curlPath"
+        Write-Host -ForegroundColor DarkGray "Curl.exe [$($curl.VersionInfo.FileVersion)] is installed at $curlPath"
         return
     }
 
@@ -646,6 +646,12 @@ function winpe-RepairCurl {
         # Cleanup
         if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
         if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+
+    if (Test-Path $curlPath) {
+        $curl = Get-Item -Path $curlPath
+        Write-Host -ForegroundColor DarkGray "Curl.exe [$($curl.VersionInfo.FileVersion)] is installed at $curlPath"
+        return
     }
 }
 
@@ -693,7 +699,7 @@ function winpe-RepairPackageManagement {
     if ($existingModule) {
         Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
         $latestVersion = ($existingModule | Sort-Object Version -Descending | Select-Object -First 1).Version
-        Write-Host -ForegroundColor DarkGray "PackageManagement $latestVersion is installed"
+        Write-Host -ForegroundColor DarkGray "PackageManagement [$latestVersion] is installed"
         return
     }
 
@@ -708,13 +714,12 @@ function winpe-RepairPackageManagement {
     # Repair / Install
     Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
     try {
-        Write-Host -ForegroundColor DarkGray "[→] PackageManagement [1.4.8.1]"
         $tempZip = "$env:TEMP\packagemanagement.1.4.8.1.zip"
         $tempDir = "$env:TEMP\1.4.8.1"
         $moduleDir = "$env:ProgramFiles\WindowsPowerShell\Modules\PackageManagement"
 
         $url = 'https://www.powershellgallery.com/api/v2/package/PackageManagement/1.4.8.1'
-        Write-Host -ForegroundColor DarkGray "[↓] $url"
+        Write-Host -ForegroundColor DarkGray $url
         
         # Download using curl if available, fallback to Invoke-WebRequest
         $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
@@ -777,8 +782,8 @@ function winpe-RepairNugetPackageProvider {
     $executionPolicy = Get-ExecutionPolicy -ErrorAction SilentlyContinue
     if ($executionPolicy -ne 'Bypass' -and $executionPolicy -ne 'Unrestricted') {
         Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "Current Execution Policy is set to $executionPolicy"
-        Write-Host -ForegroundColor DarkGray "Installing Package Providers may be blocked by the current Execution Policy"
+        Write-Host -ForegroundColor DarkGray "Execution Policy is set to $executionPolicy"
+        Write-Host -ForegroundColor DarkGray "Execution Policy is blocking installation of Package Providers"
         return
     }
 
@@ -786,7 +791,7 @@ function winpe-RepairNugetPackageProvider {
     $provider = Get-PackageProvider -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq 'NuGet' }
     if ($provider) {
         Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "PackageProvider NuGet [$($provider.Version)]"
+        Write-Host -ForegroundColor DarkGray "PackageProvider NuGet $($provider.Version) is installed"
         return
     }
 
@@ -843,7 +848,7 @@ function winpe-RepairNugetExe {
 
         # Repair / Install
         Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "[↓] $nugetExeSourceURL"
+        Write-Host -ForegroundColor DarkGray $nugetExeSourceURL
 
         # Create directory if it does not exist
         if (-not (Test-Path -Path $nugetPath)) {
