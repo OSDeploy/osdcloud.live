@@ -174,11 +174,12 @@ function winpe-TestUserShellFolder {
 
     # Success
     if (-not $needsRepair) {
-        # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGreen "[✓] All required User Shell Folders exist"
+        Write-Host -ForegroundColor DarkGreen "[✓] Required User Shell Folders exist"
         return
     }
-    Write-Host -ForegroundColor Red "[✗] One or more required User Shell Folders are missing:"
+
+    # Failure
+    Write-Host -ForegroundColor Red "[✗] Required User Shell Folders DO NOT exist"
     foreach ($item in $requiredFolders) {
         if (Test-Path -Path $item) {
             continue
@@ -217,14 +218,14 @@ function winpe-RepairUserShellFolder {
     # Success
     if (-not $needsRepair) {
         # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGreen "[✓] All required User Shell Folders exist"
+        Write-Host -ForegroundColor DarkGreen "[✓] Required User Shell Folders exist"
         return
     }
 
     # Warning only
     if (-not ($Force)) {
         Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "One or more required User Shell Folders are missing:"
+        Write-Host -ForegroundColor DarkGray "Required User Shell Folders DO NOT exist"
         foreach ($item in $requiredFolders) {
             if (Test-Path -Path $item) {
                 continue
@@ -250,6 +251,53 @@ function winpe-RepairUserShellFolder {
                 Write-Host -ForegroundColor Red $_
                 throw
             }
+        }
+    }
+}
+
+function winpe-TestRegistryEnvironment {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+    $registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
+    $requiredEnvironment = [ordered]@{
+        'APPDATA'       = "$env:UserProfile\AppData\Roaming"
+        'HOMEDRIVE'     = "$env:SystemDrive"
+        'HOMEPATH'      = "\windows\system32\config\systemprofile"
+        'LOCALAPPDATA'  = "$env:UserProfile\AppData\Local"
+        'USERPROFILE'   = "$env:UserProfile"
+    }
+
+    # Test if a repair is needed
+    $needsRepair = $false
+    foreach ($item in $requiredEnvironment.GetEnumerator()) {
+        $name = $item.Key
+        $value = $item.Value
+
+        $currentValue = (Get-ItemProperty -Path $registryPath -Name $name -ErrorAction SilentlyContinue).$name
+
+        if ($currentValue -ne $value) {
+            $needsRepair = $true
+            break
+        }
+    }
+
+    # Success
+    if (-not $needsRepair) {
+        Write-Host -ForegroundColor DarkGreen "[✓] Required Environment variables exist in the Registry"
+        return
+    }
+
+    
+    Write-Host -ForegroundColor Red "[✗] Required Environment variables DO NOT exist in the Registry"
+    foreach ($item in $requiredEnvironment.GetEnumerator()) {
+        $name = $item.Key
+        $value = $item.Value
+
+        $currentValue = (Get-ItemProperty -Path $registryPath -Name $name -ErrorAction SilentlyContinue).$name
+
+        if ($currentValue -ne $value) {
+            Write-Host -ForegroundColor DarkGray "$name = $value"
         }
     }
 }
