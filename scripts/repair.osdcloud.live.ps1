@@ -70,7 +70,7 @@ if ($WindowsPhase -eq 'WinPE') {
     # winpe-RepairTls
     winpe-RepairExecutionPolicy
     winpe-RepairUserShellFolder
-    winpe-RepairRegistryEnvironment -Force
+    winpe-RepairRegistryEnvironment
     winpe-RepairSessionEnvironment -Force
     winpe-RepairPowerShellProfile -Force
     winpe-RepairRealTimeClockUTC -Force

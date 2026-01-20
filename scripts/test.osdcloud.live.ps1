@@ -70,7 +70,7 @@ if ($WindowsPhase -eq 'WinPE') {
     # winpe-RepairTls
     $null = winpe-TestExecutionPolicy
     $null = winpe-TestUserShellFolder
-    winpe-TestRegistryEnvironment
+    $null = winpe-TestRegistryEnvironment
     winpe-TestSessionEnvironment
     winpe-TestPowerShellProfile
     winpe-TestRealTimeClockUTC

@@ -110,8 +110,8 @@ function winpe-RepairExecutionPolicy {
     param ()
 
     # Test
-    $repairNeeded = winpe-TestExecutionPolicy
-    if ($repairNeeded -eq 0) {
+    $remediate = winpe-TestExecutionPolicy
+    if ($remediate -eq 0) {
         return
     }
 
@@ -146,17 +146,17 @@ function winpe-TestUserShellFolder {
         "$env:SystemRoot\system32\WindowsPowerShell\v1.0\Scripts"
     )
 
-    # Test for missing folders
-    $needsRepair = $false
+    # Test if a repair is needed
+    $remediate = $false
     foreach ($folder in $requiredFolders) {
         if (-not (Test-Path -Path $folder)) {
-            $needsRepair = $true
+            $remediate = $true
             break
         }
     }
 
     # Success
-    if (-not $needsRepair) {
+    if (-not $remediate) {
         Write-Host -ForegroundColor DarkGreen "[✓] Required User Shell Folders exist"
         return 0
     }
@@ -175,10 +175,7 @@ function winpe-TestUserShellFolder {
 function winpe-RepairUserShellFolder {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param (
-        [System.Management.Automation.SwitchParameter]
-        $Force
-    )
+    param ()
     $requiredFolders = @(
         "$env:ProgramFiles\WindowsPowerShell\Modules",
         "$env:ProgramFiles\WindowsPowerShell\Scripts",
@@ -191,8 +188,8 @@ function winpe-RepairUserShellFolder {
     )
 
     # Test
-    $repairNeeded = winpe-TestUserShellFolder
-    if ($repairNeeded -eq 0) {
+    $remediate = winpe-TestUserShellFolder
+    if ($remediate -eq 0) {
         return
     }
 
@@ -212,7 +209,6 @@ function winpe-RepairUserShellFolder {
             throw
         }
     }
-
     $results = winpe-TestUserShellFolder
 }
 
@@ -229,27 +225,26 @@ function winpe-TestRegistryEnvironment {
         'USERPROFILE'   = "$env:UserProfile"
     }
 
-    # Test if a repair is needed
-    $needsRepair = $false
+    # Test
+    $remediate = $false
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
-
         $currentValue = (Get-ItemProperty -Path $registryPath -Name $name -ErrorAction SilentlyContinue).$name
 
         if ($currentValue -ne $value) {
-            $needsRepair = $true
+            $remediate = $true
             break
         }
     }
 
     # Success
-    if (-not $needsRepair) {
+    if (-not $remediate) {
         Write-Host -ForegroundColor DarkGreen "[✓] Required Environment variables exist in the Registry"
-        return
+        return 0
     }
 
-    
+    # Failure
     Write-Host -ForegroundColor Red "[✗] Required Environment variables DO NOT exist in the Registry"
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
@@ -261,15 +256,13 @@ function winpe-TestRegistryEnvironment {
             Write-Host -ForegroundColor DarkGray "$name = $value"
         }
     }
+    return 1
 }
 
 function winpe-RepairRegistryEnvironment {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param (
-        [System.Management.Automation.SwitchParameter]
-        $Force
-    )
+    param ()
     $registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
     $requiredEnvironment = [ordered]@{
         'APPDATA'       = "$env:UserProfile\AppData\Roaming"
@@ -279,56 +272,22 @@ function winpe-RepairRegistryEnvironment {
         'USERPROFILE'   = "$env:UserProfile"
     }
 
-    # Test if a repair is needed
-    $needsRepair = $false
-    foreach ($item in $requiredEnvironment.GetEnumerator()) {
-        $name = $item.Key
-        $value = $item.Value
-
-        $currentValue = (Get-ItemProperty -Path $registryPath -Name $name -ErrorAction SilentlyContinue).$name
-
-        if ($currentValue -ne $value) {
-            $needsRepair = $true
-            break
-        }
-    }
-
-    # Success
-    if (-not $needsRepair) {
-        #Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGreen "[✓] All required Environment variables exist in the Registry"
-        return
-    }
-
-    # Warning only
-    if (-not ($Force)) {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "One or more required Environment variables are missing from the Registry:"
-        foreach ($item in $requiredEnvironment.GetEnumerator()) {
-            $name = $item.Key
-            $value = $item.Value
-
-            $currentValue = (Get-ItemProperty -Path $registryPath -Name $name -ErrorAction SilentlyContinue).$name
-
-            if ($currentValue -ne $value) {
-                Write-Host -ForegroundColor DarkGray "$name = $value"
-            }
-        }
+    # Test
+    $remediate = winpe-TestRegistryEnvironment
+    if ($remediate -eq 0) {
         return
     }
 
     # Repair
-    Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
-    Write-Host -ForegroundColor DarkGray "Adding missing Environment variables to the Registry:"
+    Write-Host -ForegroundColor Cyan "[→] Repairing Registry Environment Variables"
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
-
         $currentValue = (Get-ItemProperty -Path $registryPath -Name $name -ErrorAction SilentlyContinue).$name
 
         if ($currentValue -ne $value) {
             try {
-                Write-Host -ForegroundColor DarkGray "$name = $value"
+                # Write-Host -ForegroundColor DarkGray "$name = $value"
                 Set-ItemProperty -Path $registryPath -Name $name -Value $value -Force -ErrorAction Stop
             }
             catch {
@@ -338,6 +297,8 @@ function winpe-RepairRegistryEnvironment {
             }
         }
     }
+
+    $results = winpe-TestRegistryEnvironment
 }
 
 function winpe-TestSessionEnvironment {
@@ -352,7 +313,7 @@ function winpe-TestSessionEnvironment {
     }
 
     # Test if a repair is needed
-    $needsRepair = $false
+    $remediate = $false
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
@@ -365,13 +326,13 @@ function winpe-TestSessionEnvironment {
         }
 
         if ($currentValue -ne $value) {
-            $needsRepair = $true
+            $remediate = $true
             break
         }
     }
 
     # Success
-    if (-not $needsRepair) {
+    if (-not $remediate) {
         Write-Host -ForegroundColor DarkGreen "[✓] Required Environment Variables exist in the current PowerShell Session"
         return
     }
@@ -410,7 +371,7 @@ function winpe-RepairSessionEnvironment {
     }
 
     # Test if a repair is needed
-    $needsRepair = $false
+    $remediate = $false
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
@@ -423,13 +384,13 @@ function winpe-RepairSessionEnvironment {
         }
 
         if ($currentValue -ne $value) {
-            $needsRepair = $true
+            $remediate = $true
             break
         }
     }
 
     # Success
-    if (-not $needsRepair) {
+    if (-not $remediate) {
         # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor DarkGreen "[✓] All required Environment variables exist in the current PowerShell Session"
         return
