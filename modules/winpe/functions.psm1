@@ -131,50 +131,6 @@ function winpe-RepairExecutionPolicy {
     $results = winpe-TestExecutionPolicy
 }
 
-function winpe-RepairExecutionPolicyToo {
-    [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param (
-        [System.Management.Automation.SwitchParameter]
-        $Force
-    )
-    # Get the current execution policy
-    try {
-        $executionPolicy = Get-ExecutionPolicy -ErrorAction Stop
-    }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor Red $_
-        throw
-    }
-    
-    # Success
-    if ($executionPolicy -eq 'Bypass') {
-        Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Execution Policy is set to Bypass"
-        return
-    }
-
-    # Warning only
-    if (-not ($Force)) {
-        Write-Host -ForegroundColor Yellow "[!] PowerShell Execution Policy is NOT set to Bypass"
-        Write-Host -ForegroundColor DarkGray "PowerShell Execution Policy is set to $executionPolicy"
-        Write-Host -ForegroundColor DarkGray "PowerShell Execution Policy should be set to Bypass for installing Package Providers"
-        return
-    }
-
-    # Repair
-    try {
-        Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "Set-ExecutionPolicy -ExecutionPolicy Bypass -Force"
-        Set-ExecutionPolicy -ExecutionPolicy Bypass -Force -ErrorAction Stop
-    }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor Red $_
-        throw
-    }
-}
-
 function winpe-TestUserShellFolder {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -202,7 +158,7 @@ function winpe-TestUserShellFolder {
     # Success
     if (-not $needsRepair) {
         Write-Host -ForegroundColor DarkGreen "[✓] Required User Shell Folders exist"
-        return
+        return 0
     }
 
     # Failure
@@ -213,6 +169,7 @@ function winpe-TestUserShellFolder {
         }
         Write-Host -ForegroundColor DarkGray $item
     }
+    return 1
 }
 
 function winpe-RepairUserShellFolder {
@@ -222,64 +179,31 @@ function winpe-RepairUserShellFolder {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    $requiredFolders = @(
-        "$env:ProgramFiles\WindowsPowerShell\Modules",
-        "$env:ProgramFiles\WindowsPowerShell\Scripts",
-        "$env:UserProfile\AppData\Local",
-        "$env:UserProfile\AppData\Roaming",
-        "$env:UserProfile\Desktop",
-        "$env:UserProfile\Documents\WindowsPowerShell",
-        "$env:SystemRoot\system32\WindowsPowerShell\v1.0\Modules",
-        "$env:SystemRoot\system32\WindowsPowerShell\v1.0\Scripts"
-    )
 
-    # Test for missing folders
-    $needsRepair = $false
-    foreach ($folder in $requiredFolders) {
-        if (-not (Test-Path -Path $folder)) {
-            $needsRepair = $true
-            break
-        }
-    }
-
-    # Success
-    if (-not $needsRepair) {
-        # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGreen "[✓] Required User Shell Folders exist"
+    # Test
+    $repairNeeded = winpe-TestUserShellFolder
+    if ($repairNeeded -eq 0) {
         return
     }
 
-    # Warning only
-    if (-not ($Force)) {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "Required User Shell Folders DO NOT exist"
-        foreach ($item in $requiredFolders) {
-            if (Test-Path -Path $item) {
-                continue
-            }
-            Write-Host -ForegroundColor DarkGray $item
-        }
-    }
-
     # Repair
-    if ($Force) {
-        Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
-        foreach ($item in $requiredFolders) {
-            if (Test-Path -Path $item) {
-                continue
-            }
+    foreach ($item in $requiredFolders) {
+        if (Test-Path -Path $item) {
+            continue
+        }
 
-            try {
-                Write-Host -ForegroundColor DarkGray $item
-                $null = New-Item -Path $item -ItemType Directory -Force -ErrorAction Stop
-            }
-            catch {
-                Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
-                Write-Host -ForegroundColor Red $_
-                throw
-            }
+        try {
+            Write-Host -ForegroundColor DarkGray $item
+            $null = New-Item -Path $item -ItemType Directory -Force -ErrorAction Stop
+        }
+        catch {
+            Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+            Write-Host -ForegroundColor Red $_
+            throw
         }
     }
+
+    $results = winpe-TestUserShellFolder
 }
 
 function winpe-TestRegistryEnvironment {
