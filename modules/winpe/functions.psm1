@@ -569,10 +569,9 @@ function winpe-TestPowerShellProfile {
         }
     }
     if ($needsProfileCreated) {
-        Write-Host -ForegroundColor Red "[✗] PowerShell Profile does not contain a solution to enable registry environment variables in new sessions"
+        Write-Host -ForegroundColor Red "[✗] PowerShell Profile is not configured for Registry Environment Variables"
     }
 }
-
 
 function winpe-RepairPowerShellProfile {
     [CmdletBinding()]
@@ -624,7 +623,7 @@ function winpe-RepairPowerShellProfile {
             }
         }
         if ($needsProfileCreated) {
-            Write-Host -ForegroundColor DarkGray "PowerShell Profile requires a solution to enable registry environment variables in new sessions"
+            Write-Host -ForegroundColor Red "[✗] PowerShell Profile is not configured for Registry Environment Variables"
         }
         return
     }
@@ -683,6 +682,21 @@ $registryPath | ForEach-Object {
     }
 }
 
+function winpe-TestRealTimeClockUTC {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+    # Test if RealTimeIsUniversal is already set
+    $realTimeIsUniversal = Get-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -ErrorAction SilentlyContinue
+
+    if ($realTimeIsUniversal -and ($realTimeIsUniversal.RealTimeIsUniversal -eq 1)) {
+        Write-Host -ForegroundColor DarkGreen "[✓] RealTime Clock is set to UTC"
+    }
+    else {
+        Write-Host -ForegroundColor Red "[✗] RealTime Clock is NOT set to UTC"
+    }
+}
+
 function winpe-RepairRealTimeClockUTC {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -719,18 +733,32 @@ function winpe-RepairRealTimeClockUTC {
     }
 }
 
-function winpe-TestRealTimeClockUTC {
+function winpe-TestTimeService {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
-    # Test if RealTimeIsUniversal is already set
-    $realTimeIsUniversal = Get-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -ErrorAction SilentlyContinue
+    # Can we connect to Time Service?
+    try {
+        $w32timeService = Get-Service -Name w32time -ErrorAction Stop
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red $_
+        throw
+    }
 
-    if ($realTimeIsUniversal -and ($realTimeIsUniversal.RealTimeIsUniversal -eq 1)) {
-        Write-Host -ForegroundColor DarkGreen "[✓] RealTime Clock is set to UTC"
+    # Test if the Time Service is correctly configured
+    if (($w32timeService.StartType -eq 'Automatic') -and ($w32timeService.Status -eq 'Running')) {
+        Write-Host -ForegroundColor DarkGreen "[✓] Time Service [w32time] is set to Automatic and is Running"
     }
     else {
-        Write-Host -ForegroundColor Red "[✗] RealTime Clock is NOT set to UTC"
+        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+        if ($w32timeService.StartType -ne 'Automatic') {
+            Write-Host -ForegroundColor Red "[✗] Time Service [w32time] StartType is NOT set to Automatic"
+        }
+        if ($w32timeService.Status -ne 'Running') {
+            Write-Host -ForegroundColor Red "[✗] Time Service [w32time] is NOT Running"
+        }
     }
 }
 
@@ -806,6 +834,22 @@ function winpe-RepairTimeService {
             Write-Host -ForegroundColor Red $_
             throw
         }
+    }
+}
+
+function winpe-TestCurl {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+    $curlPath = "$env:SystemRoot\System32\curl.exe"
+
+    # Test if Curl is already installed
+    if (Test-Path $curlPath) {
+        $curl = Get-Item -Path $curlPath
+        Write-Host -ForegroundColor DarkGreen "[✓] Curl.exe is installed [$($curl.VersionInfo.FileVersion)]"
+    }
+    else {
+        Write-Host -ForegroundColor Red "[✗] Curl is NOT installed at $curlPath"
     }
 }
 
