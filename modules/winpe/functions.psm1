@@ -528,6 +528,21 @@ function winpe-RepairRealTimeClockUTC {
     }
 }
 
+function winpe-TestRealTimeClockUTC {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+    # Test if RealTimeIsUniversal is already set
+    $realTimeIsUniversal = Get-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -ErrorAction SilentlyContinue
+
+    if ($realTimeIsUniversal -and ($realTimeIsUniversal.RealTimeIsUniversal -eq 1)) {
+        Write-Host -ForegroundColor DarkGreen "[✓] RealTime Clock is set to UTC"
+    }
+    else {
+        Write-Host -ForegroundColor Red "[✗] RealTime Clock is NOT set to UTC"
+    }
+}
+
 function winpe-RepairTimeService {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
