@@ -76,6 +76,33 @@ function winpe-RepairTls {
     }
 }
 
+function winpe-TestExecutionPolicy {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+
+    # Get the current execution policy
+    try {
+        $executionPolicy = Get-ExecutionPolicy -ErrorAction Stop
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red $_
+        throw
+    }
+    
+    # Success
+    if ($executionPolicy -eq 'Bypass') {
+        Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Execution Policy is set to Bypass"
+        return
+    }
+
+    # Failure
+    Write-Host -ForegroundColor Red "[✗] Execution Policy is NOT set to Bypass"
+    Write-Host -ForegroundColor DarkGray "The current Execution Policy is: $executionPolicy"
+    Write-Host -ForegroundColor DarkGray "OSDCloud scripting will fail if not properly configured to Bypass"
+}
+
 function winpe-RepairExecutionPolicy {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -121,31 +148,43 @@ function winpe-RepairExecutionPolicy {
     }
 }
 
-function winpe-TestExecutionPolicy {
+function winpe-TestUserShellFolder {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
+    $requiredFolders = @(
+        "$env:ProgramFiles\WindowsPowerShell\Modules",
+        "$env:ProgramFiles\WindowsPowerShell\Scripts",
+        "$env:UserProfile\AppData\Local",
+        "$env:UserProfile\AppData\Roaming",
+        "$env:UserProfile\Desktop",
+        "$env:UserProfile\Documents\WindowsPowerShell",
+        "$env:SystemRoot\system32\WindowsPowerShell\v1.0\Modules",
+        "$env:SystemRoot\system32\WindowsPowerShell\v1.0\Scripts"
+    )
 
-    # Get the current execution policy
-    try {
-        $executionPolicy = Get-ExecutionPolicy -ErrorAction Stop
+    # Test for missing folders
+    $needsRepair = $false
+    foreach ($folder in $requiredFolders) {
+        if (-not (Test-Path -Path $folder)) {
+            $needsRepair = $true
+            break
+        }
     }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor Red $_
-        throw
-    }
-    
+
     # Success
-    if ($executionPolicy -eq 'Bypass') {
-        Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Execution Policy is set to Bypass"
+    if (-not $needsRepair) {
+        # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGreen "[✓] All required User Shell Folders exist"
         return
     }
-
-    # Failure
-    Write-Host -ForegroundColor Red "[✗] Execution Policy is NOT set to Bypass"
-    Write-Host -ForegroundColor DarkGray "The current Execution Policy is: $executionPolicy"
-    Write-Host -ForegroundColor DarkGray "OSDCloud scripting will fail if not properly configured to Bypass"
+    Write-Host -ForegroundColor Red "[✗] One or more required User Shell Folders are missing:"
+    foreach ($item in $requiredFolders) {
+        if (Test-Path -Path $item) {
+            continue
+        }
+        Write-Host -ForegroundColor DarkGray $item
+    }
 }
 
 function winpe-RepairUserShellFolder {
