@@ -756,9 +756,11 @@ function winpe-RepairNugetPackageProvider {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
+    Write-Host ""
     Write-Host "Starting $($MyInvocation.MyCommand.Name)"
 
     # Test if PackageManagement module is available
+    Write-Host "1"
     if (-not (Get-Module -Name PackageManagement -ListAvailable)) {
         Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is NOT installed"
@@ -766,6 +768,7 @@ function winpe-RepairNugetPackageProvider {
     }
 
     # Test if Get-PackageProvider cmdlet is available
+    Write-Host "2"
     if (-not (Get-Command -Name Get-PackageProvider -ErrorAction SilentlyContinue)) {
         Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor DarkGray "Get-PackageProvider PowerShell Cmdlet is NOT available"
@@ -774,6 +777,7 @@ function winpe-RepairNugetPackageProvider {
     }
 
     # Test if NuGet Package Provider is already installed
+    Write-Host "3"
     $provider = Get-PackageProvider -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq 'NuGet' }
     if ($provider) {
         Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
@@ -783,6 +787,7 @@ function winpe-RepairNugetPackageProvider {
 
     # Warning only
     if (-not ($Force)) {
+        Write-Host "4"
         Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor DarkGray "PackageProvider NuGet is NOT installed"
         return
