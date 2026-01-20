@@ -111,6 +111,8 @@ function winpe-RepairExecutionPolicy {
 
     # Test
     $remediate = winpe-TestExecutionPolicy
+
+    # Success
     if ($remediate -eq 0) {
         return
     }
@@ -701,10 +703,7 @@ function winpe-TestTimeService {
 function winpe-RepairTimeService {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param (
-        [System.Management.Automation.SwitchParameter]
-        $Force
-    )
+    param ()
     # Test
     $remediate = winpe-TestTimeService
 
@@ -769,40 +768,30 @@ function winpe-TestCurl {
     if (Test-Path $curlPath) {
         $curl = Get-Item -Path $curlPath
         Write-Host -ForegroundColor Green "[✓] Curl.exe is installed [$($curl.VersionInfo.FileVersion)]"
+        return 0
     }
     else {
         Write-Host -ForegroundColor Red "[✗] Curl is NOT installed at $curlPath"
+        return 1
     }
 }
 
 function winpe-RepairCurl {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param (
-        [System.Management.Automation.SwitchParameter]
-        $Force
-    )
-    $curlPath = "$env:SystemRoot\System32\curl.exe"
+    param ()
 
-    # Test if Curl is already installed
-    if (Test-Path $curlPath) {
-        $curl = Get-Item -Path $curlPath
-        # Write-Host -ForegroundColor Green "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor Green "[✓] Curl.exe is installed [$($curl.VersionInfo.FileVersion)]"
-        return
-    }
+    # Test
+    $remediate = winpe-TestCurl
 
-    # Warning only
-    if (-not ($Force)) {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "Curl is NOT installed at $curlPath"
+    # Success
+    if ($remediate -eq 0) {
         return
     }
 
     # Repair
-
     try {
-        Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
         $tempZip = "$env:TEMP\curl.zip"
         $tempDir = "$env:TEMP\curl"
         
@@ -831,11 +820,7 @@ function winpe-RepairCurl {
         if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
 
-    if (Test-Path $curlPath) {
-        $curl = Get-Item -Path $curlPath
-        Write-Host -ForegroundColor Green "[✓] Curl.exe is installed [$($curl.VersionInfo.FileVersion)]"
-        return
-    }
+    $results = winpe-TestCurl
 }
 
 function winpe-TestPackageManagement {
