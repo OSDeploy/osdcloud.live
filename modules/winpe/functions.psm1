@@ -841,8 +841,6 @@ function winpe-TestCurl {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     $curlPath = "$env:SystemRoot\System32\curl.exe"
-
-    # Test if Curl is already installed
     if (Test-Path $curlPath) {
         $curl = Get-Item -Path $curlPath
         Write-Host -ForegroundColor DarkGreen "[✓] Curl.exe is installed [$($curl.VersionInfo.FileVersion)]"
@@ -915,6 +913,23 @@ function winpe-RepairCurl {
     }
 }
 
+function winpe-TestPackageManagement {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+    # Test if PackageManagement is already installed
+    $installedModule = Get-Module -Name PackageManagement -ListAvailable
+
+    # Success
+    if ($installedModule) {
+        $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
+        Write-Host -ForegroundColor DarkGreen "[✓] PackageManagement PowerShell Module is installed [$latestVersion]"
+    }
+    else {
+        Write-Host -ForegroundColor Red "[✗] PackageManagement PowerShell Module is NOT installed"
+    }
+}
+
 function winpe-RepairPackageManagement {
     <#
     .SYNOPSIS
@@ -951,12 +966,12 @@ function winpe-RepairPackageManagement {
         $Force
     )
     # Test if PackageManagement is already installed
-    $existingModule = Get-Module -Name PackageManagement -ListAvailable
+    $installedModule = Get-Module -Name PackageManagement -ListAvailable
 
     # Success
-    if ($existingModule) {
+    if ($installedModule) {
         # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        $latestVersion = ($existingModule | Sort-Object Version -Descending | Select-Object -First 1).Version
+        $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
         Write-Host -ForegroundColor DarkGreen "[✓] PackageManagement PowerShell Module is installed [$latestVersion]"
         return
     }
@@ -1011,12 +1026,68 @@ function winpe-RepairPackageManagement {
         if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
     # Test if PackageManagement is already installed
-    $existingModule = Get-Module -Name PackageManagement -ListAvailable
+    $installedModule = Get-Module -Name PackageManagement -ListAvailable
 
     # Success
-    if ($existingModule) {
-        $latestVersion = ($existingModule | Sort-Object Version -Descending | Select-Object -First 1).Version
+    if ($installedModule) {
+        $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
         Write-Host -ForegroundColor DarkGreen "[✓] PackageManagement PowerShell Module is installed [$latestVersion]"
+    }
+}
+
+function winpe-TestNuGetPackageProvider {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+    
+    # Test if PackageManagement module is available
+    if (-not (Get-Module -Name PackageManagement -ListAvailable)) {
+        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is NOT installed"
+        return
+    }
+
+    # Test if Get-PackageProvider cmdlet is available
+    if (-not (Get-Command -Name Get-PackageProvider -ErrorAction SilentlyContinue)) {
+        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "Get-PackageProvider PowerShell Cmdlet is NOT available"
+        Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module may not be installed properly"
+        return
+    }
+
+    # Test if Execution Policy allows installing Package Providers
+    $executionPolicy = Get-ExecutionPolicy -ErrorAction SilentlyContinue
+    if ($executionPolicy -ne 'Bypass' -and $executionPolicy -ne 'Unrestricted') {
+        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "Execution Policy is set to $executionPolicy"
+        Write-Host -ForegroundColor DarkGray "Execution Policy is blocking installation of Package Providers"
+        return
+    }
+
+    # Test if NuGet Package Provider is already installed
+    $provider = Get-PackageProvider -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq 'NuGet' }
+    if ($provider) {
+        # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGreen "[✓] NuGet Package Provider is installed [$($provider.Version)]"
+        return
+    }
+
+    # Warning only
+    if (-not ($Force)) {
+        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "NuGet Package Provider is NOT installed"
+        return
+    }
+
+    # Repair / Install
+    try {
+        Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
+        Install-PackageProvider -Name NuGet -Force -Scope AllUsers -ErrorAction Stop | Out-Null
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red $_
+        throw
     }
 }
 
@@ -1153,12 +1224,12 @@ function winpe-UpdatePackageManagement {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    $existingModule = Get-Module -Name PackageManagement -ListAvailable | Where-Object { $_.Version -ge '1.4.8.1' }
+    $installedModule = Get-Module -Name PackageManagement -ListAvailable | Where-Object { $_.Version -ge '1.4.8.1' }
 
     # Success
-    if ($existingModule) {
+    if ($installedModule) {
         # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        $latestVersion = ($existingModule | Sort-Object Version -Descending | Select-Object -First 1).Version
+        $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
         # Write-Host -ForegroundColor DarkGreen "[✓] PackageManagement PowerShell Module is installed [$latestVersion]"
         return
     }
@@ -1230,9 +1301,9 @@ function winpe-UpdatePowerShellGet {
         $Force
     )
     
-    $existingModule = Get-Module -Name PowerShellGet -ListAvailable | Where-Object { $_.Version -ge '2.2.5' }
-    if ($existingModule) {
-        $latestVersion = ($existingModule | Sort-Object Version -Descending | Select-Object -First 1).Version
+    $installedModule = Get-Module -Name PowerShellGet -ListAvailable | Where-Object { $_.Version -ge '2.2.5' }
+    if ($installedModule) {
+        $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
         Write-Host -ForegroundColor DarkGreen "[✓] PowerShellGet PowerShell Module is installed [$($latestVersion)]"
         return
     }
@@ -1287,9 +1358,9 @@ function winpe-UpdatePowerShellGet {
         if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
         if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
-    $existingModule = Get-Module -Name PowerShellGet -ListAvailable | Where-Object { $_.Version -ge '2.2.5' }
-    if ($existingModule) {
-        $latestVersion = ($existingModule | Sort-Object Version -Descending | Select-Object -First 1).Version
+    $installedModule = Get-Module -Name PowerShellGet -ListAvailable | Where-Object { $_.Version -ge '2.2.5' }
+    if ($installedModule) {
+        $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
         Write-Host -ForegroundColor DarkGreen "[✓] PowerShellGet PowerShell Module is installed [$($latestVersion)]"
         return
     }
