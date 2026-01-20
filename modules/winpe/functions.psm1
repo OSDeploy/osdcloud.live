@@ -955,14 +955,20 @@ function winpe-UpdatePowerShellGet {
     )
     
     $existingModule = Get-Module -Name PowerShellGet -ListAvailable | Where-Object { $_.Version -ge '2.2.5' }
-    
     if ($existingModule) {
         Write-Host -ForegroundColor DarkGreen "[✓] PowerShellGet PowerShell Module is installed [$($existingModule.Version)]"
         return
     }
 
+    # Warning
+    if (-not ($Force)) {
+        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "PowerShellGet PowerShell Module is NOT updated to version 2.2.5 or later"
+        return
+    }
+
     try {
-        Write-Host -ForegroundColor Cyan "[→] PowerShellGet [2.2.5]"
+        Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
         $tempZip = "$env:TEMP\powershellget.2.2.5.zip"
         $tempDir = "$env:TEMP\2.2.5"
         $moduleDir = "$env:ProgramFiles\WindowsPowerShell\Modules\PowerShellGet"
