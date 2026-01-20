@@ -14,8 +14,8 @@ Recommended execution order for initial setup:
     5. winpe-RepairPowerShellProfile
     6. winpe-RepairRealTimeClockUTC
     7. winpe-RepairTimeService
-    8. winpe-InstallCurl
-    9. winpe-InstallPackageProviderNuget
+    8. winpe-RepairCurl
+    9. winpe-RepairNugetPackageProvider
     10. winpe-RepairNugetExe
     11. winpe-UpdatePackageManagement
     12. winpe-UpdatePowerShellGet
@@ -590,7 +590,7 @@ function winpe-RepairTimeService {
     }
 }
 
-function winpe-InstallCurl {
+function winpe-RepairCurl {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
@@ -649,7 +649,7 @@ function winpe-InstallCurl {
     }
 }
 
-function winpe-InstallPackageManagement {
+function winpe-RepairPackageManagement {
     <#
     .SYNOPSIS
     Installs or updates the PackageManagement module in WinPE.
@@ -664,11 +664,11 @@ function winpe-InstallPackageManagement {
     When specified, performs installation/repair actions rather than only reporting status.
 
     .EXAMPLE
-    winpe-InstallPackageManagement
+    winpe-RepairPackageManagement
     Displays the current status of the PackageManagement module without making changes.
 
     .EXAMPLE
-    winpe-InstallPackageManagement -Force
+    winpe-RepairPackageManagement -Force
     Downloads and installs PackageManagement 1.4.8.1, then imports the module.
 
     .OUTPUTS
@@ -749,7 +749,7 @@ function winpe-InstallPackageManagement {
     }
 }
 
-function winpe-InstallPackageProviderNuget {
+function winpe-RepairNugetPackageProvider {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
@@ -801,38 +801,58 @@ function winpe-RepairNugetExe {
     )
     Write-Host ""
 
-    $NuGetClientSourceURL = 'https://nuget.org/nuget.exe'
-    $NuGetExeName = 'NuGet.exe'
-    $nugetPath = Join-Path -Path $env:LOCALAPPDATA -ChildPath 'Microsoft\Windows\PowerShell\PowerShellGet\'
+    $nugetExeSourceURL = 'https://nuget.org/nuget.exe'
+    $nugetFileName = 'NuGet.exe'
 
-    try {
-        $nugetExeFilePath = Join-Path -Path $nugetPath -ChildPath $NuGetExeName
-        if (-not (Test-Path -Path $nugetExeFilePath)) {
-            Write-Host -ForegroundColor DarkCyan "[→] NuGet [$nugetExeFilePath]"
-            Write-Host -ForegroundColor DarkGray "[↓] $NuGetClientSourceURL"
-            if (-not (Test-Path -Path $nugetPath)) {
-                $null = New-Item -Path $nugetPath -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-            }
-            
-            # Download using curl if available, fallback to Invoke-WebRequest
-            $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
-            if (Test-Path $curlPath) {
-                & $curlPath --fail --location --silent --show-error `
-                    $NuGetClientSourceURL `
-                    --output $nugetExeFilePath
-                if ($LASTEXITCODE -ne 0 -or -not (Test-Path $nugetExeFilePath)) {
-                    throw "curl download failed with exit code $LASTEXITCODE"
-                }
-            }
-            else {
-                Invoke-WebRequest -UseBasicParsing -Uri $NuGetClientSourceURL -OutFile $nugetExeFilePath -ErrorAction Stop
+    # $env:LOCALAPPDATA may not be set in WinPE, so should not use env:LOCALAPPDATA
+    # $nugetPath = Join-Path -Path $env:LOCALAPPDATA -ChildPath 'Microsoft\Windows\PowerShell\PowerShellGet\'
+    $nugetPath = Join-Path -Path "$env:UserProfile\AppData\Local" -ChildPath 'Microsoft\Windows\PowerShell\PowerShellGet\'
+    $nugetExeFilePath = Join-Path -Path $nugetPath -ChildPath $nugetFileName
+
+    # Test if NuGet.exe is already installed
+    if (Test-Path -Path $nugetExeFilePath) {
+        $nugetExe = Get-Item -Path $nugetExeFilePath
+        Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "NuGet.exe [$($nugetExe.VersionInfo.FileVersion)] is installed at $nugetExeFilePath"
+        return
+    }
+    else {
+        # Warning only
+        if (-not ($Force)) {
+            Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+            Write-Host -ForegroundColor DarkGray "NuGet.exe is NOT installed at $nugetExeFilePath"
+            return
+        }
+
+        # Repair / Install
+        Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "[↓] $nugetExeSourceURL"
+
+        # Create directory if it does not exist
+        if (-not (Test-Path -Path $nugetPath)) {
+            $null = New-Item -Path $nugetPath -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+        }
+        
+        # Download using curl if available, fallback to Invoke-WebRequest
+        $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
+        if (Test-Path $curlPath) {
+            & $curlPath --fail --location --silent --show-error `
+                $nugetExeSourceURL `
+                --output $nugetExeFilePath
+            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $nugetExeFilePath)) {
+                throw "curl download failed with exit code $LASTEXITCODE"
             }
         }
-    }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor Red $_
-        throw
+        else {
+            try {
+                Invoke-WebRequest -UseBasicParsing -Uri $nugetExeSourceURL -OutFile $nugetExeFilePath -ErrorAction Stop
+            }
+            catch {
+                Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+                Write-Host -ForegroundColor Red $_
+                throw
+            }
+        }
     }
 }
 

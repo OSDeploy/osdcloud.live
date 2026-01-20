@@ -79,7 +79,7 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-RepairRegistryEnvironment
     winpe-RepairPowerShellProfile
     winpe-RepairRealTimeClockUTC
-    winpe-InstallCurl
+    winpe-RepairCurl
     winpe-UpdatePackageManagement
     winpe-UpdatePowerShellGet
     winpe-TrustPSGallery
