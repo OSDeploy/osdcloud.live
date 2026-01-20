@@ -514,8 +514,6 @@ function winpe-RepairTimeService {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host ""
-
     # Can we connect to Time Service?
     try {
         $w32timeService = Get-Service -Name w32time -ErrorAction Stop
@@ -551,7 +549,7 @@ function winpe-RepairTimeService {
     if ($w32timeService.StartType -ne 'Automatic') {
         try {
             Set-Service -Name w32time -StartupType Automatic -ErrorAction Stop
-            Write-Host -ForegroundColor DarkGray "Time Service [w32time] StartType has been set to Automatic"
+            Write-Host -ForegroundColor DarkGray "Time Service [w32time] StartType is now set to Automatic"
         }
         catch {
             Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
@@ -683,8 +681,6 @@ function winpe-RepairPackageManagement {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host ""
-
     # Test if PackageManagement is already installed
     $existingModule = Get-Module -Name PackageManagement -ListAvailable
 
@@ -824,8 +820,6 @@ function winpe-RepairNugetExe {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host ""
-
     $nugetExeSourceURL = 'https://nuget.org/nuget.exe'
     $nugetFileName = 'NuGet.exe'
 
@@ -837,8 +831,8 @@ function winpe-RepairNugetExe {
     # Test if NuGet.exe is already installed
     if (Test-Path -Path $nugetExeFilePath) {
         $nugetExe = Get-Item -Path $nugetExeFilePath
-        Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "NuGet.exe [$($nugetExe.VersionInfo.FileVersion)] is installed"
+        # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGreen "[✓] NuGet.exe [$($nugetExe.VersionInfo.FileVersion)] is installed"
         return
     }
     else {
@@ -894,15 +888,13 @@ function winpe-UpdatePackageManagement {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    Write-Host ""
-    
     $existingModule = Get-Module -Name PackageManagement -ListAvailable | Where-Object { $_.Version -ge '1.4.8.1' }
 
     # Success
     if ($existingModule) {
-        Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
+        # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
         $latestVersion = ($existingModule | Sort-Object Version -Descending | Select-Object -First 1).Version
-        Write-Host -ForegroundColor DarkGray "PackageManagement [$latestVersion] is installed"
+        Write-Host -ForegroundColor DarkGreen "[✓] PackageManagement [$latestVersion] PowerShell Module is installed"
         return
     }
 
