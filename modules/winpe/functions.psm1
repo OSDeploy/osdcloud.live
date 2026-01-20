@@ -619,7 +619,7 @@ function winpe-InstallCurl {
     # Repair
 
     try {
-        Write-Host -ForegroundColor DarkCyan "[→] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
         $tempZip = "$env:TEMP\curl.zip"
         $tempDir = "$env:TEMP\curl"
         
@@ -706,9 +706,9 @@ function winpe-InstallPackageManagement {
     }
     
     # Repair / Install
-    Write-Host -ForegroundColor DarkCyan "[→] $($MyInvocation.MyCommand.Name)"
+    Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
     try {
-        Write-Host -ForegroundColor DarkCyan "[→] PackageManagement [1.4.8.1]"
+        Write-Host -ForegroundColor DarkGray "[→] PackageManagement [1.4.8.1]"
         $tempZip = "$env:TEMP\packagemanagement.1.4.8.1.zip"
         $tempDir = "$env:TEMP\1.4.8.1"
         $moduleDir = "$env:ProgramFiles\WindowsPowerShell\Modules\PackageManagement"
@@ -752,22 +752,36 @@ function winpe-InstallPackageManagement {
 function winpe-InstallPackageProviderNuget {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Force
+    )
+    Write-Host ""
 
     # Test if NuGet PackageProvider is already installed
     $provider = Get-PackageProvider -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq 'NuGet' }
+
     if ($provider) {
-        Write-Host -ForegroundColor DarkGray "[✓] Package Provider NuGet [$($provider.Version)]"
+        Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "Package Provider NuGet [$($provider.Version)]"
         return
     }
 
+    # Warning only
+    if (-not ($Force)) {
+        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "Package Provider NuGet is NOT installed"
+        return
+    }
+
+    # Repair / Install
     try {
-        Write-Host -ForegroundColor DarkCyan "[→] Package Provider NuGet"
-        Write-Host -ForegroundColor DarkGray "[>] Install-PackageProvider -Name NuGet -Force -Scope AllUsers"
+        Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
         Install-PackageProvider -Name NuGet -Force -Scope AllUsers -ErrorAction Stop | Out-Null
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] Package Provider NuGet failed: $_"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red $_
         throw
     }
 }
@@ -806,7 +820,8 @@ function winpe-InstallNuGet {
         }
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] NuGet failed: $_"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red $_
         throw
     }
 }

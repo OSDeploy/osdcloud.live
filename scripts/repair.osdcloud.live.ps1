@@ -76,9 +76,9 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-RepairTimeService -Force
     winpe-InstallCurl -Force
     winpe-InstallPackageManagement
-    Pause
     winpe-InstallPackageProviderNuGet
     winpe-InstallNuGet
+    Pause
     winpe-UpdatePackageManagement
     winpe-UpdatePowerShellGet
     winpe-TrustPSGallery
