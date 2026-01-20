@@ -1039,12 +1039,14 @@ function winpe-TestNuGetPackageProvider {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
 
+    <#
     # Test if PackageManagement module is available
     if (-not (Get-Module -Name PackageManagement -ListAvailable)) {
         Write-Host -ForegroundColor Red "[✗] PackageManagement PowerShell Module is NOT installed"
         Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is required for the Get-PackageProvider cmdlet"
         return
     }
+    #>
 
     # Test if Get-PackageProvider cmdlet is available
     if (-not (Get-Command -Name Get-PackageProvider -ErrorAction SilentlyContinue)) {
