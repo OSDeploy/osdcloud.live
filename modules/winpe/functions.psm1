@@ -116,6 +116,7 @@ function winpe-RepairExecutionPolicy {
     }
 
     # Repair
+    Write-Host -ForegroundColor Cyan "[→] Repair in progress ..."
     try {
         Set-ExecutionPolicy -ExecutionPolicy Bypass -Force -ErrorAction Stop
     }
@@ -194,7 +195,7 @@ function winpe-RepairUserShellFolder {
     }
 
     # Repair
-    Write-Host -ForegroundColor Cyan "[→] Repairing User Shell Folders"
+    Write-Host -ForegroundColor Cyan "[→] Repair in progress ..."
     foreach ($item in $requiredFolders) {
         if (Test-Path -Path $item) {
             continue
@@ -279,7 +280,7 @@ function winpe-RepairRegistryEnvironment {
     }
 
     # Repair
-    Write-Host -ForegroundColor Cyan "[→] Repairing Registry Environment Variables"
+    Write-Host -ForegroundColor Cyan "[→] Repair in progress ..."
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
