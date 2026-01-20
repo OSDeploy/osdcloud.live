@@ -605,7 +605,7 @@ function winpe-RepairCurl {
     if (Test-Path $curlPath) {
         $curl = Get-Item -Path $curlPath
         Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "Curl.exe [$($curl.VersionInfo.FileVersion)] is installed at $curlPath"
+        Write-Host -ForegroundColor DarkGray "Curl.exe [$($curl.VersionInfo.FileVersion)] is installed"
         return
     }
 
@@ -650,7 +650,7 @@ function winpe-RepairCurl {
 
     if (Test-Path $curlPath) {
         $curl = Get-Item -Path $curlPath
-        Write-Host -ForegroundColor DarkGray "Curl.exe [$($curl.VersionInfo.FileVersion)] is installed at $curlPath"
+        Write-Host -ForegroundColor DarkGray "Curl.exe [$($curl.VersionInfo.FileVersion)] is installed"
         return
     }
 }
@@ -835,7 +835,7 @@ function winpe-RepairNugetExe {
     if (Test-Path -Path $nugetExeFilePath) {
         $nugetExe = Get-Item -Path $nugetExeFilePath
         Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "NuGet.exe [$($nugetExe.VersionInfo.FileVersion)] is installed at $nugetExeFilePath"
+        Write-Host -ForegroundColor DarkGray "NuGet.exe [$($nugetExe.VersionInfo.FileVersion)] is installed"
         return
     }
     else {
@@ -897,9 +897,25 @@ function winpe-UpdatePackageManagement {
         return
     }
 
-    # Requires Update
+    # Warning only
+    if (-not ($Force)) {
+        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is NOT updated to version 1.4.8.1 or later"
+        return
+    }
+
+    # Test if Execution Policy allows installing Package Providers
+    $executionPolicy = Get-ExecutionPolicy -ErrorAction SilentlyContinue
+    if ($executionPolicy -ne 'Bypass' -and $executionPolicy -ne 'Unrestricted') {
+        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "Execution Policy is set to $executionPolicy"
+        Write-Host -ForegroundColor DarkGray "Execution Policy is blocking installation of Package Providers"
+        return
+    }
+
+    # Repair / Install
+    Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
     try {
-        Write-Host -ForegroundColor DarkCyan "[→] PackageManagement [1.4.8.1]"
         $tempZip = "$env:TEMP\packagemanagement.1.4.8.1.zip"
         $tempDir = "$env:TEMP\1.4.8.1"
         $moduleDir = "$env:ProgramFiles\WindowsPowerShell\Modules\PackageManagement"
@@ -930,7 +946,8 @@ function winpe-UpdatePackageManagement {
         Import-Module PackageManagement -Force -Scope Global -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] PackageManagement [1.4.8.1] failed: $_"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red $_
         throw
     }
     finally {
@@ -942,7 +959,11 @@ function winpe-UpdatePackageManagement {
 function winpe-UpdatePowerShellGet {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Force
+    )
+    Write-Host ""
     
     $existingModule = Get-Module -Name PowerShellGet -ListAvailable | Where-Object { $_.Version -ge '2.2.5' }
     
@@ -952,7 +973,7 @@ function winpe-UpdatePowerShellGet {
     }
 
     try {
-        Write-Host -ForegroundColor DarkCyan "[→] PowerShellGet [2.2.5]"
+        Write-Host -ForegroundColor Cyan "[→] PowerShellGet [2.2.5]"
         $tempZip = "$env:TEMP\powershellget.2.2.5.zip"
         $tempDir = "$env:TEMP\2.2.5"
         $moduleDir = "$env:ProgramFiles\WindowsPowerShell\Modules\PowerShellGet"
@@ -998,7 +1019,11 @@ function winpe-UpdatePowerShellGet {
 function winpe-TrustPSGallery {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Force
+    )
+    Write-Host ""
 
     $PowerShellGallery = Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue
 
@@ -1030,6 +1055,7 @@ function winpe-InstallAzCopy {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
+    Write-Host ""
 
     $azcopyPath = "$env:SystemRoot\System32\azcopy.exe"
     
@@ -1097,7 +1123,11 @@ function winpe-InstallAzCopy {
 function winpe-InstallDotNetCore {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Force
+    )
+    Write-Host ""
 
     $dotNetCoreUrl = 'https://builds.dotnet.microsoft.com/dotnet/Runtime/10.0.1/dotnet-runtime-10.0.1-win-x64.zip'
     $dotNetCoreZip = Join-Path -Path $env:TEMP -ChildPath 'dotnet-runtime.zip'
