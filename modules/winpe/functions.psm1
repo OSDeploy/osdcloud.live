@@ -98,8 +98,8 @@ function winpe-TestExecutionPolicy {
     }
 
     # Failure
-    Write-Host -ForegroundColor Red "[✗] Execution Policy is NOT set to Bypass"
-    Write-Host -ForegroundColor DarkGray "The current Execution Policy is: $executionPolicy"
+    Write-Host -ForegroundColor Red "[✗] PowerShell Execution Policy is NOT set to Bypass"
+    Write-Host -ForegroundColor DarkGray "PowerShell Execution Policy is set to $executionPolicy"
     Write-Host -ForegroundColor DarkGray "OSDCloud scripting will fail if not properly configured to Bypass"
 }
 
@@ -122,16 +122,15 @@ function winpe-RepairExecutionPolicy {
     
     # Success
     if ($executionPolicy -eq 'Bypass') {
-        # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Execution Policy is set to Bypass"
         return
     }
 
     # Warning only
     if (-not ($Force)) {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "Execution Policy is set to $executionPolicy"
-        Write-Host -ForegroundColor DarkGray "Execution Policy should be set to Bypass for installing Package Providers"
+        Write-Host -ForegroundColor Yellow "[!] PowerShell Execution Policy is NOT set to Bypass"
+        Write-Host -ForegroundColor DarkGray "PowerShell Execution Policy is set to $executionPolicy"
+        Write-Host -ForegroundColor DarkGray "PowerShell Execution Policy should be set to Bypass for installing Package Providers"
         return
     }
 
@@ -1039,18 +1038,17 @@ function winpe-TestNuGetPackageProvider {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
-    
+
     # Test if PackageManagement module is available
     if (-not (Get-Module -Name PackageManagement -ListAvailable)) {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is NOT installed"
+        Write-Host -ForegroundColor Red "[✗] PackageManagement PowerShell Module is NOT installed"
+        Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is required for the Get-PackageProvider cmdlet"
         return
     }
 
     # Test if Get-PackageProvider cmdlet is available
     if (-not (Get-Command -Name Get-PackageProvider -ErrorAction SilentlyContinue)) {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "Get-PackageProvider PowerShell Cmdlet is NOT available"
+        Write-Host -ForegroundColor Red "[✗] Get-PackageProvider PowerShell Cmdlet is NOT available"
         Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module may not be installed properly"
         return
     }
@@ -1058,37 +1056,20 @@ function winpe-TestNuGetPackageProvider {
     # Test if Execution Policy allows installing Package Providers
     $executionPolicy = Get-ExecutionPolicy -ErrorAction SilentlyContinue
     if ($executionPolicy -ne 'Bypass' -and $executionPolicy -ne 'Unrestricted') {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "Execution Policy is set to $executionPolicy"
-        Write-Host -ForegroundColor DarkGray "Execution Policy is blocking installation of Package Providers"
+        Write-Host -ForegroundColor Red "[✗] PowerShell Execution Policy is NOT set to Bypass or Unrestricted"
+        Write-Host -ForegroundColor DarkGray "PowerShell Execution Policy is set to $executionPolicy"
+        Write-Host -ForegroundColor DarkGray "PowerShell Execution Policy is blocking installation of Package Providers"
         return
     }
 
     # Test if NuGet Package Provider is already installed
     $provider = Get-PackageProvider -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq 'NuGet' }
     if ($provider) {
-        # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor DarkGreen "[✓] NuGet Package Provider is installed [$($provider.Version)]"
         return
     }
 
-    # Warning only
-    if (-not ($Force)) {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "NuGet Package Provider is NOT installed"
-        return
-    }
-
-    # Repair / Install
-    try {
-        Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
-        Install-PackageProvider -Name NuGet -Force -Scope AllUsers -ErrorAction Stop | Out-Null
-    }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor Red $_
-        throw
-    }
+    Write-Host -ForegroundColor Red "[✗] NuGet Package Provider is NOT installed"
 }
 
 function winpe-RepairNugetPackageProvider {

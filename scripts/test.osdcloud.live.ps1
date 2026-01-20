@@ -77,7 +77,7 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-TestTimeService
     winpe-TestCurl
     winpe-TestPackageManagement
-    winpe-RepairNugetPackageProvider
+    winpe-TestNugetPackageProvider
     winpe-RepairNugetExe
     winpe-UpdatePackageManagement
     winpe-UpdatePowerShellGet
