@@ -121,6 +121,33 @@ function winpe-RepairExecutionPolicy {
     }
 }
 
+function winpe-TestExecutionPolicy {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+
+    # Get the current execution policy
+    try {
+        $executionPolicy = Get-ExecutionPolicy -ErrorAction Stop
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red $_
+        throw
+    }
+    
+    # Success
+    if ($executionPolicy -eq 'Bypass') {
+        Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Execution Policy is set to Bypass"
+        return
+    }
+
+    # Failure
+    Write-Host -ForegroundColor Red "[✗] Execution Policy is NOT set to Bypass"
+    Write-Host -ForegroundColor DarkGray "The current Execution Policy is: $executionPolicy"
+    Write-Host -ForegroundColor DarkGray "OSDCloud scripting will fail if not properly configured to Bypass"
+}
+
 function winpe-RepairUserShellFolder {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
