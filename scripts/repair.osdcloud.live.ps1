@@ -84,20 +84,9 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-InstallAzCopy -Force
     # winpe-InstallPowerShellModule -Name OSD
     # winpe-InstallPowerShellModule -Name OSDCloud
-    if (-not (Get-Command 'curl.exe' -ErrorAction SilentlyContinue)) {
-        Write-Warning 'curl.exe is missing from WinPE. This is required for OSDCloud to function'
-        Start-Sleep -Seconds 5
-        Break
-    }
     $EndTime = Get-Date
     $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
     Write-Host -ForegroundColor DarkGray "[i] Ready in $TotalSeconds seconds"
-    <#
-    Write-Host -ForegroundColor Cyan "[✓] OSDCloud.live imported functions:"
-    Get-Command winpe-* | Select-Object -ExpandProperty Name | ForEach-Object {
-        Write-Host -ForegroundColor DarkGray $_
-    }
-    #>
     $null = Stop-Transcript -ErrorAction Ignore
 }
 #endregion

@@ -370,10 +370,10 @@ function winpe-RepairPowerShellProfile {
     $needsProfileRepair = $false
     $needsProfileCreated = $false
 
-    if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\profile.ps1") {
+    if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
         $needsProfileRepair = $true
     }
-    if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\Microsoft.PowerShell_profile.ps1") {
+    if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1") {
         $needsProfileRepair = $true
     }
     if (-not (Test-Path -Path $profilePath)) {
@@ -398,10 +398,10 @@ function winpe-RepairPowerShellProfile {
         Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
         if ($needsProfileRepair) {
             Write-Host -ForegroundColor DarkGray "PowerShell Profile paths are incorrectly configured:"
-            if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\profile.ps1") {
+            if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
                 Write-Host -ForegroundColor DarkGray "CurrentUserAllHosts: [$($PROFILE.CurrentUserAllHosts)]"
             }
-            if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\Microsoft.PowerShell_profile.ps1") {
+            if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1") {
                 Write-Host -ForegroundColor DarkGray "CurrentUserCurrentHost: [$($PROFILE.CurrentUserCurrentHost)]"
             }
         }
@@ -415,12 +415,12 @@ function winpe-RepairPowerShellProfile {
     Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
     if ($needsProfileRepair) {
         Write-Host -ForegroundColor DarkGray "Updating PowerShell Profile paths:"
-        if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\profile.ps1") {
-            $PROFILE.CurrentUserAllHosts = "$Home\Documents\profile.ps1"
+        if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
+            $PROFILE.CurrentUserAllHosts = "$Home\Documents\WindowsPowerShell\profile.ps1"
             Write-Host -ForegroundColor DarkGray "CurrentUserAllHosts: [$($PROFILE.CurrentUserAllHosts)]"
         }
-        if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\Microsoft.PowerShell_profile.ps1") {
-            $PROFILE.CurrentUserCurrentHost = "$Home\Documents\Microsoft.PowerShell_profile.ps1"
+        if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1") {
+            $PROFILE.CurrentUserCurrentHost = "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1"
             Write-Host -ForegroundColor DarkGray "CurrentUserCurrentHost: [$($PROFILE.CurrentUserCurrentHost)]"
         }
     }
@@ -1096,8 +1096,7 @@ function winpe-InstallAzCopy {
         else {
             throw "Unsupported processor architecture: $env:PROCESSOR_ARCHITECTURE"
         }
-        Write-Host -ForegroundColor DarkCyan "[→] Microsoft AzCopy"
-        Write-Host -ForegroundColor DarkGray "[↓] $downloadUrl"
+        Write-Host -ForegroundColor DarkGray $downloadUrl
 
         # Download using curl if available, fallback to Invoke-WebRequest
         $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
@@ -1133,7 +1132,7 @@ function winpe-InstallAzCopy {
     }
     if (Test-Path $azcopyPath) {
         $azcopy = Get-Item -Path $azcopyPath
-        Write-Host -ForegroundColor DarkGreen "[✓] Microsoft AzCopy is installed [$($azcopy.VersionInfo.FileVersion)]"
+        Write-Host -ForegroundColor DarkGreen "[✓] Microsoft AzCopy is installed"
         return
     }
 }
