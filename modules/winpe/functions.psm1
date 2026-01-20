@@ -241,12 +241,12 @@ function winpe-TestRegistryEnvironment {
 
     # Success
     if (-not $remediate) {
-        Write-Host -ForegroundColor DarkGreen "[✓] Required Environment variables exist in the Registry"
+        Write-Host -ForegroundColor DarkGreen "[✓] Required Environment Variables exist in the Registry"
         return 0
     }
 
     # Failure
-    Write-Host -ForegroundColor Red "[✗] Required Environment variables DO NOT exist in the Registry"
+    Write-Host -ForegroundColor Red "[✗] Required Environment Variables DO NOT exist in the Registry"
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
@@ -298,7 +298,6 @@ function winpe-RepairRegistryEnvironment {
             }
         }
     }
-
     $results = winpe-TestRegistryEnvironment
 }
 
@@ -313,7 +312,7 @@ function winpe-TestSessionEnvironment {
         'LOCALAPPDATA'  = "$env:UserProfile\AppData\Local"
     }
 
-    # Test if a repair is needed
+    # Test
     $remediate = $false
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
@@ -335,7 +334,7 @@ function winpe-TestSessionEnvironment {
     # Success
     if (-not $remediate) {
         Write-Host -ForegroundColor DarkGreen "[✓] Required Environment Variables exist in the current PowerShell Session"
-        return
+        return 0
     }
 
     # Failure
@@ -355,15 +354,20 @@ function winpe-TestSessionEnvironment {
             Write-Host -ForegroundColor DarkGray "$name = $value"
         }
     }
+    return 1
 }
 
 function winpe-RepairSessionEnvironment {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param (
-        [System.Management.Automation.SwitchParameter]
-        $Force
-    )
+    param ()
+
+    # Test
+    $remediate = winpe-TestSessionEnvironment
+    if ($remediate -eq 0) {
+        return
+    }
+
     $requiredEnvironment = [ordered]@{
         'APPDATA'       = "$env:UserProfile\AppData\Roaming"
         'HOMEDRIVE'     = "$env:SystemDrive"
@@ -371,8 +375,8 @@ function winpe-RepairSessionEnvironment {
         'LOCALAPPDATA'  = "$env:UserProfile\AppData\Local"
     }
 
-    # Test if a repair is needed
-    $remediate = $false
+    # Repair
+    Write-Host -ForegroundColor DarkGray "[→] Repairing ..."
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
@@ -385,58 +389,8 @@ function winpe-RepairSessionEnvironment {
         }
 
         if ($currentValue -ne $value) {
-            $remediate = $true
-            break
-        }
-    }
-
-    # Success
-    if (-not $remediate) {
-        # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGreen "[✓] All required Environment variables exist in the current PowerShell Session"
-        return
-    }
-
-    # Warning only
-    if (-not ($Force)) {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "One or more required Environment variables are missing from the current PowerShell Session:"
-        foreach ($item in $requiredEnvironment.GetEnumerator()) {
-            $name = $item.Key
-            $value = $item.Value
-
             try {
-                $currentValue = Get-Item "env:$name" -ErrorAction Stop | Select-Object -ExpandProperty Value
-            }
-            catch {
-                $currentValue = $null
-            }
-
-            if ($currentValue -ne $value) {
-                Write-Host -ForegroundColor DarkGray "$name = $value"
-            }
-        }
-        return
-    }
-
-    #Repair
-    Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
-    Write-Host -ForegroundColor DarkGray "Adding missing Environment variables to the current PowerShell Session:"
-    foreach ($item in $requiredEnvironment.GetEnumerator()) {
-        $name = $item.Key
-        $value = $item.Value
-
-        try {
-            $currentValue = Get-Item "env:$name" -ErrorAction Stop | Select-Object -ExpandProperty Value
-        }
-        catch {
-            $currentValue = $null
-        }
-
-
-        if ($currentValue -ne $value) {
-            try {
-                Write-Host -ForegroundColor DarkGray "$name = $value"
+                # Write-Host -ForegroundColor DarkGray "$name = $value"
                 Set-Item -Path "env:$name" -Value $value -ErrorAction Stop
             }
             catch {
@@ -446,6 +400,8 @@ function winpe-RepairSessionEnvironment {
             }
         }
     }
+
+    $results = winpe-TestSessionEnvironment
 }
 
 function winpe-TestPowerShellProfile {
@@ -454,11 +410,10 @@ function winpe-TestPowerShellProfile {
     param ()
     $profileDir = $PSHome
     $profilePath = Join-Path -Path $PSHome -ChildPath 'profile.ps1'
-
-    # Test if a repair is needed
     $needsProfileRepair = $false
     $needsProfileCreated = $false
 
+    # Test
     if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
         $needsProfileRepair = $true
     }
@@ -478,7 +433,7 @@ function winpe-TestPowerShellProfile {
     # Success
     if (-not $needsProfileRepair -and -not $needsProfileCreated) {
         Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Profiles are properly configured"
-        return
+        return 0
     }
 
     # Failure
@@ -494,22 +449,66 @@ function winpe-TestPowerShellProfile {
     if ($needsProfileCreated) {
         Write-Host -ForegroundColor Red "[✗] PowerShell Profile is not configured for Registry Environment Variables"
     }
+    return 1
 }
 
 function winpe-RepairPowerShellProfile {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param (
-        [System.Management.Automation.SwitchParameter]
-        $Force
-    )
+    param ()
+    $winpePowerShellProfile = @'
+# OSDCloud by Recast Software
+[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+$registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
+$registryPath | ForEach-Object {
+    $k = Get-Item $_
+    $k.GetValueNames() | ForEach-Object {
+        $name = $_
+        $value = $k.GetValue($_)
+        Set-Item -Path Env:\$name -Value $value
+    }
+}
+'@
+
+    # Test
+    $remediate = winpe-TestPowerShellProfile
+    if ($remediate -eq 0) {
+        return
+    }
+
+    # Repair Profile Paths
+    if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
+        $PROFILE.CurrentUserAllHosts = "$Home\Documents\WindowsPowerShell\profile.ps1"
+        Write-Host -ForegroundColor DarkGray "CurrentUserAllHosts: [$($PROFILE.CurrentUserAllHosts)]"
+    }
+    if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1") {
+        $PROFILE.CurrentUserCurrentHost = "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1"
+        Write-Host -ForegroundColor DarkGray "CurrentUserCurrentHost: [$($PROFILE.CurrentUserCurrentHost)]"
+    }
+
     $profileDir = $PSHome
     $profilePath = Join-Path -Path $PSHome -ChildPath 'profile.ps1'
 
-    # Test if a repair is needed
+    if (Test-Path -Path $profilePath) {
+        $existingContent = Get-Content -Path $profilePath -Raw -ErrorAction Stop
+        if (-not ($existingContent -match 'OSDCloud by Recast Software')) {
+            Add-Content -Path $profilePath -Value ("`r`n" + $winpePowerShellProfile) -Encoding Unicode -ErrorAction Stop
+        }
+    }
+    else {
+        Write-Host -ForegroundColor DarkGray "PowerShell Profile does not exist with OSDCloud update for new sessions"
+        Write-Host -ForegroundColor DarkGray "Create new PowerShell Profile for AllUsersAllHosts"
+        Write-Host -ForegroundColor DarkGray "Resolves new environment variables added to Session Manager in the registry"
+        if (-not (Test-Path $profileDir)) {
+            $null = New-Item -Path $profileDir -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+        }
+        $winpePowerShellProfile | Set-Content -Path $profilePath -Force -Encoding Unicode
+    }
+    $results = winpe-TestPowerShellProfile
+
+    <#
     $needsProfileRepair = $false
     $needsProfileCreated = $false
-
     if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
         $needsProfileRepair = $true
     }
@@ -521,9 +520,7 @@ function winpe-RepairPowerShellProfile {
     }
     else {
         $existingContent = Get-Content -Path $profilePath -Raw -ErrorAction Stop
-        if (-not ($existingContent -match 'OSDCloud by Recast Software')) {
-            $needsProfileCreated = $true
-        }
+
     }
 
     # Success
@@ -548,7 +545,7 @@ function winpe-RepairPowerShellProfile {
         if ($needsProfileCreated) {
             Write-Host -ForegroundColor Red "[✗] PowerShell Profile is not configured for Registry Environment Variables"
         }
-        return
+        return 1
     }
 
     # Repair
@@ -568,19 +565,6 @@ function winpe-RepairPowerShellProfile {
         return
     }
 
-    $winpePowerShellProfile = @'
-# OSDCloud by Recast Software
-[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-$registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
-$registryPath | ForEach-Object {
-    $k = Get-Item $_
-    $k.GetValueNames() | ForEach-Object {
-        $name = $_
-        $value = $k.GetValue($_)
-        Set-Item -Path Env:\$name -Value $value
-    }
-}
-'@
 
     try {
         if (Test-Path -Path $profilePath) {
@@ -603,6 +587,8 @@ $registryPath | ForEach-Object {
         Write-Host -ForegroundColor Red $_
         throw
     }
+    
+    #>
 }
 
 function winpe-TestRealTimeClockUTC {

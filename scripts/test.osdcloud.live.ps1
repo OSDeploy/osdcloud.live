@@ -71,18 +71,18 @@ if ($WindowsPhase -eq 'WinPE') {
     $null = winpe-TestExecutionPolicy
     $null = winpe-TestUserShellFolder
     $null = winpe-TestRegistryEnvironment
-    winpe-TestSessionEnvironment
-    winpe-TestPowerShellProfile
-    winpe-TestRealTimeClockUTC
-    winpe-TestTimeService
-    winpe-TestCurl
-    winpe-TestPackageManagement
-    winpe-TestNugetPackageProvider
-    $results = winpe-TestNugetExe
-    winpe-UpdatePackageManagement
-    winpe-UpdatePowerShellGet
-    winpe-TrustPSGallery
-    winpe-InstallAzCopy
+    $null = winpe-TestSessionEnvironment
+    $null = winpe-TestPowerShellProfile
+    $null = winpe-TestRealTimeClockUTC
+    $null = winpe-TestTimeService
+    $null = winpe-TestCurl
+    $null = winpe-TestPackageManagement
+    $null = winpe-TestNugetPackageProvider
+    $null = winpe-TestNugetExe
+    $null = winpe-UpdatePackageManagement
+    $null = winpe-UpdatePowerShellGet
+    $null = winpe-TrustPSGallery
+    $null = winpe-InstallAzCopy
     # winpe-InstallPowerShellModule -Name OSD
     # winpe-InstallPowerShellModule -Name OSDCloud
     $EndTime = Get-Date
