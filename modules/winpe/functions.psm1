@@ -404,40 +404,30 @@ function winpe-RepairSessionEnvironment {
     $results = winpe-TestSessionEnvironment
 }
 
-function winpe-TestPowerShellProfile {
+function winpe-TestPowerShellProfilePath {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     $profileDir = $PSHome
     $profilePath = Join-Path -Path $PSHome -ChildPath 'profile.ps1'
-    $needsProfileRepair = $false
-    $needsProfileCreated = $false
+    $repairPSProfilePath = $false
 
     # Test
     if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
-        $needsProfileRepair = $true
+        $repairPSProfilePath = $true
     }
     if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1") {
-        $needsProfileRepair = $true
-    }
-    if (-not (Test-Path -Path $profilePath)) {
-        $needsProfileCreated = $true
-    }
-    else {
-        $existingContent = Get-Content -Path $profilePath -Raw -ErrorAction Stop
-        if (-not ($existingContent -match 'OSDCloud by Recast Software')) {
-            $needsProfileCreated = $true
-        }
+        $repairPSProfilePath = $true
     }
 
     # Success
-    if (-not $needsProfileRepair -and -not $needsProfileCreated) {
-        Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Profiles are properly configured"
+    if ($repairPSProfilePath -eq $false) {
+        Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Profile Paths are properly configured"
         return 0
     }
 
     # Failure
-    if ($needsProfileRepair) {
+    if ($repairPSProfilePath -eq $true) {
         Write-Host -ForegroundColor Red "[✗] PowerShell Profile paths are NOT properly configured"
         if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
             Write-Host -ForegroundColor DarkGray "CurrentUserAllHosts: [$($PROFILE.CurrentUserAllHosts)]"
@@ -446,16 +436,71 @@ function winpe-TestPowerShellProfile {
             Write-Host -ForegroundColor DarkGray "CurrentUserCurrentHost: [$($PROFILE.CurrentUserCurrentHost)]"
         }
     }
-    if ($needsProfileCreated) {
-        Write-Host -ForegroundColor Red "[✗] PowerShell Profile is not configured for Registry Environment Variables"
-    }
     return 1
+}
+
+function winpe-RepairPowerShellProfilePath {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+    # Test
+    $remediate = winpe-TestPowerShellProfilePath
+
+    # Success
+    if ($remediate -eq 0) {
+        return
+    }
+
+    # Repair
+    if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
+        $PROFILE.CurrentUserAllHosts = "$Home\Documents\WindowsPowerShell\profile.ps1"
+        Write-Host -ForegroundColor DarkGray "CurrentUserAllHosts: [$($PROFILE.CurrentUserAllHosts)]"
+    }
+    if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1") {
+        $PROFILE.CurrentUserCurrentHost = "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1"
+        Write-Host -ForegroundColor DarkGray "CurrentUserCurrentHost: [$($PROFILE.CurrentUserCurrentHost)]"
+    }
+
+    $results = winpe-TestPowerShellProfilePath
+}
+
+function winpe-TestPowerShellProfile {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+    $profileDir = $PSHome
+    $profilePath = Join-Path -Path $PSHome -ChildPath 'profile.ps1'
+    $repairPSProfileFile = $false
+
+    # Test
+    if (-not (Test-Path -Path $profilePath)) {
+        $repairPSProfileFile = $true
+    }
+    else {
+        $existingContent = Get-Content -Path $profilePath -Raw -ErrorAction Stop
+        if (-not ($existingContent -match 'OSDCloud by Recast Software')) {
+            $repairPSProfileFile = $true
+        }
+    }
+
+    # Success
+    if ($repairPSProfileFile -eq $false) {
+        Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Profile AllUsersAllHosts is properly configured"
+        return 0
+    }
+
+    # Failure
+    if ($repairPSProfileFile -eq $true) {
+        Write-Host -ForegroundColor Red "[✗] PowerShell Profile AllUsersAllHosts is not configured for Registry Environment Variables"
+        return 1
+    }
 }
 
 function winpe-RepairPowerShellProfile {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
+
     $winpePowerShellProfile = @'
 # OSDCloud by Recast Software
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
@@ -472,19 +517,14 @@ $registryPath | ForEach-Object {
 
     # Test
     $remediate = winpe-TestPowerShellProfile
+
+    # Success
     if ($remediate -eq 0) {
         return
     }
 
-    # Repair Profile Paths
-    if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
-        $PROFILE.CurrentUserAllHosts = "$Home\Documents\WindowsPowerShell\profile.ps1"
-        Write-Host -ForegroundColor DarkGray "CurrentUserAllHosts: [$($PROFILE.CurrentUserAllHosts)]"
-    }
-    if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1") {
-        $PROFILE.CurrentUserCurrentHost = "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1"
-        Write-Host -ForegroundColor DarkGray "CurrentUserCurrentHost: [$($PROFILE.CurrentUserCurrentHost)]"
-    }
+    # Repair
+
 
     $profileDir = $PSHome
     $profilePath = Join-Path -Path $PSHome -ChildPath 'profile.ps1'
@@ -507,16 +547,16 @@ $registryPath | ForEach-Object {
     $results = winpe-TestPowerShellProfile
 
     <#
-    $needsProfileRepair = $false
-    $needsProfileCreated = $false
+    $repairPSProfilePath = $false
+    $repairPSProfileFile = $false
     if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
-        $needsProfileRepair = $true
+        $repairPSProfilePath = $true
     }
     if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1") {
-        $needsProfileRepair = $true
+        $repairPSProfilePath = $true
     }
     if (-not (Test-Path -Path $profilePath)) {
-        $needsProfileCreated = $true
+        $repairPSProfileFile = $true
     }
     else {
         $existingContent = Get-Content -Path $profilePath -Raw -ErrorAction Stop
@@ -524,7 +564,7 @@ $registryPath | ForEach-Object {
     }
 
     # Success
-    if (-not $needsProfileRepair -and -not $needsProfileCreated) {
+    if (-not $repairPSProfilePath -and -not $repairPSProfileFile) {
         # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Profiles are configured"
         return
@@ -533,7 +573,7 @@ $registryPath | ForEach-Object {
     # Warning only
     if (-not ($Force)) {
         Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        if ($needsProfileRepair) {
+        if ($repairPSProfilePath) {
             Write-Host -ForegroundColor DarkGray "PowerShell Profile paths are incorrectly configured:"
             if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
                 Write-Host -ForegroundColor DarkGray "CurrentUserAllHosts: [$($PROFILE.CurrentUserAllHosts)]"
@@ -542,7 +582,7 @@ $registryPath | ForEach-Object {
                 Write-Host -ForegroundColor DarkGray "CurrentUserCurrentHost: [$($PROFILE.CurrentUserCurrentHost)]"
             }
         }
-        if ($needsProfileCreated) {
+        if ($repairPSProfileFile) {
             Write-Host -ForegroundColor Red "[✗] PowerShell Profile is not configured for Registry Environment Variables"
         }
         return 1
@@ -550,7 +590,7 @@ $registryPath | ForEach-Object {
 
     # Repair
     Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
-    if ($needsProfileRepair) {
+    if ($repairPSProfilePath) {
         Write-Host -ForegroundColor DarkGray "Updating PowerShell Profile paths:"
         if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
             $PROFILE.CurrentUserAllHosts = "$Home\Documents\WindowsPowerShell\profile.ps1"
@@ -561,7 +601,7 @@ $registryPath | ForEach-Object {
             Write-Host -ForegroundColor DarkGray "CurrentUserCurrentHost: [$($PROFILE.CurrentUserCurrentHost)]"
         }
     }
-    if (-not $needsProfileCreated) {
+    if (-not $repairPSProfileFile) {
         return
     }
 

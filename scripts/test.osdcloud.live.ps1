@@ -72,6 +72,7 @@ if ($WindowsPhase -eq 'WinPE') {
     $null = winpe-TestUserShellFolder
     $null = winpe-TestRegistryEnvironment
     $null = winpe-TestSessionEnvironment
+    $null = winpe-TestPowerShellProfilePath
     $null = winpe-TestPowerShellProfile
     $null = winpe-TestRealTimeClockUTC
     $null = winpe-TestTimeService
