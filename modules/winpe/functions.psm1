@@ -1046,6 +1046,12 @@ function winpe-TrustPSGallery {
         return
     }
 
+    if (-not $Force) {
+        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "PowerShell Gallery PSRepository Installation Policy is NOT Trusted"
+        return
+    }
+
     try {
         Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
         Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction Stop
