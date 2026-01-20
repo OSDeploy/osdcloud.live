@@ -1070,7 +1070,7 @@ function winpe-InstallAzCopy {
     # Test if AzCopy is already installed
     if (Test-Path $azcopyPath) {
         $azcopy = Get-Item -Path $azcopyPath
-        Write-Host -ForegroundColor DarkGreen "[✓] Microsoft AzCopy is installed [$($azcopy.VersionInfo.FileVersion)]"
+        Write-Host -ForegroundColor DarkGreen "[✓] Microsoft AzCopy is installed"
         return
     }
 
@@ -1152,7 +1152,7 @@ function winpe-InstallDotNetCore {
     try {
         $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
         if (Test-Path $curlPath) {
-            Write-Host -ForegroundColor DarkCyan "[→] Downloading .NET Runtime with curl"
+            Write-Host -ForegroundColor Cyan "[→] Downloading .NET Runtime with curl"
             & $curlPath --fail --location --silent --show-error `
                 $dotNetCoreUrl `
                 --output $dotNetCoreZip
@@ -1161,17 +1161,17 @@ function winpe-InstallDotNetCore {
             }
         }
         else {
-            Write-Host -ForegroundColor DarkCyan "[→] Downloading .NET Runtime with Invoke-WebRequest"
+            Write-Host -ForegroundColor Cyan "[→] Downloading .NET Runtime with Invoke-WebRequest"
             Invoke-WebRequest -UseBasicParsing -Uri $dotNetCoreUrl -OutFile $dotNetCoreZip -ErrorAction Stop
         }
-        Write-Host -ForegroundColor Green "[✓] .NET Runtime downloaded successfully"
+        Write-Host -ForegroundColor DarkGreen "[✓] .NET Runtime downloaded successfully"
 
-        Write-Host -ForegroundColor DarkCyan "[→] Extracting .NET Runtime"
+        Write-Host -ForegroundColor Cyan "[→] Extracting .NET Runtime"
         if (-not (Test-Path $dotNetCoreDir)) {
             $null = New-Item -Path $dotNetCoreDir -ItemType Directory -Force
         }
         Expand-Archive -Path $dotNetCoreZip -DestinationPath $dotNetCoreDir -Force -ErrorAction Stop
-        Write-Host -ForegroundColor Green "[✓] .NET Runtime installed successfully to $dotNetCoreDir"
+        Write-Host -ForegroundColor DarkGreen "[✓] .NET Runtime installed successfully to $dotNetCoreDir"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] Failed to install .NET Runtime: $_"
@@ -1204,26 +1204,27 @@ function winpe-InstallPowerShellModule {
             $GalleryModule = Find-Module -Name $Name -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
             
             if ($GalleryModule -and ([version]$GalleryModule.Version -gt [version]$InstalledModule.Version)) {
-                Write-Host -ForegroundColor DarkCyan "[→] Install-Module -Name $Name -Force -Scope AllUsers -SkipPublisherCheck -AllowClobber [$($GalleryModule.Version)]"
+                Write-Host -ForegroundColor Cyan "[→] Install-Module -Name $Name -Force -Scope AllUsers -SkipPublisherCheck -AllowClobber"
                 Install-Module -Name $Name -Force -Scope AllUsers -SkipPublisherCheck -AllowClobber -ErrorAction Stop -WarningAction SilentlyContinue
-                Write-Host -ForegroundColor Green "[✓] $Name $($GalleryModule.Version) installed successfully"
+                Write-Host -ForegroundColor DarkGreen "[✓] $Name is installed [$($GalleryModule.Version)]"
                 return
             }
             
             # Already installed and current
             Import-Module -Name $Name -Force -DisableNameChecking -ErrorAction SilentlyContinue
-            Write-Host -ForegroundColor Green "[✓] $Name $($InstalledModule.Version)"
+            Write-Host -ForegroundColor DarkGreen "[✓] $Name is installed [$($InstalledModule.Version)]"
             return
         }
         catch {
-            Write-Host -ForegroundColor Red "[✗] Failed to install $Name : $_"
+            Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+            Write-Host -ForegroundColor Red $_
             throw
         }
     }
 
     # Module not installed or forced, install it
     try {
-        Write-Host -ForegroundColor DarkCyan "[→] Installing $Name [AllUsers]"
+        Write-Host -ForegroundColor Cyan "[→] Install-Module -Name $Name -Scope AllUsers -Force -SkipPublisherCheck -AllowClobber"
         $GalleryModule = Find-Module -Name $Name -ErrorAction Stop -WarningAction SilentlyContinue
         
         if (-not $GalleryModule) {
@@ -1232,10 +1233,11 @@ function winpe-InstallPowerShellModule {
 
         Install-Module -Name $Name -Scope AllUsers -Force -SkipPublisherCheck -AllowClobber -ErrorAction Stop -WarningAction SilentlyContinue
         Import-Module -Name $Name -Force -DisableNameChecking -ErrorAction Stop
-        Write-Host -ForegroundColor Green "[✓] $Name $($GalleryModule.Version) installed successfully"
+        Write-Host -ForegroundColor DarkGreen "[✓] $Name is installed [$($GalleryModule.Version)]"
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] Failed to install $Name : $_"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red $_
         throw
     }
 }
@@ -1289,7 +1291,7 @@ function winpe-InstallZip {
             Copy-Item -Path "$tempDir\7za\arm64\*" -Destination $env:SystemRoot\System32 -Recurse -Force -ErrorAction Stop
         }
 
-        Write-Host -ForegroundColor Green "[✓] 7-Zip [25.01]"
+        Write-Host -ForegroundColor DarkGreen "[✓] 7-Zip [25.01]"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] 7-Zip [25.01] failed: $_"
