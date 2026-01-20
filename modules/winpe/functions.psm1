@@ -634,7 +634,7 @@ function winpe-RepairCurl {
 
     if (Test-Path $curlPath) {
         $curl = Get-Item -Path $curlPath
-        Write-Host -ForegroundColor DarkGray "Curl.exe is installed [$($curl.VersionInfo.FileVersion)]"
+        Write-Host -ForegroundColor DarkGreen "[✓] Curl.exe is installed [$($curl.VersionInfo.FileVersion)]"
         return
     }
 }
@@ -740,7 +740,7 @@ function winpe-RepairPackageManagement {
     # Success
     if ($existingModule) {
         $latestVersion = ($existingModule | Sort-Object Version -Descending | Select-Object -First 1).Version
-        Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is installed [$latestVersion]"
+        Write-Host -ForegroundColor DarkGreen "[✓] PackageManagement PowerShell Module is installed [$latestVersion]"
     }
 }
 
@@ -864,7 +864,7 @@ function winpe-RepairNugetExe {
 
         if (Test-Path $nugetExeFilePath) {
             $nugetExe = Get-Item -Path $nugetExeFilePath
-            Write-Host -ForegroundColor DarkGray "NuGet.exe is installed [$($nugetExe.VersionInfo.FileVersion)]"
+            Write-Host -ForegroundColor DarkGreen "[✓] NuGet.exe is installed [$($nugetExe.VersionInfo.FileVersion)]"
             return
         }
     }
@@ -883,7 +883,7 @@ function winpe-UpdatePackageManagement {
     if ($existingModule) {
         # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
         $latestVersion = ($existingModule | Sort-Object Version -Descending | Select-Object -First 1).Version
-        Write-Host -ForegroundColor DarkGreen "[✓] PackageManagement PowerShell Module is installed [$latestVersion]"
+        # Write-Host -ForegroundColor DarkGreen "[✓] PackageManagement PowerShell Module is installed [$latestVersion]"
         return
     }
 
@@ -995,13 +995,19 @@ function winpe-UpdatePowerShellGet {
         Import-Module PowerShellGet -Force -Scope Global -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] PowerShellGet [2.2.5] failed: $_"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red $_
         throw
     }
     finally {
         # Cleanup
         if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
         if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+    $existingModule = Get-Module -Name PowerShellGet -ListAvailable | Where-Object { $_.Version -ge '2.2.5' }
+    if ($existingModule) {
+        Write-Host -ForegroundColor DarkGreen "[✓] PowerShellGet PowerShell Module is installed [$($existingModule.Version)]"
+        return
     }
 }
 
@@ -1012,7 +1018,6 @@ function winpe-TrustPSGallery {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-
     $PowerShellGallery = Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue
 
     if (-not $PowerShellGallery) {
@@ -1021,7 +1026,7 @@ function winpe-TrustPSGallery {
     }
 
     if ($PowerShellGallery.InstallationPolicy -eq 'Trusted') {
-        Write-Host -ForegroundColor DarkGray "[✓] Trust PSGallery"
+        Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Gallery PSRepository Installation Policy is Trusted"
         return
     }
 
@@ -1031,7 +1036,8 @@ function winpe-TrustPSGallery {
         Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] Trust PSGallery failed: $_"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red $_
         throw
     }
 }
@@ -1097,7 +1103,8 @@ function winpe-InstallAzCopy {
         # Write-Host -ForegroundColor Green "[✓] AzCopy installed successfully."
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] Microsoft AzCopy failed: $_"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red $_
         throw
     }
     finally {

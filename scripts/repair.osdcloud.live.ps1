@@ -79,7 +79,6 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-RepairNugetPackageProvider -Force
     winpe-RepairNugetExe -Force
     winpe-UpdatePackageManagement -Force
-    Pause
     winpe-UpdatePowerShellGet
     winpe-TrustPSGallery
     winpe-InstallAzCopy
