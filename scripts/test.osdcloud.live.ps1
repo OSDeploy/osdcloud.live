@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 26.01.18
+.VERSION 26.01.20
 .GUID 8d166026-3ff8-4a56-bb46-97e446a35ffe
 .AUTHOR David Segura @OSDeploy
 .COMPANYNAME Recast Software
@@ -24,7 +24,7 @@ powershell iex (irm test.osdcloud.live)
 .DESCRIPTION
     PowerShell Script which supports the OSDCloud environment
 .NOTES
-    Version 26.01.18
+    Version 26.01.20
 .LINK
     https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/scripts/test.osdcloud.live.ps1
 .EXAMPLE
@@ -34,7 +34,7 @@ powershell iex (irm test.osdcloud.live)
 param()
 $StartTime = Get-Date
 $ScriptName = 'test.osdcloud.live'
-$ScriptVersion = '26.01.18'
+$ScriptVersion = '26.01.20'
 
 #region Initialize
 $Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-$ScriptName.log"
@@ -54,7 +54,8 @@ else {
 $whoiam = [system.security.principal.windowsidentity]::getcurrent().name
 $isElevated = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
 
-Write-Host -ForegroundColor DarkGray "$ScriptName $ScriptVersion ($WindowsPhase)"
+# Write-Host -ForegroundColor DarkGray "$ScriptName $ScriptVersion ($WindowsPhase)"
+Write-Host -ForegroundColor DarkGray "OSDCloud Live Test [$WindowsPhase]"
 #endregion
 
 #region Transport Layer Security (TLS) 1.2
