@@ -956,7 +956,8 @@ function winpe-UpdatePowerShellGet {
     
     $existingModule = Get-Module -Name PowerShellGet -ListAvailable | Where-Object { $_.Version -ge '2.2.5' }
     if ($existingModule) {
-        Write-Host -ForegroundColor DarkGreen "[✓] PowerShellGet PowerShell Module is installed [$($existingModule.Version)]"
+        $latestVersion = ($existingModule | Sort-Object Version -Descending | Select-Object -First 1).Version
+        Write-Host -ForegroundColor DarkGreen "[✓] PowerShellGet PowerShell Module is installed [$($latestVersion)]"
         return
     }
 
@@ -1012,7 +1013,8 @@ function winpe-UpdatePowerShellGet {
     }
     $existingModule = Get-Module -Name PowerShellGet -ListAvailable | Where-Object { $_.Version -ge '2.2.5' }
     if ($existingModule) {
-        Write-Host -ForegroundColor DarkGreen "[✓] PowerShellGet PowerShell Module is installed [$($existingModule.Version)]"
+        $latestVersion = ($existingModule | Sort-Object Version -Descending | Select-Object -First 1).Version
+        Write-Host -ForegroundColor DarkGreen "[✓] PowerShellGet PowerShell Module is installed [$($latestVersion)]"
         return
     }
 }
@@ -1024,8 +1026,16 @@ function winpe-TrustPSGallery {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-    $PowerShellGallery = Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue
+    # Test if Execution Policy allows PSGallery trust change
+    $executionPolicy = Get-ExecutionPolicy -ErrorAction SilentlyContinue
+    if ($executionPolicy -ne 'Bypass' -and $executionPolicy -ne 'Unrestricted') {
+        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "Execution Policy is set to $executionPolicy"
+        Write-Host -ForegroundColor DarkGray "Execution Policy is blocking enumerating the PowerShell Gallery PSRepository"
+        return
+    }
 
+    $PowerShellGallery = Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue
     if (-not $PowerShellGallery) {
         Write-Host -ForegroundColor Red "[✗] PSRepository PSGallery not found"
         return
@@ -1037,7 +1047,7 @@ function winpe-TrustPSGallery {
     }
 
     try {
-        Write-Host -ForegroundColor DarkCyan "[→] Trust PSGallery"
+        Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor DarkGray "[>] Set-PSRepository -Name PSGallery -InstallationPolicy Trusted"
         Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction Stop
     }
@@ -1055,19 +1065,24 @@ function winpe-InstallAzCopy {
         [System.Management.Automation.SwitchParameter]
         $Force
     )
-
     $azcopyPath = "$env:SystemRoot\System32\azcopy.exe"
-    
-    if ($Force) {
-        Write-Host -ForegroundColor DarkCyan "[→] Microsoft AzCopy -Force"
-    }
-    elseif (Test-Path $azcopyPath) {
+
+    # Test if AzCopy is already installed
+    if (Test-Path $azcopyPath) {
         $azcopy = Get-Item -Path $azcopyPath
-        Write-Host -ForegroundColor DarkGray "[✓] Microsoft AzCopy"
+        Write-Host -ForegroundColor DarkGreen "[✓] Microsoft AzCopy is installed [$($azcopy.VersionInfo.FileVersion)]"
         return
     }
 
+    # Warning
+    if (-not ($Force)) {
+        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "Microsoft AzCopy is NOT installed"
+        return
+    }
+    
     try {
+        Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
         $tempZip = "$env:TEMP\azcopy.zip"
         $tempDir = "$env:TEMP\azcopy"
         
@@ -1105,8 +1120,6 @@ function winpe-InstallAzCopy {
         # Install
         Get-ChildItem $tempDir -Include 'azcopy.exe' -Recurse -ErrorAction Stop | 
             ForEach-Object { Copy-Item -Path $_.FullName -Destination $azcopyPath -Force -ErrorAction Stop }
-        
-        # Write-Host -ForegroundColor Green "[✓] AzCopy installed successfully."
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
@@ -1117,6 +1130,11 @@ function winpe-InstallAzCopy {
         # Cleanup
         if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
         if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+    if (Test-Path $azcopyPath) {
+        $azcopy = Get-Item -Path $azcopyPath
+        Write-Host -ForegroundColor DarkGreen "[✓] Microsoft AzCopy is installed [$($azcopy.VersionInfo.FileVersion)]"
+        return
     }
 }
 
