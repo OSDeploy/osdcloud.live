@@ -94,7 +94,7 @@ function winpe-TestExecutionPolicy {
         # Failure
         Write-Host -ForegroundColor Red "[✗] PowerShell Execution Policy is NOT set to Bypass"
         Write-Host -ForegroundColor DarkGray "PowerShell Execution Policy is set to $executionPolicy"
-        Write-Host -ForegroundColor DarkGray "OSDCloud scripting will fail if not properly configured to Bypass"
+        # Write-Host -ForegroundColor DarkGray "OSDCloud scripting will fail if not properly configured to Bypass"
         return 1
     }
     catch {
