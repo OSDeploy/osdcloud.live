@@ -87,7 +87,7 @@ function winpe-TestExecutionPolicy {
 
         # Success
         if ($executionPolicy -eq 'Bypass') {
-            Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Execution Policy is set to Bypass"
+            Write-Host -ForegroundColor Green "[✓] PowerShell Execution Policy is set to Bypass"
             return 0
         }
 
@@ -158,7 +158,7 @@ function winpe-TestUserShellFolder {
 
     # Success
     if (-not $remediate) {
-        Write-Host -ForegroundColor DarkGreen "[✓] User Shell Folders exist"
+        Write-Host -ForegroundColor Green "[✓] User Shell Folders exist"
         return 0
     }
 
@@ -241,7 +241,7 @@ function winpe-TestRegistryEnvironment {
 
     # Success
     if (-not $remediate) {
-        Write-Host -ForegroundColor DarkGreen "[✓] Environment Variables exist in the Registry"
+        Write-Host -ForegroundColor Green "[✓] Environment Variables exist in the Registry"
         return 0
     }
 
@@ -333,7 +333,7 @@ function winpe-TestSessionEnvironment {
 
     # Success
     if (-not $remediate) {
-        Write-Host -ForegroundColor DarkGreen "[✓] Environment Variables exist in the current PowerShell Session"
+        Write-Host -ForegroundColor Green "[✓] Environment Variables exist in the current PowerShell Session"
         return 0
     }
 
@@ -422,7 +422,7 @@ function winpe-TestPowerShellProfilePath {
 
     # Success
     if ($repairPSProfilePath -eq $false) {
-        Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Profile CurrentUser Paths are properly configured"
+        Write-Host -ForegroundColor Green "[✓] PowerShell Profile CurrentUser Paths are properly configured"
         return 0
     }
 
@@ -485,7 +485,7 @@ function winpe-TestPowerShellProfile {
 
     # Success
     if ($repairPSProfileFile -eq $false) {
-        Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Profile AllUsersAllHosts is properly configured"
+        Write-Host -ForegroundColor Green "[✓] PowerShell Profile AllUsersAllHosts is properly configured"
         return 0
     }
 
@@ -564,8 +564,8 @@ $registryPath | ForEach-Object {
 
     # Success
     if (-not $repairPSProfilePath -and -not $repairPSProfileFile) {
-        # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Profiles are configured"
+        # Write-Host -ForegroundColor Green "[✓] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Green "[✓] PowerShell Profiles are configured"
         return
     }
 
@@ -638,7 +638,7 @@ function winpe-TestRealTimeClockUTC {
     $realTimeIsUniversal = Get-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -ErrorAction SilentlyContinue
 
     if ($realTimeIsUniversal -and ($realTimeIsUniversal.RealTimeIsUniversal -eq 1)) {
-        Write-Host -ForegroundColor DarkGreen "[✓] RealTime Clock is set to UTC"
+        Write-Host -ForegroundColor Green "[✓] RealTime Clock is set to UTC"
     }
     else {
         Write-Host -ForegroundColor Red "[✗] RealTime Clock is NOT set to UTC"
@@ -656,8 +656,8 @@ function winpe-RepairRealTimeClockUTC {
     $realTimeIsUniversal = Get-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -ErrorAction SilentlyContinue
 
     if ($realTimeIsUniversal -and ($realTimeIsUniversal.RealTimeIsUniversal -eq 1)) {
-        # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGreen "[✓] RealTime Clock is set to UTC"
+        # Write-Host -ForegroundColor Green "[✓] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Green "[✓] RealTime Clock is set to UTC"
         return
     }
 
@@ -697,7 +697,7 @@ function winpe-TestTimeService {
 
     # Test if the Time Service is correctly configured
     if (($w32timeService.StartType -eq 'Automatic') -and ($w32timeService.Status -eq 'Running')) {
-        Write-Host -ForegroundColor DarkGreen "[✓] Time Service [w32time] is set to Automatic and is Running"
+        Write-Host -ForegroundColor Green "[✓] Time Service [w32time] is set to Automatic and is Running"
     }
     else {
         if ($w32timeService.StartType -ne 'Automatic') {
@@ -728,8 +728,8 @@ function winpe-RepairTimeService {
 
     # Test if the Time Service is correctly configured
     if (($w32timeService.StartType -eq 'Automatic') -and ($w32timeService.Status -eq 'Running')) {
-        # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGreen "[✓] Time Service [w32time] is set to Automatic and is Running"
+        # Write-Host -ForegroundColor Green "[✓] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Green "[✓] Time Service [w32time] is set to Automatic and is Running"
         return
     }
 
@@ -791,7 +791,7 @@ function winpe-TestCurl {
     $curlPath = "$env:SystemRoot\System32\curl.exe"
     if (Test-Path $curlPath) {
         $curl = Get-Item -Path $curlPath
-        Write-Host -ForegroundColor DarkGreen "[✓] Curl.exe is installed [$($curl.VersionInfo.FileVersion)]"
+        Write-Host -ForegroundColor Green "[✓] Curl.exe is installed [$($curl.VersionInfo.FileVersion)]"
     }
     else {
         Write-Host -ForegroundColor Red "[✗] Curl is NOT installed at $curlPath"
@@ -810,8 +810,8 @@ function winpe-RepairCurl {
     # Test if Curl is already installed
     if (Test-Path $curlPath) {
         $curl = Get-Item -Path $curlPath
-        # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGreen "[✓] Curl.exe is installed [$($curl.VersionInfo.FileVersion)]"
+        # Write-Host -ForegroundColor Green "[✓] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Green "[✓] Curl.exe is installed [$($curl.VersionInfo.FileVersion)]"
         return
     }
 
@@ -856,7 +856,7 @@ function winpe-RepairCurl {
 
     if (Test-Path $curlPath) {
         $curl = Get-Item -Path $curlPath
-        Write-Host -ForegroundColor DarkGreen "[✓] Curl.exe is installed [$($curl.VersionInfo.FileVersion)]"
+        Write-Host -ForegroundColor Green "[✓] Curl.exe is installed [$($curl.VersionInfo.FileVersion)]"
         return
     }
 }
@@ -871,7 +871,7 @@ function winpe-TestPackageManagement {
     # Success
     if ($installedModule) {
         $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
-        Write-Host -ForegroundColor DarkGreen "[✓] PackageManagement PowerShell Module is installed [$latestVersion]"
+        Write-Host -ForegroundColor Green "[✓] PackageManagement PowerShell Module is installed [$latestVersion]"
     }
     else {
         Write-Host -ForegroundColor Red "[✗] PackageManagement PowerShell Module is NOT installed"
@@ -918,9 +918,9 @@ function winpe-RepairPackageManagement {
 
     # Success
     if ($installedModule) {
-        # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
+        # Write-Host -ForegroundColor Green "[✓] $($MyInvocation.MyCommand.Name)"
         $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
-        Write-Host -ForegroundColor DarkGreen "[✓] PackageManagement PowerShell Module is installed [$latestVersion]"
+        Write-Host -ForegroundColor Green "[✓] PackageManagement PowerShell Module is installed [$latestVersion]"
         return
     }
 
@@ -979,7 +979,7 @@ function winpe-RepairPackageManagement {
     # Success
     if ($installedModule) {
         $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
-        Write-Host -ForegroundColor DarkGreen "[✓] PackageManagement PowerShell Module is installed [$latestVersion]"
+        Write-Host -ForegroundColor Green "[✓] PackageManagement PowerShell Module is installed [$latestVersion]"
     }
 }
 
@@ -1016,7 +1016,7 @@ function winpe-TestNuGetPackageProvider {
     # Test if NuGet Package Provider is already installed
     $provider = Get-PackageProvider -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq 'NuGet' }
     if ($provider) {
-        Write-Host -ForegroundColor DarkGreen "[✓] NuGet Package Provider is installed [$($provider.Version)]"
+        Write-Host -ForegroundColor Green "[✓] NuGet Package Provider is installed [$($provider.Version)]"
         return
     }
 
@@ -1057,8 +1057,8 @@ function winpe-RepairNugetPackageProvider {
     # Test if NuGet Package Provider is already installed
     $provider = Get-PackageProvider -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq 'NuGet' }
     if ($provider) {
-        # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGreen "[✓] NuGet Package Provider is installed [$($provider.Version)]"
+        # Write-Host -ForegroundColor Green "[✓] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Green "[✓] NuGet Package Provider is installed [$($provider.Version)]"
         return
     }
 
@@ -1096,7 +1096,7 @@ function winpe-TestNugetExe {
     # Test if NuGet.exe is already installed
     if (Test-Path -Path $nugetExeFilePath) {
         $nugetExe = Get-Item -Path $nugetExeFilePath
-        Write-Host -ForegroundColor DarkGreen "[✓] NuGet.exe is installed [$($nugetExe.VersionInfo.FileVersion)]"
+        Write-Host -ForegroundColor Green "[✓] NuGet.exe is installed [$($nugetExe.VersionInfo.FileVersion)]"
         return 0
     }
 
@@ -1122,8 +1122,8 @@ function winpe-RepairNugetExe {
     # Test if NuGet.exe is already installed
     if (Test-Path -Path $nugetExeFilePath) {
         $nugetExe = Get-Item -Path $nugetExeFilePath
-        # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGreen "[✓] NuGet.exe is installed [$($nugetExe.VersionInfo.FileVersion)]"
+        # Write-Host -ForegroundColor Green "[✓] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Green "[✓] NuGet.exe is installed [$($nugetExe.VersionInfo.FileVersion)]"
         return
     }
     else {
@@ -1166,7 +1166,7 @@ function winpe-RepairNugetExe {
 
         if (Test-Path $nugetExeFilePath) {
             $nugetExe = Get-Item -Path $nugetExeFilePath
-            Write-Host -ForegroundColor DarkGreen "[✓] NuGet.exe is installed [$($nugetExe.VersionInfo.FileVersion)]"
+            Write-Host -ForegroundColor Green "[✓] NuGet.exe is installed [$($nugetExe.VersionInfo.FileVersion)]"
             return
         }
     }
@@ -1183,9 +1183,9 @@ function winpe-UpdatePackageManagement {
 
     # Success
     if ($installedModule) {
-        # Write-Host -ForegroundColor DarkGreen "[✓] $($MyInvocation.MyCommand.Name)"
+        # Write-Host -ForegroundColor Green "[✓] $($MyInvocation.MyCommand.Name)"
         $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
-        # Write-Host -ForegroundColor DarkGreen "[✓] PackageManagement PowerShell Module is installed [$latestVersion]"
+        # Write-Host -ForegroundColor Green "[✓] PackageManagement PowerShell Module is installed [$latestVersion]"
         return
     }
 
@@ -1259,7 +1259,7 @@ function winpe-UpdatePowerShellGet {
     $installedModule = Get-Module -Name PowerShellGet -ListAvailable | Where-Object { $_.Version -ge '2.2.5' }
     if ($installedModule) {
         $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
-        Write-Host -ForegroundColor DarkGreen "[✓] PowerShellGet PowerShell Module is installed [$($latestVersion)]"
+        Write-Host -ForegroundColor Green "[✓] PowerShellGet PowerShell Module is installed [$($latestVersion)]"
         return
     }
 
@@ -1316,7 +1316,7 @@ function winpe-UpdatePowerShellGet {
     $installedModule = Get-Module -Name PowerShellGet -ListAvailable | Where-Object { $_.Version -ge '2.2.5' }
     if ($installedModule) {
         $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
-        Write-Host -ForegroundColor DarkGreen "[✓] PowerShellGet PowerShell Module is installed [$($latestVersion)]"
+        Write-Host -ForegroundColor Green "[✓] PowerShellGet PowerShell Module is installed [$($latestVersion)]"
         return
     }
 }
@@ -1344,7 +1344,7 @@ function winpe-TrustPSGallery {
     }
 
     if ($PowerShellGallery.InstallationPolicy -eq 'Trusted') {
-        Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Gallery PSRepository Installation Policy is Trusted"
+        Write-Host -ForegroundColor Green "[✓] PowerShell Gallery PSRepository Installation Policy is Trusted"
         return
     }
 
@@ -1357,7 +1357,7 @@ function winpe-TrustPSGallery {
     try {
         Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
         Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction Stop
-        Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Gallery PSRepository Installation Policy is Trusted"
+        Write-Host -ForegroundColor Green "[✓] PowerShell Gallery PSRepository Installation Policy is Trusted"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
@@ -1378,7 +1378,7 @@ function winpe-InstallAzCopy {
     # Test if AzCopy is already installed
     if (Test-Path $azcopyPath) {
         $azcopy = Get-Item -Path $azcopyPath
-        Write-Host -ForegroundColor DarkGreen "[✓] Microsoft AzCopy is installed"
+        Write-Host -ForegroundColor Green "[✓] Microsoft AzCopy is installed"
         return
     }
 
@@ -1440,7 +1440,7 @@ function winpe-InstallAzCopy {
     }
     if (Test-Path $azcopyPath) {
         $azcopy = Get-Item -Path $azcopyPath
-        Write-Host -ForegroundColor DarkGreen "[✓] Microsoft AzCopy is installed"
+        Write-Host -ForegroundColor Green "[✓] Microsoft AzCopy is installed"
         return
     }
 }
@@ -1472,14 +1472,14 @@ function winpe-InstallDotNetCore {
             Write-Host -ForegroundColor Cyan "[→] Downloading .NET Runtime with Invoke-WebRequest"
             Invoke-WebRequest -UseBasicParsing -Uri $dotNetCoreUrl -OutFile $dotNetCoreZip -ErrorAction Stop
         }
-        Write-Host -ForegroundColor DarkGreen "[✓] .NET Runtime downloaded successfully"
+        Write-Host -ForegroundColor Green "[✓] .NET Runtime downloaded successfully"
 
         Write-Host -ForegroundColor Cyan "[→] Extracting .NET Runtime"
         if (-not (Test-Path $dotNetCoreDir)) {
             $null = New-Item -Path $dotNetCoreDir -ItemType Directory -Force
         }
         Expand-Archive -Path $dotNetCoreZip -DestinationPath $dotNetCoreDir -Force -ErrorAction Stop
-        Write-Host -ForegroundColor DarkGreen "[✓] .NET Runtime installed successfully to $dotNetCoreDir"
+        Write-Host -ForegroundColor Green "[✓] .NET Runtime installed successfully to $dotNetCoreDir"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] Failed to install .NET Runtime: $_"
@@ -1514,13 +1514,13 @@ function winpe-InstallPowerShellModule {
             if ($GalleryModule -and ([version]$GalleryModule.Version -gt [version]$InstalledModule.Version)) {
                 Write-Host -ForegroundColor Cyan "[→] Install-Module -Name $Name -Force -Scope AllUsers -SkipPublisherCheck -AllowClobber"
                 Install-Module -Name $Name -Force -Scope AllUsers -SkipPublisherCheck -AllowClobber -ErrorAction Stop -WarningAction SilentlyContinue
-                Write-Host -ForegroundColor DarkGreen "[✓] $Name is installed [$($GalleryModule.Version)]"
+                Write-Host -ForegroundColor Green "[✓] $Name is installed [$($GalleryModule.Version)]"
                 return
             }
             
             # Already installed and current
             Import-Module -Name $Name -Force -DisableNameChecking -ErrorAction SilentlyContinue
-            Write-Host -ForegroundColor DarkGreen "[✓] $Name is installed [$($InstalledModule.Version)]"
+            Write-Host -ForegroundColor Green "[✓] $Name is installed [$($InstalledModule.Version)]"
             return
         }
         catch {
@@ -1541,7 +1541,7 @@ function winpe-InstallPowerShellModule {
 
         Install-Module -Name $Name -Scope AllUsers -Force -SkipPublisherCheck -AllowClobber -ErrorAction Stop -WarningAction SilentlyContinue
         Import-Module -Name $Name -Force -DisableNameChecking -ErrorAction Stop
-        Write-Host -ForegroundColor DarkGreen "[✓] $Name is installed [$($GalleryModule.Version)]"
+        Write-Host -ForegroundColor Green "[✓] $Name is installed [$($GalleryModule.Version)]"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
@@ -1599,7 +1599,7 @@ function winpe-InstallZip {
             Copy-Item -Path "$tempDir\7za\arm64\*" -Destination $env:SystemRoot\System32 -Recurse -Force -ErrorAction Stop
         }
 
-        Write-Host -ForegroundColor DarkGreen "[✓] 7-Zip [25.01]"
+        Write-Host -ForegroundColor Green "[✓] 7-Zip [25.01]"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] 7-Zip [25.01] failed: $_"
