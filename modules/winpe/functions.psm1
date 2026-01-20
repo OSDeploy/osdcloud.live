@@ -158,12 +158,12 @@ function winpe-TestUserShellFolder {
 
     # Success
     if (-not $remediate) {
-        Write-Host -ForegroundColor DarkGreen "[✓] Required User Shell Folders exist"
+        Write-Host -ForegroundColor DarkGreen "[✓] User Shell Folders exist"
         return 0
     }
 
     # Failure
-    Write-Host -ForegroundColor Red "[✗] Required User Shell Folders DO NOT exist"
+    Write-Host -ForegroundColor Red "[✗] User Shell Folders DO NOT exist"
     foreach ($item in $requiredFolders) {
         if (Test-Path -Path $item) {
             continue
@@ -241,12 +241,12 @@ function winpe-TestRegistryEnvironment {
 
     # Success
     if (-not $remediate) {
-        Write-Host -ForegroundColor DarkGreen "[✓] Required Environment Variables exist in the Registry"
+        Write-Host -ForegroundColor DarkGreen "[✓] Environment Variables exist in the Registry"
         return 0
     }
 
     # Failure
-    Write-Host -ForegroundColor Red "[✗] Required Environment Variables DO NOT exist in the Registry"
+    Write-Host -ForegroundColor Red "[✗] Environment Variables DO NOT exist in the Registry"
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
@@ -333,12 +333,12 @@ function winpe-TestSessionEnvironment {
 
     # Success
     if (-not $remediate) {
-        Write-Host -ForegroundColor DarkGreen "[✓] Required Environment Variables exist in the current PowerShell Session"
+        Write-Host -ForegroundColor DarkGreen "[✓] Environment Variables exist in the current PowerShell Session"
         return 0
     }
 
     # Failure
-    Write-Host -ForegroundColor Red "[✗] Required Environment Variables DO NOT exist in the current PowerShell Session"
+    Write-Host -ForegroundColor Red "[✗] Environment Variables DO NOT exist in the current PowerShell Session"
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
@@ -422,13 +422,13 @@ function winpe-TestPowerShellProfilePath {
 
     # Success
     if ($repairPSProfilePath -eq $false) {
-        Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Profile Paths are properly configured"
+        Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Profile CurrentUser Paths are properly configured"
         return 0
     }
 
     # Failure
     if ($repairPSProfilePath -eq $true) {
-        Write-Host -ForegroundColor Red "[✗] PowerShell Profile paths are NOT properly configured"
+        Write-Host -ForegroundColor Red "[✗] PowerShell Profile CurrentUser Paths are NOT properly configured"
         if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
             Write-Host -ForegroundColor DarkGray "CurrentUserAllHosts: [$($PROFILE.CurrentUserAllHosts)]"
         }
@@ -491,7 +491,8 @@ function winpe-TestPowerShellProfile {
 
     # Failure
     if ($repairPSProfileFile -eq $true) {
-        Write-Host -ForegroundColor Red "[✗] PowerShell Profile AllUsersAllHosts is not configured for Registry Environment Variables"
+        Write-Host -ForegroundColor Red "[✗] PowerShell Profile AllUsersAllHosts is NOT configured"
+        Write-Host -ForegroundColor DarkGray "Causes issues with new PowerShell sessions not inheriting Registry Environment Variables"
         return 1
     }
 }
@@ -524,8 +525,6 @@ $registryPath | ForEach-Object {
     }
 
     # Repair
-
-
     $profileDir = $PSHome
     $profilePath = Join-Path -Path $PSHome -ChildPath 'profile.ps1'
 
