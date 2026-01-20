@@ -379,6 +379,61 @@ function winpe-RepairRegistryEnvironment {
     }
 }
 
+function winpe-TestSessionEnvironment {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+    $requiredEnvironment = [ordered]@{
+        'APPDATA'       = "$env:UserProfile\AppData\Roaming"
+        'HOMEDRIVE'     = "$env:SystemDrive"
+        'HOMEPATH'      = "\windows\system32\config\systemprofile"
+        'LOCALAPPDATA'  = "$env:UserProfile\AppData\Local"
+    }
+
+    # Test if a repair is needed
+    $needsRepair = $false
+    foreach ($item in $requiredEnvironment.GetEnumerator()) {
+        $name = $item.Key
+        $value = $item.Value
+
+        try {
+            $currentValue = Get-Item "env:$name" -ErrorAction Stop | Select-Object -ExpandProperty Value
+        }
+        catch {
+            $currentValue = $null
+        }
+
+        if ($currentValue -ne $value) {
+            $needsRepair = $true
+            break
+        }
+    }
+
+    # Success
+    if (-not $needsRepair) {
+        Write-Host -ForegroundColor DarkGreen "[✓] Required Environment Variables exist in the current PowerShell Session"
+        return
+    }
+
+    # Failure
+    Write-Host -ForegroundColor Red "[✗] Required Environment Variables DO NOT exist in the current PowerShell Session"
+    foreach ($item in $requiredEnvironment.GetEnumerator()) {
+        $name = $item.Key
+        $value = $item.Value
+
+        try {
+            $currentValue = Get-Item "env:$name" -ErrorAction Stop | Select-Object -ExpandProperty Value
+        }
+        catch {
+            $currentValue = $null
+        }
+
+        if ($currentValue -ne $value) {
+            Write-Host -ForegroundColor DarkGray "$name = $value"
+        }
+    }
+}
+
 function winpe-RepairSessionEnvironment {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -469,6 +524,55 @@ function winpe-RepairSessionEnvironment {
         }
     }
 }
+
+function winpe-TestPowerShellProfile {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+    $profileDir = $PSHome
+    $profilePath = Join-Path -Path $PSHome -ChildPath 'profile.ps1'
+
+    # Test if a repair is needed
+    $needsProfileRepair = $false
+    $needsProfileCreated = $false
+
+    if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
+        $needsProfileRepair = $true
+    }
+    if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1") {
+        $needsProfileRepair = $true
+    }
+    if (-not (Test-Path -Path $profilePath)) {
+        $needsProfileCreated = $true
+    }
+    else {
+        $existingContent = Get-Content -Path $profilePath -Raw -ErrorAction Stop
+        if (-not ($existingContent -match 'OSDCloud by Recast Software')) {
+            $needsProfileCreated = $true
+        }
+    }
+
+    # Success
+    if (-not $needsProfileRepair -and -not $needsProfileCreated) {
+        Write-Host -ForegroundColor DarkGreen "[✓] PowerShell Profiles are properly configured"
+        return
+    }
+
+    # Failure
+    if ($needsProfileRepair) {
+        Write-Host -ForegroundColor Red "[✗] PowerShell Profile paths are NOT properly configured"
+        if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
+            Write-Host -ForegroundColor DarkGray "CurrentUserAllHosts: [$($PROFILE.CurrentUserAllHosts)]"
+        }
+        if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1") {
+            Write-Host -ForegroundColor DarkGray "CurrentUserCurrentHost: [$($PROFILE.CurrentUserCurrentHost)]"
+        }
+    }
+    if ($needsProfileCreated) {
+        Write-Host -ForegroundColor Red "[✗] PowerShell Profile does not contain a solution to enable registry environment variables in new sessions"
+    }
+}
+
 
 function winpe-RepairPowerShellProfile {
     [CmdletBinding()]

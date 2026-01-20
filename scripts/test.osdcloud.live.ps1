@@ -71,8 +71,8 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-TestExecutionPolicy
     winpe-TestUserShellFolder
     winpe-TestRegistryEnvironment
-    winpe-RepairSessionEnvironment
-    winpe-RepairPowerShellProfile
+    winpe-TestSessionEnvironment
+    winpe-TestPowerShellProfile
     winpe-TestRealTimeClockUTC
     winpe-RepairTimeService
     winpe-RepairCurl
