@@ -78,7 +78,7 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-TestCurl
     winpe-TestPackageManagement
     winpe-TestNugetPackageProvider
-    winpe-RepairNugetExe
+    winpe-TestNugetExe
     winpe-UpdatePackageManagement
     winpe-UpdatePowerShellGet
     winpe-TrustPSGallery

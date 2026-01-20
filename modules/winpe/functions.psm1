@@ -1132,6 +1132,29 @@ function winpe-RepairNugetPackageProvider {
     }
 }
 
+function winpe-TestNugetExe {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+    $nugetExeSourceURL = 'https://nuget.org/nuget.exe'
+    $nugetFileName = 'NuGet.exe'
+
+    # $env:LOCALAPPDATA may not be set in WinPE, so should not use env:LOCALAPPDATA
+    # $nugetPath = Join-Path -Path $env:LOCALAPPDATA -ChildPath 'Microsoft\Windows\PowerShell\PowerShellGet\'
+    $nugetPath = Join-Path -Path "$env:UserProfile\AppData\Local" -ChildPath 'Microsoft\Windows\PowerShell\PowerShellGet\'
+    $nugetExeFilePath = Join-Path -Path $nugetPath -ChildPath $nugetFileName
+
+    # Test if NuGet.exe is already installed
+    if (Test-Path -Path $nugetExeFilePath) {
+        $nugetExe = Get-Item -Path $nugetExeFilePath
+        Write-Host -ForegroundColor DarkGreen "[✓] NuGet.exe is installed [$($nugetExe.VersionInfo.FileVersion)]"
+        return 0
+    }
+
+    Write-Host -ForegroundColor Red "[✗] NuGet.exe is NOT installed"
+    return 1
+}
+
 function winpe-RepairNugetExe {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
