@@ -35,27 +35,33 @@ Most functions will skip if the target is already configured/installed.
 function winpe-ExecutionPolicyTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Quiet
+    )
 
     # Get the current execution policy
     try {
         $executionPolicy = Get-ExecutionPolicy -ErrorAction Stop
-
-        # Success
-        if ($executionPolicy -eq 'Bypass') {
-            Write-Host -ForegroundColor Green "[✓] PowerShell Execution Policy is set to Bypass"
-            return 0
-        }
-
-        # Failure
-        Write-Host -ForegroundColor DarkGray "[✗] PowerShell Execution Policy is NOT set to Bypass [$executionPolicy]"
-        return 1
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor Red $_
+            Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+            Write-Host -ForegroundColor Red $_
+        }
         throw
     }
+
+    # Success
+    if ($executionPolicy -eq 'Bypass') {
+        if ($Quiet) { return 0 }
+        Write-Host -ForegroundColor Green "[✓] PowerShell Execution Policy is set to Bypass"
+        return 0
+    }
+
+    # Failure
+    if ($Quiet) { return 1 }
+    Write-Host -ForegroundColor DarkGray "[✗] PowerShell Execution Policy is NOT set to Bypass [$executionPolicy]"
+    return 1
 }
 
 function winpe-ExecutionPolicyRepair {
@@ -64,7 +70,7 @@ function winpe-ExecutionPolicyRepair {
     param ()
 
     # Test
-    $results = winpe-ExecutionPolicyTest
+    $results = winpe-ExecutionPolicyTest -Quiet
 
     # Success
     if ($results -eq 0) {
@@ -91,7 +97,11 @@ function winpe-ExecutionPolicyRepair {
 function winpe-UserShellFolderTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Quiet
+    )
+
     $requiredFolders = @(
         "$env:ProgramFiles\WindowsPowerShell\Modules",
         "$env:ProgramFiles\WindowsPowerShell\Scripts",
@@ -114,11 +124,13 @@ function winpe-UserShellFolderTest {
 
     # Success
     if (-not $remediate) {
+        if ($Quiet) { return 0 }
         Write-Host -ForegroundColor Green "[✓] User Shell Folders exist"
         return 0
     }
 
     # Failure
+    if ($Quiet) { return 1 }
     Write-Host -ForegroundColor DarkGray "[✗] User Shell Folders do NOT exist"
     foreach ($item in $requiredFolders) {
         if (Test-Path -Path $item) {
@@ -145,7 +157,7 @@ function winpe-UserShellFolderRepair {
     )
 
     # Test
-    $results = winpe-UserShellFolderTest
+    $results = winpe-UserShellFolderTest -Quiet
     if ($results -eq 0) {
         return
     }
