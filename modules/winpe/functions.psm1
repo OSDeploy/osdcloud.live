@@ -51,7 +51,6 @@ function winpe-ExecutionPolicyTest {
     }
 
     # Success
-
     if ($executionPolicy -eq 'Bypass') {
         if ($Quiet) { return 0 }
         Write-Host -ForegroundColor Green "[✓] PowerShell Execution Policy is set to Bypass"
@@ -60,7 +59,7 @@ function winpe-ExecutionPolicyTest {
 
     # Failure
     if ($Quiet) { return 1 }
-    Write-Host -ForegroundColor DarkGray "[✗] PowerShell Execution Policy is NOT set to Bypass [$executionPolicy]"
+    Write-Host -ForegroundColor Red "[✗] PowerShell Execution Policy is NOT set to Bypass [$executionPolicy]"
     return 1
 }
 
@@ -130,7 +129,7 @@ function winpe-UserShellFolderTest {
 
     # Failure
     if ($Quiet) { return 1 }
-    Write-Host -ForegroundColor DarkGray "[✗] User Shell Folders do NOT exist"
+    Write-Host -ForegroundColor Red "[✗] User Shell Folders do NOT exist"
     foreach ($item in $requiredFolders) {
         if (Test-Path -Path $item) {
             continue
@@ -213,12 +212,13 @@ function winpe-RegistryEnvironmentTest {
 
     # Success
     if (-not $remediate) {
+        if ($Quiet) { return 0 }
         Write-Host -ForegroundColor Green "[✓] Environment Variables exist in the Registry"
         return 0
     }
 
     # Failure
-    Write-Host -ForegroundColor DarkGray "[✗] Environment Variables do NOT exist in the Registry"
+    if ($Quiet) { return 1 }
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
@@ -310,12 +310,14 @@ function winpe-SessionEnvironmentTest {
 
     # Success
     if (-not $remediate) {
+        if ($Quiet) { return 0 }
         Write-Host -ForegroundColor Green "[✓] Environment Variables exist in the current PowerShell Session"
         return 0
     }
 
     # Failure
-    Write-Host -ForegroundColor DarkGray "[✗] Environment Variables do NOT exist in the current PowerShell Session"
+    if ($Quiet) { return 1 }
+    Write-Host -ForegroundColor Red "[✗] Environment Variables do NOT exist in the current PowerShell Session"
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
@@ -403,12 +405,14 @@ function winpe-PowerShellProfilePathTest {
 
     # Success
     if ($repairPSProfilePath -eq $false) {
+        if ($Quiet) { return 0 }
         Write-Host -ForegroundColor Green "[✓] PowerShell Profile CurrentUser Paths are properly configured"
         return 0
     }
 
     # Failure
     if ($repairPSProfilePath -eq $true) {
+        if ($Quiet) { return 1 }
         Write-Host -ForegroundColor Red "[✗] PowerShell Profile CurrentUser Paths are NOT properly configured"
         if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
             Write-Host -ForegroundColor DarkGray "CurrentUserAllHosts: [$($PROFILE.CurrentUserAllHosts)]"
