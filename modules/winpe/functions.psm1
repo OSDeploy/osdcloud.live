@@ -941,7 +941,7 @@ function winpe-NugetPackageProviderRepair {
 
     # Repair / Install
     try {
-        Install-PackageProvider -Name NuGet -Force -Scope AllUsers -ErrorAction Stop
+        Install-PackageProvider -Name NuGet -Force -Scope AllUsers -ErrorAction Stop | Out-Null
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
