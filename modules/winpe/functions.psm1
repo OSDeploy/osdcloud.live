@@ -48,9 +48,7 @@ function winpe-ExecutionPolicyTest {
         }
 
         # Failure
-        Write-Host -ForegroundColor Red "[✗] PowerShell Execution Policy is NOT set to Bypass [$executionPolicy]"
-        # Write-Host -ForegroundColor DarkGray "PowerShell Execution Policy is set to $executionPolicy"
-        # Write-Host -ForegroundColor DarkGray "OSDCloud scripting will fail if not properly configured to Bypass"
+        Write-Host -ForegroundColor DarkGray "[✗] PowerShell Execution Policy is NOT set to Bypass [$executionPolicy]"
         return 1
     }
     catch {
@@ -66,7 +64,7 @@ function winpe-ExecutionPolicyRepair {
     param ()
 
     # Test
-    $results = winpe-ExecutionPolicyTest | Out-Null
+    $results = winpe-ExecutionPolicyTest
 
     # Success
     if ($results -eq 0) {
@@ -121,7 +119,7 @@ function winpe-UserShellFolderTest {
     }
 
     # Failure
-    Write-Host -ForegroundColor Red "[✗] User Shell Folders do NOT exist"
+    Write-Host -ForegroundColor DarkGray "[✗] User Shell Folders do NOT exist"
     foreach ($item in $requiredFolders) {
         if (Test-Path -Path $item) {
             continue
@@ -147,7 +145,7 @@ function winpe-UserShellFolderRepair {
     )
 
     # Test
-    $results = winpe-UserShellFolderTest | Out-Null
+    $results = winpe-UserShellFolderTest
     if ($results -eq 0) {
         return
     }
@@ -204,7 +202,7 @@ function winpe-RegistryEnvironmentTest {
     }
 
     # Failure
-    Write-Host -ForegroundColor Red "[✗] Environment Variables do NOT exist in the Registry"
+    Write-Host -ForegroundColor DarkGray "[✗] Environment Variables do NOT exist in the Registry"
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
@@ -296,7 +294,7 @@ function winpe-SessionEnvironmentTest {
     }
 
     # Failure
-    Write-Host -ForegroundColor Red "[✗] Environment Variables do NOT exist in the current PowerShell Session"
+    Write-Host -ForegroundColor DarkGray "[✗] Environment Variables do NOT exist in the current PowerShell Session"
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
@@ -1063,7 +1061,7 @@ function winpe-UpdatePackageManagementRepair {
         $moduleDir = "$env:ProgramFiles\WindowsPowerShell\Modules\PackageManagement"
 
         $url = 'https://www.powershellgallery.com/api/v2/package/PackageManagement/1.4.8.1'
-        Write-Host -ForegroundColor DarkGray $url
+        # Write-Host -ForegroundColor DarkGray $url
         
         # Download using curl if available, fallback to Invoke-WebRequest
         $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
