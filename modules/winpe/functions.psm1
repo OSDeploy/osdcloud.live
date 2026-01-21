@@ -66,6 +66,7 @@ function winpe-RepairTls {
     }
 
     # Repair
+    Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     try {
         Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [Tls12] repaired"
         [Net.ServicePointManager]::SecurityProtocol = $SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
@@ -118,7 +119,7 @@ function winpe-RepairExecutionPolicy {
     }
 
     # Repair
-    # Write-Host -ForegroundColor DarkGray "[→] Repairing ..."
+    Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     try {
         Set-ExecutionPolicy -ExecutionPolicy Bypass -Force -ErrorAction Stop
     }
@@ -197,7 +198,7 @@ function winpe-RepairUserShellFolder {
     }
 
     # Repair
-    # Write-Host -ForegroundColor DarkGray "[→] Repairing ..."
+    Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     foreach ($item in $requiredFolders) {
         if (Test-Path -Path $item) {
             continue
@@ -282,7 +283,7 @@ function winpe-RepairRegistryEnvironment {
     }
 
     # Repair
-    # Write-Host -ForegroundColor DarkGray "[→] Repairing ..."
+    Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
@@ -378,7 +379,7 @@ function winpe-RepairSessionEnvironment {
     }
 
     # Repair
-    # Write-Host -ForegroundColor DarkGray "[→] Repairing ..."
+    Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
@@ -454,6 +455,7 @@ function winpe-RepairPowerShellProfilePath {
     }
 
     # Repair
+    Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
         $PROFILE.CurrentUserAllHosts = "$Home\Documents\WindowsPowerShell\profile.ps1"
         Write-Host -ForegroundColor DarkGray "[REPAIR] CurrentUserAllHosts: [$($PROFILE.CurrentUserAllHosts)]"
@@ -527,6 +529,7 @@ $registryPath | ForEach-Object {
     }
 
     # Repair
+    Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     $profileDir = $PSHome
     $profilePath = Join-Path -Path $PSHome -ChildPath 'profile.ps1'
 
@@ -658,6 +661,7 @@ function winpe-RepairRealTimeClockUTC {
     }
 
     # Repair
+    Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     try {
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -Value 1 -Type DWord -ErrorAction Stop
     }
@@ -713,6 +717,7 @@ function winpe-RepairTimeService {
     }
 
     # Repair
+    Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     try {
         $w32timeService = Get-Service -Name w32time -ErrorAction Stop
     }
@@ -790,8 +795,8 @@ function winpe-RepairCurl {
     }
 
     # Repair
+    Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     try {
-        Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
         $tempZip = "$env:TEMP\curl.zip"
         $tempDir = "$env:TEMP\curl"
         
@@ -884,6 +889,7 @@ function winpe-RepairPackageManagement {
     }
 
     # Repair
+    Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     try {
         $tempZip = "$env:TEMP\packagemanagement.1.4.8.1.zip"
         $tempDir = "$env:TEMP\1.4.8.1"
