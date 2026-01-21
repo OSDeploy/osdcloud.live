@@ -45,9 +45,8 @@ function winpe-ExecutionPolicyTest {
         $executionPolicy = Get-ExecutionPolicy -ErrorAction Stop
     }
     catch {
-            Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
-            Write-Host -ForegroundColor Red $_
-        }
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red $_
         throw
     }
 
