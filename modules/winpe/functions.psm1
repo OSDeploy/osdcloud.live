@@ -68,7 +68,6 @@ function winpe-ExecutionPolicyRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
-
     # Test
     $results = winpe-ExecutionPolicyTest -Quiet
 
@@ -145,6 +144,14 @@ function winpe-UserShellFolderRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
+    # Test
+    $results = winpe-UserShellFolderTest -Quiet
+    
+    # Success
+    if ($results -eq 0) {
+        return
+    }
+
     $requiredFolders = @(
         "$env:ProgramFiles\WindowsPowerShell\Modules",
         "$env:ProgramFiles\WindowsPowerShell\Scripts",
@@ -155,12 +162,6 @@ function winpe-UserShellFolderRepair {
         "$env:SystemRoot\system32\WindowsPowerShell\v1.0\Modules",
         "$env:SystemRoot\system32\WindowsPowerShell\v1.0\Scripts"
     )
-
-    # Test
-    $results = winpe-UserShellFolderTest -Quiet
-    if ($results -eq 0) {
-        return
-    }
 
     # Repair
     Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
@@ -235,6 +236,14 @@ function winpe-RegistryEnvironmentRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
+    # Test
+    $results = winpe-RegistryEnvironmentTest -Quiet
+
+    # Success
+    if ($results -eq 0) {
+        return
+    }
+    
     $registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
     $requiredEnvironment = [ordered]@{
         'APPDATA'       = "$env:UserProfile\AppData\Roaming"
@@ -242,12 +251,6 @@ function winpe-RegistryEnvironmentRepair {
         'HOMEPATH'      = "\windows\system32\config\systemprofile"
         'LOCALAPPDATA'  = "$env:UserProfile\AppData\Local"
         'USERPROFILE'   = "$env:UserProfile"
-    }
-
-    # Test
-    $remediate = winpe-RegistryEnvironmentTest
-    if ($remediate -eq 0) {
-        return
     }
 
     # Repair
@@ -335,10 +338,11 @@ function winpe-SessionEnvironmentRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
-
     # Test
-    $remediate = winpe-SessionEnvironmentTest
-    if ($remediate -eq 0) {
+    $results = winpe-SessionEnvironmentTest -Quiet
+
+    # Success
+    if ($results -eq 0) {
         return
     }
 
@@ -421,10 +425,10 @@ function winpe-PowerShellProfilePathRepair {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
-    $remediate = winpe-PowerShellProfilePathTest
+    $results = winpe-PowerShellProfilePathTest -Quiet
 
     # Success
-    if ($remediate -eq 0) {
+    if ($results -eq 0) {
         return
     }
 
@@ -482,7 +486,15 @@ function winpe-PowerShellProfileRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
+     # Test
+    $results = winpe-PowerShellProfileTest -Quiet
 
+    # Success
+    if ($results -eq 0) {
+        return
+    }
+
+    # Repair
     $winpePowerShellProfile = @'
 # OSDCloud by Recast Software
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
@@ -497,15 +509,6 @@ $registryPath | ForEach-Object {
 }
 '@
 
-    # Test
-    $remediate = winpe-PowerShellProfileTest
-
-    # Success
-    if ($remediate -eq 0) {
-        return
-    }
-
-    # Repair
     Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     $profileDir = $PSHome
     $profilePath = Join-Path -Path $PSHome -ChildPath 'profile.ps1'
@@ -633,10 +636,11 @@ function winpe-RealTimeClockUTCRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
-
     # Test
-    $remediate = winpe-RealTimeClockUTCTest
-    if ($remediate -eq 0) {
+    $results = winpe-RealTimeClockUTCTest -Quiet
+
+    # Success
+    if ($results -eq 0) {
         return
     }
 
@@ -692,10 +696,10 @@ function winpe-TimeServiceRepair {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
-    $remediate = winpe-TimeServiceTest
+    $results = winpe-TimeServiceTest -Quiet
 
     # Success
-    if ($remediate -eq 0) {
+    if ($results -eq 0) {
         return
     }
 
@@ -772,10 +776,10 @@ function winpe-CurlExeRepair {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
-    $remediate = winpe-CurlExeTest
+    $results = winpe-CurlExeTest -Quiet
 
     # Success
-    if ($remediate -eq 0) {
+    if ($results -eq 0) {
         return
     }
 
@@ -867,12 +871,11 @@ function winpe-PackageManagementRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
-
     # Test
-    $remediate = winpe-PackageManagementTest
+    $results = winpe-PackageManagementTest -Quiet
 
     # Success
-    if ($remediate -eq 0) {
+    if ($results -eq 0) {
         return
     }
 
@@ -967,16 +970,15 @@ function winpe-NugetPackageProviderRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
-    
     # Test
-    $remediate = winpe-NuGetPackageProviderTest
+    $results = winpe-NuGetPackageProviderTest -Quiet
 
     # Success
-    if ($remediate -eq 0) {
+    if ($results -eq 0) {
         return
     }
 
-    # Repair / Install
+    # Repair
     try {
         Install-PackageProvider -Name NuGet -Force -Scope AllUsers -ErrorAction Stop | Out-Null
     }
@@ -1020,10 +1022,10 @@ function winpe-NugetExeRepair {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
-    $remediate = winpe-NugetExeTest
+    $results = winpe-NugetExeTest -Quiet
 
     # Success
-    if ($remediate -eq 0) {
+    if ($results -eq 0) {
         return
     }
 
@@ -1091,7 +1093,7 @@ function winpe-UpdatePackageManagementRepair {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
-    $results = winpe-UpdatePackageManagementTest
+    $results = winpe-UpdatePackageManagementTest -Quiet
 
     # Success
     if ($results -eq 0) {
@@ -1170,7 +1172,7 @@ function winpe-UpdatePowerShellGetRepair {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
-    $results = winpe-UpdatePowerShellGetTest
+    $results = winpe-UpdatePowerShellGetTest -Quiet
 
     # Success
     if ($results -eq 0) {
@@ -1262,7 +1264,7 @@ function winpe-PSGalleryTrustRepair {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
-    $results = winpe-PSGalleryTrustTest
+    $results = winpe-PSGalleryTrustTest -Quiet
 
     # Success
     if ($results -eq 0) {
@@ -1310,10 +1312,10 @@ function winpe-AzcopyExeRepair {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
-    $remediate = winpe-AzcopyExeTest
+    $results = winpe-AzcopyExeTest -Quiet
 
     # Success
-    if ($remediate -eq 0) {
+    if ($results -eq 0) {
         return
     }
 
