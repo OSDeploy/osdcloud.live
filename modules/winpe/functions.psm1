@@ -51,6 +51,7 @@ function winpe-ExecutionPolicyTest {
     }
 
     # Success
+
     if ($executionPolicy -eq 'Bypass') {
         if ($Quiet) { return 0 }
         Write-Host -ForegroundColor Green "[✓] PowerShell Execution Policy is set to Bypass"
@@ -183,7 +184,10 @@ function winpe-UserShellFolderRepair {
 function winpe-RegistryEnvironmentTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Quiet
+    )
     $registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
     $requiredEnvironment = [ordered]@{
         'APPDATA'       = "$env:UserProfile\AppData\Roaming"
@@ -271,7 +275,10 @@ function winpe-RegistryEnvironmentRepair {
 function winpe-SessionEnvironmentTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Quiet
+    )
     $requiredEnvironment = [ordered]@{
         'APPDATA'       = "$env:UserProfile\AppData\Roaming"
         'HOMEDRIVE'     = "$env:SystemDrive"
@@ -374,7 +381,10 @@ function winpe-SessionEnvironmentRepair {
 function winpe-PowerShellProfilePathTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Quiet
+    )
     $profileDir = $PSHome
     $profilePath = Join-Path -Path $PSHome -ChildPath 'profile.ps1'
     $repairPSProfilePath = $false
@@ -435,7 +445,10 @@ function winpe-PowerShellProfilePathRepair {
 function winpe-PowerShellProfileTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Quiet
+    )
     $profileDir = $PSHome
     $profilePath = Join-Path -Path $PSHome -ChildPath 'profile.ps1'
     $repairPSProfileFile = $false
@@ -599,7 +612,10 @@ $registryPath | ForEach-Object {
 function winpe-RealTimeClockUTCTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Quiet
+    )
     # Test if RealTimeIsUniversal is already set
     $realTimeIsUniversal = Get-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -ErrorAction SilentlyContinue
 
@@ -641,7 +657,10 @@ function winpe-RealTimeClockUTCRepair {
 function winpe-TimeServiceTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Quiet
+    )
     # Can we connect to Time Service?
     try {
         $w32timeService = Get-Service -Name w32time -ErrorAction Stop
@@ -732,7 +751,10 @@ function winpe-TimeServiceRepair {
 function winpe-CurlExeTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Quiet
+    )
     $curlPath = "$env:SystemRoot\System32\curl.exe"
     if (Test-Path $curlPath) {
         $curl = Get-Item -Path $curlPath
@@ -794,7 +816,10 @@ function winpe-CurlExeRepair {
 function winpe-PackageManagementTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Quiet
+    )
     # Test if PackageManagement is already installed
     $installedModule = Get-Module -Name PackageManagement -ListAvailable
 
@@ -899,7 +924,10 @@ function winpe-PackageManagementRepair {
 function winpe-NuGetPackageProviderTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Quiet
+    )
 
     # Test PackageManagement
     if (-not (Get-Module -Name PackageManagement -ListAvailable)) {
@@ -964,7 +992,10 @@ function winpe-NugetPackageProviderRepair {
 function winpe-NugetExeTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Quiet
+    )
     $nugetExeSourceURL = 'https://nuget.org/nuget.exe'
     $nugetFileName = 'NuGet.exe'
 
@@ -1037,7 +1068,10 @@ function winpe-NugetExeRepair {
 function winpe-UpdatePackageManagementTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Quiet
+    )
     $installedModule = Get-Module -Name PackageManagement -ListAvailable | Where-Object { $_.Version -ge '1.4.8.1' }
 
     # Success
@@ -1113,7 +1147,10 @@ function winpe-UpdatePackageManagementRepair {
 function winpe-UpdatePowerShellGetTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Quiet
+    )
     $installedModule = Get-Module -Name PowerShellGet -ListAvailable | Where-Object { $_.Version -ge '2.2.5' }
 
     # Success
@@ -1192,7 +1229,10 @@ function winpe-UpdatePowerShellGetRepair {
 function winpe-PSGalleryTrustTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Quiet
+    )
     # Test
     $executionPolicy = Get-ExecutionPolicy -ErrorAction SilentlyContinue
     if ($executionPolicy -ne 'Bypass' -and $executionPolicy -ne 'Unrestricted') {
@@ -1247,7 +1287,10 @@ function winpe-PSGalleryTrustRepair {
 function winpe-AzcopyExeTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Quiet
+    )
     $azcopyPath = "$env:SystemRoot\System32\azcopy.exe"
 
     # Success
