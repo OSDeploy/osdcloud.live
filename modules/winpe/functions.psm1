@@ -1021,7 +1021,7 @@ function winpe-RepairNugetExe {
     param ()
 
     # Test
-    $remediate = winpe-TestRepairNugetExe
+    $remediate = winpe-TestNugetExe
 
     # Success
     if ($remediate -eq 0) {
@@ -1062,7 +1062,7 @@ function winpe-RepairNugetExe {
         }
     }
 
-    $results = winpe-TestRepairNugetExe
+    $results = winpe-TestNugetExe
 }
 
 function winpe-UpdatePackageManagement {
