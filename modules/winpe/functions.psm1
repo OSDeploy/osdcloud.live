@@ -48,8 +48,8 @@ function winpe-ExecutionPolicyTest {
         }
 
         # Failure
-        Write-Host -ForegroundColor Red "[✗] PowerShell Execution Policy is NOT set to Bypass"
-        Write-Host -ForegroundColor DarkGray "PowerShell Execution Policy is set to $executionPolicy"
+        Write-Host -ForegroundColor Red "[✗] PowerShell Execution Policy is NOT set to Bypass [Current Policy: $executionPolicy]"
+        # Write-Host -ForegroundColor DarkGray "PowerShell Execution Policy is set to $executionPolicy"
         # Write-Host -ForegroundColor DarkGray "OSDCloud scripting will fail if not properly configured to Bypass"
         return 1
     }
@@ -121,7 +121,7 @@ function winpe-UserShellFolderTest {
     }
 
     # Failure
-    Write-Host -ForegroundColor Red "[✗] User Shell Folders DO NOT exist"
+    Write-Host -ForegroundColor Red "[✗] User Shell Folders do NOT exist"
     foreach ($item in $requiredFolders) {
         if (Test-Path -Path $item) {
             continue
@@ -204,7 +204,7 @@ function winpe-RegistryEnvironmentTest {
     }
 
     # Failure
-    Write-Host -ForegroundColor Red "[✗] Environment Variables DO NOT exist in the Registry"
+    Write-Host -ForegroundColor Red "[✗] Environment Variables do NOT exist in the Registry"
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
@@ -296,7 +296,7 @@ function winpe-SessionEnvironmentTest {
     }
 
     # Failure
-    Write-Host -ForegroundColor Red "[✗] Environment Variables DO NOT exist in the current PowerShell Session"
+    Write-Host -ForegroundColor Red "[✗] Environment Variables do NOT exist in the current PowerShell Session"
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
@@ -1034,35 +1034,25 @@ function winpe-UpdatePackageManagementTest {
 
     # Success
     if ($installedModule) {
-        # Write-Host -ForegroundColor Green "[✓] $($MyInvocation.MyCommand.Name)"
         $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
-        Write-Host -ForegroundColor Green "[✓] PackageManagement PowerShell Module is installed [$latestVersion]"
+        Write-Host -ForegroundColor Green "[✓] PackageManagement PowerShell Module is updated [$latestVersion]"
         return 0
     }
 
-    Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is NOT updated to version 1.4.8.1 or later"
+    # Failure
+    Write-Host -ForegroundColor Red "[✗] PackageManagement PowerShell Module is NOT updated to version 1.4.8.1 or later"
     return 1
-
-    # Test if Execution Policy allows installing Package Providers
-    $executionPolicy = Get-ExecutionPolicy -ErrorAction SilentlyContinue
-    if ($executionPolicy -ne 'Bypass' -and $executionPolicy -ne 'Unrestricted') {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "Execution Policy is set to $executionPolicy"
-        Write-Host -ForegroundColor DarkGray "Execution Policy is blocking installation of Package Providers"
-        return 1
-    }
 }
 
 function winpe-UpdatePackageManagementRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
-
     # Test
-    $remediate = winpe-UpdatePackageManagementTest
+    $results = winpe-UpdatePackageManagementTest
 
     # Success
-    if ($remediate -eq 0) {
+    if ($results -eq 0) {
         return
     }
 
@@ -1108,6 +1098,7 @@ function winpe-UpdatePackageManagementRepair {
         if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
 
+    # Test again
     $results = winpe-UpdatePackageManagementTest
 }
 
@@ -1115,91 +1106,33 @@ function winpe-UpdatePowerShellGetTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
-    
     $installedModule = Get-Module -Name PowerShellGet -ListAvailable | Where-Object { $_.Version -ge '2.2.5' }
+
+    # Success
     if ($installedModule) {
         $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
-        Write-Host -ForegroundColor Green "[✓] PowerShellGet PowerShell Module is installed [$($latestVersion)]"
-        return
+        Write-Host -ForegroundColor Green "[✓] PowerShellGet PowerShell Module is updated [$($latestVersion)]"
+        return 0
     }
 
-    # Warning
-    if (-not ($Force)) {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "PowerShellGet PowerShell Module is NOT updated to version 2.2.5 or later"
-        return
-    }
-
-    try {
-        Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
-        $tempZip = "$env:TEMP\powershellget.2.2.5.zip"
-        $tempDir = "$env:TEMP\2.2.5"
-        $moduleDir = "$env:ProgramFiles\WindowsPowerShell\Modules\PowerShellGet"
-        
-        # Download using curl if available, fallback to Invoke-WebRequest
-        $url = 'https://www.powershellgallery.com/api/v2/package/PowerShellGet/2.2.5'
-        Write-Host -ForegroundColor DarkGray $url
-        $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
-        if (Test-Path $curlPath) {
-            & $curlPath --fail --location --silent --show-error `
-                $url `
-                --output $tempZip
-            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $tempZip)) {
-                throw "curl download failed with exit code $LASTEXITCODE"
-            }
-        }
-        else {
-            Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $tempZip -ErrorAction Stop
-        }
-        
-        # Extract
-        $null = New-Item -Path $tempDir -ItemType Directory -Force
-        Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force -ErrorAction Stop
-        
-        # Install
-        $null = New-Item -Path $moduleDir -ItemType Directory -Force -ErrorAction SilentlyContinue
-        Move-Item -Path $tempDir -Destination "$moduleDir\2.2.5" -Force -ErrorAction Stop
-        
-        # Import
-        Import-Module PowerShellGet -Force -Scope Global -ErrorAction Stop
-    }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor Red $_
-        throw
-    }
-    finally {
-        # Cleanup
-        if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
-        if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
-    }
-    $installedModule = Get-Module -Name PowerShellGet -ListAvailable | Where-Object { $_.Version -ge '2.2.5' }
-    if ($installedModule) {
-        $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
-        Write-Host -ForegroundColor Green "[✓] PowerShellGet PowerShell Module is installed [$($latestVersion)]"
-        return
-    }
+    # Failure
+    Write-Host -ForegroundColor Red "[✗] PowerShellGet PowerShell Module is NOT updated to version 2.2.5 or later"
+    return 1
 }
 
 function winpe-UpdatePowerShellGetRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
-    
-    $installedModule = Get-Module -Name PowerShellGet -ListAvailable | Where-Object { $_.Version -ge '2.2.5' }
-    if ($installedModule) {
-        $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
-        Write-Host -ForegroundColor Green "[✓] PowerShellGet PowerShell Module is installed [$($latestVersion)]"
+    # Test
+    $results = winpe-UpdatePowerShellGetTest
+
+    # Success
+    if ($results -eq 0) {
         return
     }
 
-    # Warning
-    if (-not ($Force)) {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "PowerShellGet PowerShell Module is NOT updated to version 2.2.5 or later"
-        return
-    }
-
+    # Repair
     try {
         Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
         $tempZip = "$env:TEMP\powershellget.2.2.5.zip"
@@ -1243,12 +1176,9 @@ function winpe-UpdatePowerShellGetRepair {
         if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
         if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
-    $installedModule = Get-Module -Name PowerShellGet -ListAvailable | Where-Object { $_.Version -ge '2.2.5' }
-    if ($installedModule) {
-        $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
-        Write-Host -ForegroundColor Green "[✓] PowerShellGet PowerShell Module is installed [$($latestVersion)]"
-        return
-    }
+
+    # Test again
+    $results = winpe-UpdatePowerShellGetTest
 }
 
 function winpe-PSGalleryTrustTest {
