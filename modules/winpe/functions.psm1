@@ -32,6 +32,7 @@ Functions are designed to be idempotent and can be safely re-run.
 Most functions will skip if the target is already configured/installed.
 #>
 
+#region ExecutionPolicy
 function winpe-ExecutionPolicyTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -62,7 +63,6 @@ function winpe-ExecutionPolicyTest {
     Write-Host -ForegroundColor Red "[✗] PowerShell Execution Policy is NOT set to Bypass [$executionPolicy]"
     return 1
 }
-
 function winpe-ExecutionPolicyRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -91,7 +91,9 @@ function winpe-ExecutionPolicyRepair {
 
     $results = winpe-ExecutionPolicyTest
 }
+#endregion
 
+#region UserShellFolders
 function winpe-UserShellFolderTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -138,7 +140,6 @@ function winpe-UserShellFolderTest {
     }
     return 1
 }
-
 function winpe-UserShellFolderRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -180,7 +181,9 @@ function winpe-UserShellFolderRepair {
     }
     $results = winpe-UserShellFolderTest
 }
+#endregion
 
+#region RegistryEnvironment
 function winpe-RegistryEnvironmentTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -219,6 +222,7 @@ function winpe-RegistryEnvironmentTest {
 
     # Failure
     if ($Quiet) { return 1 }
+    Write-Host -ForegroundColor Red "[✗] Environment Variables do NOT exist in the Registry"
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
@@ -231,7 +235,6 @@ function winpe-RegistryEnvironmentTest {
     }
     return 1
 }
-
 function winpe-RegistryEnvironmentRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -274,7 +277,9 @@ function winpe-RegistryEnvironmentRepair {
     }
     $results = winpe-RegistryEnvironmentTest
 }
+#endregion
 
+#region SessionEnvironment
 function winpe-SessionEnvironmentTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -335,7 +340,6 @@ function winpe-SessionEnvironmentTest {
     }
     return 1
 }
-
 function winpe-SessionEnvironmentRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -383,7 +387,9 @@ function winpe-SessionEnvironmentRepair {
 
     $results = winpe-SessionEnvironmentTest
 }
+#endregion
 
+#region PowerShellProfilePath
 function winpe-PowerShellProfilePathTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -447,7 +453,9 @@ function winpe-PowerShellProfilePathRepair {
 
     $results = winpe-PowerShellProfilePathTest
 }
+#endregion
 
+#region PowerShellProfile
 function winpe-PowerShellProfileTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -529,7 +537,9 @@ $registryPath | ForEach-Object {
     }
     $results = winpe-PowerShellProfileTest
 }
+#endregion
 
+#region RealTimeClockUTC
 function winpe-RealTimeClockUTCTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -577,7 +587,9 @@ function winpe-RealTimeClockUTCRepair {
 
     $results = winpe-RealTimeClockUTCTest
 }
+#endregion
 
+#region TimeService
 function winpe-TimeServiceTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -612,7 +624,6 @@ function winpe-TimeServiceTest {
         return 1
     }
 }
-
 function winpe-TimeServiceRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -673,7 +684,9 @@ function winpe-TimeServiceRepair {
 
     $results = winpe-TimeServiceTest
 }
+#endregion
 
+#region CurlExe
 function winpe-CurlExeTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -740,7 +753,9 @@ function winpe-CurlExeRepair {
 
     $results = winpe-CurlExeTest
 }
+#endregion
 
+#region PackageManagement
 function winpe-PackageManagementTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -849,7 +864,9 @@ function winpe-PackageManagementRepair {
     
     $results = winpe-PackageManagementTest
 }
+#endregion
 
+#region NuGetPackageProvider
 function winpe-NuGetPackageProviderTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -921,7 +938,9 @@ function winpe-NugetPackageProviderRepair {
     
     $results = winpe-NuGetPackageProviderTest
 }
+#endregion
 
+#region NuGetExe
 function winpe-NugetExeTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -949,7 +968,6 @@ function winpe-NugetExeTest {
     Write-Host -ForegroundColor Red "[✗] NuGet.exe is NOT installed"
     return 1
 }
-
 function winpe-NugetExeRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -999,7 +1017,9 @@ function winpe-NugetExeRepair {
 
     $results = winpe-NugetExeTest
 }
+#endregion
 
+#region UpdatePackageManagement
 function winpe-UpdatePackageManagementTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -1022,7 +1042,6 @@ function winpe-UpdatePackageManagementTest {
     if ($Quiet) { return 1 }
     return 1
 }
-
 function winpe-UpdatePackageManagementRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -1080,7 +1099,9 @@ function winpe-UpdatePackageManagementRepair {
     # Test again
     $results = winpe-UpdatePackageManagementTest
 }
+#endregion
 
+#region PowerShellGet
 function winpe-UpdatePowerShellGetTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -1103,7 +1124,6 @@ function winpe-UpdatePowerShellGetTest {
     Write-Host -ForegroundColor Red "[✗] PowerShellGet PowerShell Module is NOT updated to version 2.2.5 or later"
     return 1
 }
-
 function winpe-UpdatePowerShellGetRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -1164,7 +1184,9 @@ function winpe-UpdatePowerShellGetRepair {
     # Test again
     $results = winpe-UpdatePowerShellGetTest
 }
+#endregion
 
+#region PSGalleryTrust
 function winpe-PSGalleryTrustTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -1199,7 +1221,6 @@ function winpe-PSGalleryTrustTest {
     Write-Host -ForegroundColor Red "[✗] PSGallery Repository Installation Policy is NOT Trusted"
     return 1
 }
-
 function winpe-PSGalleryTrustRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -1226,7 +1247,9 @@ function winpe-PSGalleryTrustRepair {
     # Test
     $results = winpe-PSGalleryTrustTest
 }
+#endregion
 
+#region AzCopyExe
 function winpe-AzcopyExeTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -1315,11 +1338,11 @@ function winpe-AzcopyExeRepair {
     }
     $results = winpe-AzcopyExeTest
 }
+#endregion
 
 
 
-
-
+#region Other
 function winpe-RepairTls {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -1544,3 +1567,4 @@ function Send-SettingChange {
 
   [void] ([Win32.Nativemethods]::SendMessageTimeout($HWND_BROADCAST, $WM_SETTINGCHANGE, [UIntPtr]::Zero, "Environment", 2, 5000, [ref] $result))
 }
+#endregion
