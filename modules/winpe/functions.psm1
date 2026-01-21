@@ -66,10 +66,10 @@ function winpe-ExecutionPolicyRepair {
     param ()
 
     # Test
-    $remediate = winpe-ExecutionPolicyTest
+    $results = winpe-ExecutionPolicyTest | Out-Null
 
     # Success
-    if ($remediate -eq 0) {
+    if ($results -eq 0) {
         return
     }
 
@@ -147,8 +147,8 @@ function winpe-UserShellFolderRepair {
     )
 
     # Test
-    $remediate = winpe-UserShellFolderTest
-    if ($remediate -eq 0) {
+    $results = winpe-UserShellFolderTest | Out-Null
+    if ($results -eq 0) {
         return
     }
 
@@ -740,7 +740,6 @@ function winpe-CurlExeRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
-
     # Test
     $remediate = winpe-CurlExeTest
 
@@ -757,7 +756,7 @@ function winpe-CurlExeRepair {
         
         # Download
         $url = 'https://curl.se/windows/latest.cgi?p=win64-mingw.zip'
-        Write-Host -ForegroundColor DarkGray "$url"
+        # Write-Host -ForegroundColor DarkGray "$url"
         Invoke-WebRequest -UseBasicParsing -Uri $url `
             -OutFile $tempZip -ErrorAction Stop
         
