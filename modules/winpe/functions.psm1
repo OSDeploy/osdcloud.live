@@ -689,7 +689,7 @@ function winpe-CurlExeTest {
         return 0
     }
     else {
-        if ($Quiet) { return 0 }
+        if ($Quiet) { return 1 }
         Write-Host -ForegroundColor Red "[✗] Curl is NOT installed at $curlPath"
         return 1
     }
