@@ -860,6 +860,7 @@ function winpe-NuGetPackageProviderTest {
 
     # Test PackageManagement
     if (-not (Get-Module -Name PackageManagement -ListAvailable)) {
+        if ($Quiet) { return 1 }
         Write-Host -ForegroundColor Red "[✗] NuGet Package Provider is NOT installed"
         # Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is a required prerequisite"
         return 1
@@ -868,6 +869,7 @@ function winpe-NuGetPackageProviderTest {
 
     # Test Get-PackageProvider
     if (-not (Get-Command -Name Get-PackageProvider -ErrorAction SilentlyContinue)) {
+        if ($Quiet) { return 1 }
         Write-Host -ForegroundColor Red "[✗] NuGet Package Provider is NOT installed"
         # Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is a required prerequisite"
         return 1
@@ -876,6 +878,7 @@ function winpe-NuGetPackageProviderTest {
     # Test Execution Policy
     $executionPolicy = Get-ExecutionPolicy -ErrorAction SilentlyContinue
     if ($executionPolicy -ne 'Bypass' -and $executionPolicy -ne 'Unrestricted') {
+        if ($Quiet) { return 1 }
         Write-Host -ForegroundColor Red "[✗] NuGet Package Provider is NOT installed"
         # Write-Host -ForegroundColor DarkGray "PowerShell Execution Policy is blocking installation of NuGetPackage Providers"
         return 1
@@ -884,10 +887,12 @@ function winpe-NuGetPackageProviderTest {
     # Test if NuGet Package Provider is already installed
     $provider = Get-PackageProvider -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq 'NuGet' }
     if ($provider) {
+        if ($Quiet) { return 0 }
         Write-Host -ForegroundColor Green "[✓] NuGet Package Provider [$($provider.Version)]"
         return 0
     }
 
+    if ($Quiet) { return 1 }
     Write-Host -ForegroundColor Red "[✗] NuGet Package Provider is NOT installed"
     return 1
 }
@@ -934,11 +939,13 @@ function winpe-NugetExeTest {
 
     # Test if NuGet.exe is already installed
     if (Test-Path -Path $nugetExeFilePath) {
+        if ($Quiet) { return 0 }
         $nugetExe = Get-Item -Path $nugetExeFilePath
         Write-Host -ForegroundColor Green "[✓] NuGet.exe [$($nugetExe.VersionInfo.FileVersion)]"
         return 0
     }
 
+    if ($Quiet) { return 1 }
     Write-Host -ForegroundColor Red "[✗] NuGet.exe is NOT installed"
     return 1
 }
@@ -1004,6 +1011,7 @@ function winpe-UpdatePackageManagementTest {
 
     # Success
     if ($installedModule) {
+        if ($Quiet) { return 0 }
         $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
         Write-Host -ForegroundColor Green "[✓] PackageManagement PowerShell Module is updated [$latestVersion]"
         return 0
@@ -1011,6 +1019,7 @@ function winpe-UpdatePackageManagementTest {
 
     # Failure
     Write-Host -ForegroundColor Red "[✗] PackageManagement PowerShell Module is NOT updated to version 1.4.8.1 or later"
+    if ($Quiet) { return 1 }
     return 1
 }
 
@@ -1083,12 +1092,14 @@ function winpe-UpdatePowerShellGetTest {
 
     # Success
     if ($installedModule) {
+        if ($Quiet) { return 0 }
         $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
         Write-Host -ForegroundColor Green "[✓] PowerShellGet PowerShell Module is updated [$($latestVersion)]"
         return 0
     }
 
     # Failure
+    if ($Quiet) { return 1 }
     Write-Host -ForegroundColor Red "[✗] PowerShellGet PowerShell Module is NOT updated to version 2.2.5 or later"
     return 1
 }
@@ -1164,6 +1175,7 @@ function winpe-PSGalleryTrustTest {
     # Test
     $executionPolicy = Get-ExecutionPolicy -ErrorAction SilentlyContinue
     if ($executionPolicy -ne 'Bypass' -and $executionPolicy -ne 'Unrestricted') {
+        if ($Quiet) { return 1 }
         Write-Host -ForegroundColor Red "[✗] PSGallery Repository Installation Policy is NOT Trusted [Execution Policy $executionPolicy]"
         # Write-Host -ForegroundColor DarkGray "Execution Policy is set to $executionPolicy"
         # Write-Host -ForegroundColor DarkGray "Execution Policy is blocking enumerating the PowerShell Gallery PSRepository"
@@ -1172,15 +1184,18 @@ function winpe-PSGalleryTrustTest {
 
     $PowerShellGallery = Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue
     if (-not $PowerShellGallery) {
+        if ($Quiet) { return 1 }
         Write-Host -ForegroundColor Red "[✗] PSGallery Repository was NOT found"
         return 1
     }
 
     if ($PowerShellGallery.InstallationPolicy -eq 'Trusted') {
+        if ($Quiet) { return 0 }
         Write-Host -ForegroundColor Green "[✓] PSGallery Repository Installation Policy is Trusted"
         return 0
     }
 
+    if ($Quiet) { return 1 }
     Write-Host -ForegroundColor Red "[✗] PSGallery Repository Installation Policy is NOT Trusted"
     return 1
 }
@@ -1223,12 +1238,14 @@ function winpe-AzcopyExeTest {
 
     # Success
     if (Test-Path $azcopyPath) {
+        if ($Quiet) { return 0 }
         $azcopy = Get-Item -Path $azcopyPath
         Write-Host -ForegroundColor Green "[✓] Microsoft AzCopy"
         return 0
     }
 
     # Failure
+    if ($Quiet) { return 1 }
     Write-Host -ForegroundColor Red "[✗] Microsoft AzCopy [NOT installed]"
     return 1
 }
