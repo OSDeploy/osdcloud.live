@@ -78,8 +78,8 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-RepairTimeService
     winpe-RepairCurl
     winpe-RepairPackageManagement
-    winpe-RepairNugetPackageProvider -Force
-    winpe-RepairNugetExe -Force
+    winpe-RepairNugetPackageProvider
+    winpe-RepairNugetExe
     winpe-UpdatePackageManagement -Force
     winpe-UpdatePowerShellGet -Force
     winpe-TrustPSGallery -Force

@@ -1018,69 +1018,51 @@ function winpe-TestNugetExe {
 function winpe-RepairNugetExe {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param (
-        [System.Management.Automation.SwitchParameter]
-        $Force
-    )
+    param ()
+
+    # Test
+    $remediate = winpe-TestRepairNugetExe
+
+    # Success
+    if ($remediate -eq 0) {
+        return
+    }
+
+    # Repair
     $nugetExeSourceURL = 'https://nuget.org/nuget.exe'
     $nugetFileName = 'NuGet.exe'
-
     # $env:LOCALAPPDATA may not be set in WinPE, so should not use env:LOCALAPPDATA
     # $nugetPath = Join-Path -Path $env:LOCALAPPDATA -ChildPath 'Microsoft\Windows\PowerShell\PowerShellGet\'
     $nugetPath = Join-Path -Path "$env:UserProfile\AppData\Local" -ChildPath 'Microsoft\Windows\PowerShell\PowerShellGet\'
     $nugetExeFilePath = Join-Path -Path $nugetPath -ChildPath $nugetFileName
 
-    # Test if NuGet.exe is already installed
-    if (Test-Path -Path $nugetExeFilePath) {
-        $nugetExe = Get-Item -Path $nugetExeFilePath
-        # Write-Host -ForegroundColor Green "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor Green "[✓] NuGet.exe is installed [$($nugetExe.VersionInfo.FileVersion)]"
-        return
+    # Create directory if it does not exist
+    if (-not (Test-Path -Path $nugetPath)) {
+        $null = New-Item -Path $nugetPath -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
+    }
+    
+    # Download using curl if available, fallback to Invoke-WebRequest
+    $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
+    if (Test-Path $curlPath) {
+        & $curlPath --fail --location --silent --show-error `
+            $nugetExeSourceURL `
+            --output $nugetExeFilePath
+        if ($LASTEXITCODE -ne 0 -or -not (Test-Path $nugetExeFilePath)) {
+            throw "curl download failed with exit code $LASTEXITCODE"
+        }
     }
     else {
-        # Warning only
-        if (-not ($Force)) {
-            Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-            Write-Host -ForegroundColor DarkGray "NuGet.exe is NOT installed"
-            return
+        try {
+            Invoke-WebRequest -UseBasicParsing -Uri $nugetExeSourceURL -OutFile $nugetExeFilePath -ErrorAction Stop
         }
-
-        # Repair / Install
-        Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray $nugetExeSourceURL
-
-        # Create directory if it does not exist
-        if (-not (Test-Path -Path $nugetPath)) {
-            $null = New-Item -Path $nugetPath -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-        }
-        
-        # Download using curl if available, fallback to Invoke-WebRequest
-        $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
-        if (Test-Path $curlPath) {
-            & $curlPath --fail --location --silent --show-error `
-                $nugetExeSourceURL `
-                --output $nugetExeFilePath
-            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $nugetExeFilePath)) {
-                throw "curl download failed with exit code $LASTEXITCODE"
-            }
-        }
-        else {
-            try {
-                Invoke-WebRequest -UseBasicParsing -Uri $nugetExeSourceURL -OutFile $nugetExeFilePath -ErrorAction Stop
-            }
-            catch {
-                Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
-                Write-Host -ForegroundColor Red $_
-                throw
-            }
-        }
-
-        if (Test-Path $nugetExeFilePath) {
-            $nugetExe = Get-Item -Path $nugetExeFilePath
-            Write-Host -ForegroundColor Green "[✓] NuGet.exe is installed [$($nugetExe.VersionInfo.FileVersion)]"
-            return
+        catch {
+            Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+            Write-Host -ForegroundColor Red $_
+            throw
         }
     }
+
+    $results = winpe-TestRepairNugetExe
 }
 
 function winpe-UpdatePackageManagement {
