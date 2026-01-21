@@ -48,7 +48,7 @@ function winpe-ExecutionPolicyTest {
         }
 
         # Failure
-        Write-Host -ForegroundColor Red "[✗] PowerShell Execution Policy is NOT set to Bypass [Current Policy: $executionPolicy]"
+        Write-Host -ForegroundColor Red "[✗] PowerShell Execution Policy is NOT set to Bypass [$executionPolicy]"
         # Write-Host -ForegroundColor DarkGray "PowerShell Execution Policy is set to $executionPolicy"
         # Write-Host -ForegroundColor DarkGray "OSDCloud scripting will fail if not properly configured to Bypass"
         return 1
@@ -413,11 +413,11 @@ function winpe-PowerShellProfilePathRepair {
     Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
         $PROFILE.CurrentUserAllHosts = "$Home\Documents\WindowsPowerShell\profile.ps1"
-        Write-Host -ForegroundColor DarkGray "[REPAIR] CurrentUserAllHosts: [$($PROFILE.CurrentUserAllHosts)]"
+        # Write-Host -ForegroundColor DarkGray "CurrentUserAllHosts: [$($PROFILE.CurrentUserAllHosts)]"
     }
     if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1") {
         $PROFILE.CurrentUserCurrentHost = "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1"
-        Write-Host -ForegroundColor DarkGray "[REPAIR] CurrentUserCurrentHost: [$($PROFILE.CurrentUserCurrentHost)]"
+        # Write-Host -ForegroundColor DarkGray "CurrentUserCurrentHost: [$($PROFILE.CurrentUserCurrentHost)]"
     }
 
     $results = winpe-PowerShellProfilePathTest
@@ -685,7 +685,7 @@ function winpe-TimeServiceRepair {
     if ($w32timeService.StartType -ne 'Automatic') {
         try {
             Set-Service -Name w32time -StartupType Automatic -ErrorAction Stop
-            Write-Host -ForegroundColor DarkGray "[REPAIR] Time Service [w32time] StartType is set to Automatic"
+            # Write-Host -ForegroundColor DarkGray "Time Service [w32time] StartType is set to Automatic"
         }
         catch {
             Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
@@ -695,7 +695,7 @@ function winpe-TimeServiceRepair {
     }
 
     if ($w32timeService.Status -eq 'Running') {
-        Write-Host -ForegroundColor DarkGray "[REPAIR] Time Service [w32time] is being restarted"
+        # Write-Host -ForegroundColor DarkGray "Time Service [w32time] is being restarted"
         try {
             Restart-Service -Name w32time -ErrorAction Stop
         }
@@ -706,7 +706,7 @@ function winpe-TimeServiceRepair {
         }
     }
     else {
-        Write-Host -ForegroundColor DarkGray "[REPAIR] Time Service [w32time] is being started"
+        # Write-Host -ForegroundColor DarkGray "Time Service [w32time] is being started"
         try {
             Start-Service -Name w32time -ErrorAction Stop
         }
@@ -727,7 +727,7 @@ function winpe-CurlExeTest {
     $curlPath = "$env:SystemRoot\System32\curl.exe"
     if (Test-Path $curlPath) {
         $curl = Get-Item -Path $curlPath
-        Write-Host -ForegroundColor Green "[✓] Curl.exe is installed [$($curl.VersionInfo.FileVersion)]"
+        Write-Host -ForegroundColor Green "[✓] Curl.exe [$($curl.VersionInfo.FileVersion)]"
         return 0
     }
     else {
@@ -793,7 +793,7 @@ function winpe-PackageManagementTest {
     # Success
     if ($installedModule) {
         $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
-        Write-Host -ForegroundColor Green "[✓] PackageManagement PowerShell Module is installed [$latestVersion]"
+        Write-Host -ForegroundColor Green "[✓] PackageManagement PowerShell Module [$latestVersion]"
         return 0
     }
     else {
@@ -968,7 +968,7 @@ function winpe-NugetExeTest {
     # Test if NuGet.exe is already installed
     if (Test-Path -Path $nugetExeFilePath) {
         $nugetExe = Get-Item -Path $nugetExeFilePath
-        Write-Host -ForegroundColor Green "[✓] NuGet.exe is installed [$($nugetExe.VersionInfo.FileVersion)]"
+        Write-Host -ForegroundColor Green "[✓] NuGet.exe [$($nugetExe.VersionInfo.FileVersion)]"
         return 0
     }
 
@@ -1141,7 +1141,7 @@ function winpe-UpdatePowerShellGetRepair {
         
         # Download using curl if available, fallback to Invoke-WebRequest
         $url = 'https://www.powershellgallery.com/api/v2/package/PowerShellGet/2.2.5'
-        Write-Host -ForegroundColor DarkGray $url
+        # Write-Host -ForegroundColor DarkGray $url
         $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
         if (Test-Path $curlPath) {
             & $curlPath --fail --location --silent --show-error `
@@ -1204,6 +1204,9 @@ function winpe-PSGalleryTrustTest {
         Write-Host -ForegroundColor Green "[✓] PSGallery Repository Installation Policy is Trusted"
         return 0
     }
+
+    Write-Host -ForegroundColor Red "[✗] PSGallery Repository Installation Policy is NOT Trusted"
+    return 1
 }
 
 function winpe-PSGalleryTrustRepair {
@@ -1242,12 +1245,12 @@ function winpe-AzcopyExeTest {
     # Success
     if (Test-Path $azcopyPath) {
         $azcopy = Get-Item -Path $azcopyPath
-        Write-Host -ForegroundColor Green "[✓] Microsoft AzCopy is installed"
+        Write-Host -ForegroundColor Green "[✓] Microsoft AzCopy"
         return 0
     }
 
     # Failure
-    Write-Host -ForegroundColor Red "[✗] Microsoft AzCopy is NOT installed"
+    Write-Host -ForegroundColor Red "[✗] Microsoft AzCopy [NOT installed]"
     return 1
 }
 
@@ -1280,7 +1283,7 @@ function winpe-AzcopyExeRepair {
         else {
             throw "Unsupported processor architecture: $env:PROCESSOR_ARCHITECTURE"
         }
-        Write-Host -ForegroundColor DarkGray $downloadUrl
+        # Write-Host -ForegroundColor DarkGray $downloadUrl
 
         # Download using curl if available, fallback to Invoke-WebRequest
         $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
@@ -1435,13 +1438,13 @@ function winpe-InstallPowerShellModule {
             if ($GalleryModule -and ([version]$GalleryModule.Version -gt [version]$InstalledModule.Version)) {
                 Write-Host -ForegroundColor DarkGray "[→] Install-Module -Name $Name -Force -Scope AllUsers -SkipPublisherCheck -AllowClobber"
                 Install-Module -Name $Name -Force -Scope AllUsers -SkipPublisherCheck -AllowClobber -ErrorAction Stop -WarningAction SilentlyContinue
-                Write-Host -ForegroundColor Green "[✓] $Name is installed [$($GalleryModule.Version)]"
+                Write-Host -ForegroundColor Green "[✓] $Name [$($GalleryModule.Version)]"
                 return
             }
             
             # Already installed and current
             Import-Module -Name $Name -Force -DisableNameChecking -ErrorAction SilentlyContinue
-            Write-Host -ForegroundColor Green "[✓] $Name is installed [$($InstalledModule.Version)]"
+            Write-Host -ForegroundColor Green "[✓] $Name [$($InstalledModule.Version)]"
             return
         }
         catch {
@@ -1462,7 +1465,7 @@ function winpe-InstallPowerShellModule {
 
         Install-Module -Name $Name -Scope AllUsers -Force -SkipPublisherCheck -AllowClobber -ErrorAction Stop -WarningAction SilentlyContinue
         Import-Module -Name $Name -Force -DisableNameChecking -ErrorAction Stop
-        Write-Host -ForegroundColor Green "[✓] $Name is installed [$($GalleryModule.Version)]"
+        Write-Host -ForegroundColor Green "[✓] $Name [$($GalleryModule.Version)]"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
