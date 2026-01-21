@@ -32,51 +32,6 @@ Functions are designed to be idempotent and can be safely re-run.
 Most functions will skip if the target is already configured/installed.
 #>
 
-function winpe-RepairTls {
-    [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param (
-        [System.Management.Automation.SwitchParameter]
-        $Force
-    )
-
-    if ([Net.ServicePointManager]::SecurityProtocol -band [Net.SecurityProtocolType]::Tls12) {
-        Write-Host "TLS 1.2 is already enabled"
-    } else {
-        Write-Host "TLS 1.2 is NOT enabled"
-    }
-
-    $currentProtocols = [Net.ServicePointManager]::SecurityProtocol
-    $hasTls12 = $currentProtocols -band [Net.SecurityProtocolType]::Tls12
-    Write-Host "Current protocols: $currentProtocols"
-    Write-Host "TLS 1.2 enabled: $($hasTls12 -ne 0)"
-
-    pause
-
-    $SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol
-
-    if ($SecurityProtocol -band [Net.SecurityProtocolType]::Tls12) {
-        Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [Tls12]"
-        return
-    }
-
-    if (-not ($Force)) {
-        Write-Host -ForegroundColor Yellow "[!] Transport Layer Security should be set to Tls12"
-        return
-    }
-
-    # Repair
-    Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
-    try {
-        Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [Tls12] repaired"
-        [Net.ServicePointManager]::SecurityProtocol = $SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-    }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name) failed: $_"
-        throw
-    }
-}
-
 function winpe-ExecutionPolicyTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -590,7 +545,7 @@ $registryPath | ForEach-Object {
     }
 
     # Repair
-    Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
+    Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     if ($repairPSProfilePath) {
         Write-Host -ForegroundColor DarkGray "Updating PowerShell Profile paths:"
         if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
@@ -1034,7 +989,7 @@ function winpe-NugetExeRepair {
     }
 
     # Repair
-    Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
+    Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     $nugetExeSourceURL = 'https://nuget.org/nuget.exe'
     $nugetFileName = 'NuGet.exe'
     # $env:LOCALAPPDATA may not be set in WinPE, so should not use env:LOCALAPPDATA
@@ -1112,7 +1067,7 @@ function winpe-UpdatePackageManagementRepair {
     }
 
     # Repair
-    Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
+    Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     try {
         $tempZip = "$env:TEMP\packagemanagement.1.4.8.1.zip"
         $tempDir = "$env:TEMP\1.4.8.1"
@@ -1159,10 +1114,7 @@ function winpe-UpdatePackageManagementRepair {
 function winpe-UpdatePowerShellGetTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param (
-        [System.Management.Automation.SwitchParameter]
-        $Force
-    )
+    param ()
     
     $installedModule = Get-Module -Name PowerShellGet -ListAvailable | Where-Object { $_.Version -ge '2.2.5' }
     if ($installedModule) {
@@ -1179,7 +1131,7 @@ function winpe-UpdatePowerShellGetTest {
     }
 
     try {
-        Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
         $tempZip = "$env:TEMP\powershellget.2.2.5.zip"
         $tempDir = "$env:TEMP\2.2.5"
         $moduleDir = "$env:ProgramFiles\WindowsPowerShell\Modules\PowerShellGet"
@@ -1232,10 +1184,7 @@ function winpe-UpdatePowerShellGetTest {
 function winpe-UpdatePowerShellGetRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param (
-        [System.Management.Automation.SwitchParameter]
-        $Force
-    )
+    param ()
     
     $installedModule = Get-Module -Name PowerShellGet -ListAvailable | Where-Object { $_.Version -ge '2.2.5' }
     if ($installedModule) {
@@ -1252,7 +1201,7 @@ function winpe-UpdatePowerShellGetRepair {
     }
 
     try {
-        Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
         $tempZip = "$env:TEMP\powershellget.2.2.5.zip"
         $tempDir = "$env:TEMP\2.2.5"
         $moduleDir = "$env:ProgramFiles\WindowsPowerShell\Modules\PowerShellGet"
@@ -1341,7 +1290,7 @@ function winpe-PSGalleryTrustRepair {
 
     # Repair
     try {
-        Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
         Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction Stop
     }
     catch {
@@ -1385,7 +1334,7 @@ function winpe-AzcopyExeRepair {
     }
 
     # Repair
-    Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
+    Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     $azcopyPath = "$env:SystemRoot\System32\azcopy.exe"
     $tempZip = "$env:TEMP\azcopy.zip"
     $tempDir = "$env:TEMP\azcopy"
@@ -1442,7 +1391,50 @@ function winpe-AzcopyExeRepair {
 
 
 
+function winpe-RepairTls {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Force
+    )
 
+    if ([Net.ServicePointManager]::SecurityProtocol -band [Net.SecurityProtocolType]::Tls12) {
+        Write-Host "TLS 1.2 is already enabled"
+    } else {
+        Write-Host "TLS 1.2 is NOT enabled"
+    }
+
+    $currentProtocols = [Net.ServicePointManager]::SecurityProtocol
+    $hasTls12 = $currentProtocols -band [Net.SecurityProtocolType]::Tls12
+    Write-Host "Current protocols: $currentProtocols"
+    Write-Host "TLS 1.2 enabled: $($hasTls12 -ne 0)"
+
+    pause
+
+    $SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol
+
+    if ($SecurityProtocol -band [Net.SecurityProtocolType]::Tls12) {
+        Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [Tls12]"
+        return
+    }
+
+    if (-not ($Force)) {
+        Write-Host -ForegroundColor Yellow "[!] Transport Layer Security should be set to Tls12"
+        return
+    }
+
+    # Repair
+    Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
+    try {
+        Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [Tls12] repaired"
+        [Net.ServicePointManager]::SecurityProtocol = $SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name) failed: $_"
+        throw
+    }
+}
 
 function winpe-InstallDotNetCore {
     [CmdletBinding()]
@@ -1459,7 +1451,7 @@ function winpe-InstallDotNetCore {
     try {
         $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
         if (Test-Path $curlPath) {
-            Write-Host -ForegroundColor Cyan "[→] Downloading .NET Runtime with curl"
+            Write-Host -ForegroundColor DarkGray "[→] Downloading .NET Runtime with curl"
             & $curlPath --fail --location --silent --show-error `
                 $dotNetCoreUrl `
                 --output $dotNetCoreZip
@@ -1468,12 +1460,12 @@ function winpe-InstallDotNetCore {
             }
         }
         else {
-            Write-Host -ForegroundColor Cyan "[→] Downloading .NET Runtime with Invoke-WebRequest"
+            Write-Host -ForegroundColor DarkGray "[→] Downloading .NET Runtime with Invoke-WebRequest"
             Invoke-WebRequest -UseBasicParsing -Uri $dotNetCoreUrl -OutFile $dotNetCoreZip -ErrorAction Stop
         }
         Write-Host -ForegroundColor Green "[✓] .NET Runtime downloaded successfully"
 
-        Write-Host -ForegroundColor Cyan "[→] Extracting .NET Runtime"
+        Write-Host -ForegroundColor DarkGray "[→] Extracting .NET Runtime"
         if (-not (Test-Path $dotNetCoreDir)) {
             $null = New-Item -Path $dotNetCoreDir -ItemType Directory -Force
         }
@@ -1511,7 +1503,7 @@ function winpe-InstallPowerShellModule {
             $GalleryModule = Find-Module -Name $Name -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
             
             if ($GalleryModule -and ([version]$GalleryModule.Version -gt [version]$InstalledModule.Version)) {
-                Write-Host -ForegroundColor Cyan "[→] Install-Module -Name $Name -Force -Scope AllUsers -SkipPublisherCheck -AllowClobber"
+                Write-Host -ForegroundColor DarkGray "[→] Install-Module -Name $Name -Force -Scope AllUsers -SkipPublisherCheck -AllowClobber"
                 Install-Module -Name $Name -Force -Scope AllUsers -SkipPublisherCheck -AllowClobber -ErrorAction Stop -WarningAction SilentlyContinue
                 Write-Host -ForegroundColor Green "[✓] $Name is installed [$($GalleryModule.Version)]"
                 return
@@ -1531,7 +1523,7 @@ function winpe-InstallPowerShellModule {
 
     # Module not installed or forced, install it
     try {
-        Write-Host -ForegroundColor Cyan "[→] Install-Module -Name $Name -Scope AllUsers -Force -SkipPublisherCheck -AllowClobber"
+        Write-Host -ForegroundColor DarkGray "[→] Install-Module -Name $Name -Scope AllUsers -Force -SkipPublisherCheck -AllowClobber"
         $GalleryModule = Find-Module -Name $Name -ErrorAction Stop -WarningAction SilentlyContinue
         
         if (-not $GalleryModule) {
