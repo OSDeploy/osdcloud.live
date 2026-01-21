@@ -451,7 +451,7 @@ function winpe-PowerShellProfileTest {
     # Failure
     if ($repairPSProfileFile -eq $true) {
         Write-Host -ForegroundColor Red "[✗] PowerShell Profile AllUsersAllHosts is NOT configured"
-        Write-Host -ForegroundColor DarkGray "Causes issues with new PowerShell sessions not inheriting Registry Environment Variables"
+        # Write-Host -ForegroundColor DarkGray "Causes issues with new PowerShell sessions not inheriting Registry Environment Variables"
         return 1
     }
 }
@@ -895,24 +895,24 @@ function winpe-NuGetPackageProviderTest {
 
     # Test PackageManagement
     if (-not (Get-Module -Name PackageManagement -ListAvailable)) {
-        Write-Host -ForegroundColor Red "[✗] NuGet Package Provider"
-        Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is a required prerequisite"
+        Write-Host -ForegroundColor Red "[✗] NuGet Package Provider is NOT installed"
+        # Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is a required prerequisite"
         return 1
     }
 
 
     # Test Get-PackageProvider
     if (-not (Get-Command -Name Get-PackageProvider -ErrorAction SilentlyContinue)) {
-        Write-Host -ForegroundColor Red "[✗] NuGet Package Provider"
-        Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is a required prerequisite"
+        Write-Host -ForegroundColor Red "[✗] NuGet Package Provider is NOT installed"
+        # Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is a required prerequisite"
         return 1
     }
 
     # Test Execution Policy
     $executionPolicy = Get-ExecutionPolicy -ErrorAction SilentlyContinue
     if ($executionPolicy -ne 'Bypass' -and $executionPolicy -ne 'Unrestricted') {
-        Write-Host -ForegroundColor Red "[✗] NuGet Package Provider"
-        Write-Host -ForegroundColor DarkGray "PowerShell Execution Policy is blocking installation of NuGetPackage Providers"
+        Write-Host -ForegroundColor Red "[✗] NuGet Package Provider is NOT installed"
+        # Write-Host -ForegroundColor DarkGray "PowerShell Execution Policy is blocking installation of NuGetPackage Providers"
         return 1
     }
 
@@ -1258,9 +1258,9 @@ function winpe-PSGalleryTrustTest {
     # Test
     $executionPolicy = Get-ExecutionPolicy -ErrorAction SilentlyContinue
     if ($executionPolicy -ne 'Bypass' -and $executionPolicy -ne 'Unrestricted') {
-        Write-Host -ForegroundColor Red "[✗] PSGallery Repository Installation Policy is NOT Trusted"
-        Write-Host -ForegroundColor DarkGray "Execution Policy is set to $executionPolicy"
-        Write-Host -ForegroundColor DarkGray "Execution Policy is blocking enumerating the PowerShell Gallery PSRepository"
+        Write-Host -ForegroundColor Red "[✗] PSGallery Repository Installation Policy is NOT Trusted [Execution Policy $executionPolicy]"
+        # Write-Host -ForegroundColor DarkGray "Execution Policy is set to $executionPolicy"
+        # Write-Host -ForegroundColor DarkGray "Execution Policy is blocking enumerating the PowerShell Gallery PSRepository"
         return 1
     }
 
