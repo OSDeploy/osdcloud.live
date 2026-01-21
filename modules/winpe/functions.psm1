@@ -411,15 +411,13 @@ function winpe-PowerShellProfilePathTest {
     }
 
     # Failure
-    if ($repairPSProfilePath -eq $true) {
-        if ($Quiet) { return 1 }
-        Write-Host -ForegroundColor Red "[✗] PowerShell Profile CurrentUser Paths are NOT properly configured"
-        if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
-            Write-Host -ForegroundColor DarkGray "CurrentUserAllHosts: [$($PROFILE.CurrentUserAllHosts)]"
-        }
-        if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1") {
-            Write-Host -ForegroundColor DarkGray "CurrentUserCurrentHost: [$($PROFILE.CurrentUserCurrentHost)]"
-        }
+    if ($Quiet) { return 1 }
+    Write-Host -ForegroundColor Red "[✗] PowerShell Profile CurrentUser Paths are NOT properly configured"
+    if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
+        Write-Host -ForegroundColor DarkGray "CurrentUserAllHosts: [$($PROFILE.CurrentUserAllHosts)]"
+    }
+    if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1") {
+        Write-Host -ForegroundColor DarkGray "CurrentUserCurrentHost: [$($PROFILE.CurrentUserCurrentHost)]"
     }
     return 1
 }
@@ -474,16 +472,16 @@ function winpe-PowerShellProfileTest {
 
     # Success
     if ($repairPSProfileFile -eq $false) {
+        if ($Quiet) { return 0 }
         Write-Host -ForegroundColor Green "[✓] PowerShell Profile AllUsersAllHosts is properly configured"
         return 0
     }
 
     # Failure
-    if ($repairPSProfileFile -eq $true) {
-        Write-Host -ForegroundColor Red "[✗] PowerShell Profile AllUsersAllHosts is NOT configured"
-        # Write-Host -ForegroundColor DarkGray "Causes issues with new PowerShell sessions not inheriting Registry Environment Variables"
-        return 1
-    }
+    if ($Quiet) { return 1 }
+    Write-Host -ForegroundColor Red "[✗] PowerShell Profile AllUsersAllHosts is NOT configured"
+    # Write-Host -ForegroundColor DarkGray "Causes issues with new PowerShell sessions not inheriting Registry Environment Variables"
+    return 1
 }
 
 function winpe-PowerShellProfileRepair {
@@ -530,90 +528,6 @@ $registryPath | ForEach-Object {
         $winpePowerShellProfile | Set-Content -Path $profilePath -Force -Encoding Unicode
     }
     $results = winpe-PowerShellProfileTest
-
-    <#
-    $repairPSProfilePath = $false
-    $repairPSProfileFile = $false
-    if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
-        $repairPSProfilePath = $true
-    }
-    if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1") {
-        $repairPSProfilePath = $true
-    }
-    if (-not (Test-Path -Path $profilePath)) {
-        $repairPSProfileFile = $true
-    }
-    else {
-        $existingContent = Get-Content -Path $profilePath -Raw -ErrorAction Stop
-
-    }
-
-    # Success
-    if (-not $repairPSProfilePath -and -not $repairPSProfileFile) {
-        # Write-Host -ForegroundColor Green "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor Green "[✓] PowerShell Profiles are configured"
-        return
-    }
-
-    # Warning only
-    if (-not ($Force)) {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        if ($repairPSProfilePath) {
-            Write-Host -ForegroundColor DarkGray "PowerShell Profile paths are incorrectly configured:"
-            if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
-                Write-Host -ForegroundColor DarkGray "CurrentUserAllHosts: [$($PROFILE.CurrentUserAllHosts)]"
-            }
-            if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1") {
-                Write-Host -ForegroundColor DarkGray "CurrentUserCurrentHost: [$($PROFILE.CurrentUserCurrentHost)]"
-            }
-        }
-        if ($repairPSProfileFile) {
-            Write-Host -ForegroundColor Red "[✗] PowerShell Profile is not configured for Registry Environment Variables"
-        }
-        return 1
-    }
-
-    # Repair
-    Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
-    if ($repairPSProfilePath) {
-        Write-Host -ForegroundColor DarkGray "Updating PowerShell Profile paths:"
-        if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
-            $PROFILE.CurrentUserAllHosts = "$Home\Documents\WindowsPowerShell\profile.ps1"
-            Write-Host -ForegroundColor DarkGray "CurrentUserAllHosts: [$($PROFILE.CurrentUserAllHosts)]"
-        }
-        if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1") {
-            $PROFILE.CurrentUserCurrentHost = "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1"
-            Write-Host -ForegroundColor DarkGray "CurrentUserCurrentHost: [$($PROFILE.CurrentUserCurrentHost)]"
-        }
-    }
-    if (-not $repairPSProfileFile) {
-        return
-    }
-
-
-    try {
-        if (Test-Path -Path $profilePath) {
-            Write-Host -ForegroundColor DarkGray "Add to existing PowerShell Profile for AllUsersAllHosts"
-            Write-Host -ForegroundColor DarkGray "Resolves new environment variables added to Session Manager in the registry"
-            Add-Content -Path $profilePath -Value ("`r`n" + $winpePowerShellProfile) -Encoding Unicode -ErrorAction Stop
-        }
-        else {
-            Write-Host -ForegroundColor DarkGray "PowerShell Profile does not exist with OSDCloud update for new sessions"
-            Write-Host -ForegroundColor DarkGray "Create new PowerShell Profile for AllUsersAllHosts"
-            Write-Host -ForegroundColor DarkGray "Resolves new environment variables added to Session Manager in the registry"
-            if (-not (Test-Path $profileDir)) {
-                $null = New-Item -Path $profileDir -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
-            }
-            $winpePowerShellProfile | Set-Content -Path $profilePath -Force -Encoding Unicode
-        }
-    }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor Red $_
-        throw
-    }
-    
-    #>
 }
 
 function winpe-RealTimeClockUTCTest {
@@ -627,10 +541,12 @@ function winpe-RealTimeClockUTCTest {
     $realTimeIsUniversal = Get-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -ErrorAction SilentlyContinue
 
     if ($realTimeIsUniversal -and ($realTimeIsUniversal.RealTimeIsUniversal -eq 1)) {
+        if ($Quiet) { return 0 }
         Write-Host -ForegroundColor Green "[✓] RealTime Clock is set to UTC"
         return 0
     }
     else {
+        if ($Quiet) { return 1 }
         Write-Host -ForegroundColor Red "[✗] RealTime Clock is NOT set to UTC"
         return 1
     }
@@ -681,10 +597,12 @@ function winpe-TimeServiceTest {
 
     # Test if the Time Service is correctly configured
     if (($w32timeService.StartType -eq 'Automatic') -and ($w32timeService.Status -eq 'Running')) {
+        if ($Quiet) { return 0 }
         Write-Host -ForegroundColor Green "[✓] Time Service [w32time] is set to Automatic and is Running"
         return 0
     }
     else {
+        if ($Quiet) { return 1 }
         if ($w32timeService.StartType -ne 'Automatic') {
             Write-Host -ForegroundColor Red "[✗] Time Service [w32time] StartType is NOT set to Automatic"
         }
@@ -765,11 +683,13 @@ function winpe-CurlExeTest {
     )
     $curlPath = "$env:SystemRoot\System32\curl.exe"
     if (Test-Path $curlPath) {
+        if ($Quiet) { return 0 }
         $curl = Get-Item -Path $curlPath
         Write-Host -ForegroundColor Green "[✓] Curl.exe [$($curl.VersionInfo.FileVersion)]"
         return 0
     }
     else {
+        if ($Quiet) { return 0 }
         Write-Host -ForegroundColor Red "[✗] Curl is NOT installed at $curlPath"
         return 1
     }
@@ -833,11 +753,13 @@ function winpe-PackageManagementTest {
 
     # Success
     if ($installedModule) {
+        if ($Quiet) { return 0 }
         $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
         Write-Host -ForegroundColor Green "[✓] PackageManagement PowerShell Module [$latestVersion]"
         return 0
     }
     else {
+        if ($Quiet) { return 1 }
         Write-Host -ForegroundColor Red "[✗] PackageManagement PowerShell Module is NOT installed"
         return 1
     }
@@ -891,7 +813,7 @@ function winpe-PackageManagementRepair {
         $moduleDir = "$env:ProgramFiles\WindowsPowerShell\Modules\PackageManagement"
 
         $url = 'https://www.powershellgallery.com/api/v2/package/PackageManagement/1.4.8.1'
-        Write-Host -ForegroundColor DarkGray $url
+        # Write-Host -ForegroundColor DarkGray $url
         
         # Download using curl if available, fallback to Invoke-WebRequest
         $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
