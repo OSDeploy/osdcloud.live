@@ -874,6 +874,7 @@ function winpe-RepairPackageManagement {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
+
     # Test
     $remediate = winpe-TestPackageManagement
 
@@ -931,97 +932,64 @@ function winpe-TestNuGetPackageProvider {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
 
-    <#
-    # Test if PackageManagement module is available
+    # Test PackageManagement
     if (-not (Get-Module -Name PackageManagement -ListAvailable)) {
-        Write-Host -ForegroundColor Red "[✗] PackageManagement PowerShell Module is NOT installed"
-        Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is required for the Get-PackageProvider cmdlet"
-        return
+        Write-Host -ForegroundColor Red "[✗] NuGet Package Provider"
+        Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is required"
+        return 1
     }
-    #>
 
-    # Test if Get-PackageProvider cmdlet is available
+
+    # Test Get-PackageProvider
     if (-not (Get-Command -Name Get-PackageProvider -ErrorAction SilentlyContinue)) {
-        Write-Host -ForegroundColor Red "[✗] Get-PackageProvider PowerShell Cmdlet is NOT available"
-        Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module may not be installed properly"
-        return
+        Write-Host -ForegroundColor Red "[✗] NuGet Package Provider"
+        Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is required"
+        return 1
     }
 
-    # Test if Execution Policy allows installing Package Providers
+    # Test Execution Policy
     $executionPolicy = Get-ExecutionPolicy -ErrorAction SilentlyContinue
     if ($executionPolicy -ne 'Bypass' -and $executionPolicy -ne 'Unrestricted') {
-        Write-Host -ForegroundColor Red "[✗] PowerShell Execution Policy is NOT set to Bypass or Unrestricted"
-        Write-Host -ForegroundColor DarkGray "PowerShell Execution Policy is set to $executionPolicy"
-        Write-Host -ForegroundColor DarkGray "PowerShell Execution Policy is blocking installation of Package Providers"
-        return
+        Write-Host -ForegroundColor Red "[✗] NuGet Package Provider"
+        Write-Host -ForegroundColor DarkGray "PowerShell Execution Policy is blocking installation of NuGetPackage Providers"
+        return 1
     }
 
     # Test if NuGet Package Provider is already installed
     $provider = Get-PackageProvider -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq 'NuGet' }
     if ($provider) {
-        Write-Host -ForegroundColor Green "[✓] NuGet Package Provider is installed [$($provider.Version)]"
-        return
+        Write-Host -ForegroundColor Green "[✓] NuGet Package Provider [$($provider.Version)]"
+        return 0
     }
 
     Write-Host -ForegroundColor Red "[✗] NuGet Package Provider is NOT installed"
+    return 1
 }
 
 function winpe-RepairNugetPackageProvider {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param (
-        [System.Management.Automation.SwitchParameter]
-        $Force
-    )
-    # Test if PackageManagement module is available
-    if (-not (Get-Module -Name PackageManagement -ListAvailable)) {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is NOT installed"
-        return
-    }
+    param ()
+    
+    # Test
+    $remediate = winpe-TestNuGetPackageProvider
 
-    # Test if Get-PackageProvider cmdlet is available
-    if (-not (Get-Command -Name Get-PackageProvider -ErrorAction SilentlyContinue)) {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "Get-PackageProvider PowerShell Cmdlet is NOT available"
-        Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module may not be installed properly"
-        return
-    }
-
-    # Test if Execution Policy allows installing Package Providers
-    $executionPolicy = Get-ExecutionPolicy -ErrorAction SilentlyContinue
-    if ($executionPolicy -ne 'Bypass' -and $executionPolicy -ne 'Unrestricted') {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "Execution Policy is set to $executionPolicy"
-        Write-Host -ForegroundColor DarkGray "Execution Policy is blocking installation of Package Providers"
-        return
-    }
-
-    # Test if NuGet Package Provider is already installed
-    $provider = Get-PackageProvider -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq 'NuGet' }
-    if ($provider) {
-        # Write-Host -ForegroundColor Green "[✓] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor Green "[✓] NuGet Package Provider is installed [$($provider.Version)]"
-        return
-    }
-
-    # Warning only
-    if (-not ($Force)) {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "NuGet Package Provider is NOT installed"
+    # Success
+    if ($remediate -eq 0) {
         return
     }
 
     # Repair / Install
     try {
-        Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
-        Install-PackageProvider -Name NuGet -Force -Scope AllUsers -ErrorAction Stop | Out-Null
+        Install-PackageProvider -Name NuGet -Force -Scope AllUsers -ErrorAction Stop
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
+    
+    $results = winpe-TestNuGetPackageProvider
 }
 
 function winpe-TestNugetExe {
