@@ -68,22 +68,22 @@ Write-Host -ForegroundColor DarkGray "OSDCloud Live Test [$WindowsPhase]"
 if ($WindowsPhase -eq 'WinPE') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
     # winpe-RepairTls
-    $null = winpe-TestExecutionPolicy
-    $null = winpe-TestUserShellFolder
-    $null = winpe-TestRegistryEnvironment
-    $null = winpe-TestSessionEnvironment
-    $null = winpe-TestPowerShellProfilePath
-    $null = winpe-TestPowerShellProfile
-    $null = winpe-TestRealTimeClockUTC
-    $null = winpe-TestTimeService
-    $null = winpe-TestCurl
-    $null = winpe-TestPackageManagement
-    $null = winpe-TestNugetPackageProvider
-    $null = winpe-TestNugetExe
-    $null = winpe-UpdatePackageManagement
-    $null = winpe-UpdatePowerShellGet
-    $null = winpe-TrustPSGallery
-    $null = winpe-InstallAzCopy
+    $null = winpe-ExecutionPolicyTest
+    $null = winpe-UserShellFolderTest
+    $null = winpe-RegistryEnvironmentTest
+    $null = winpe-SessionEnvironmentTest
+    $null = winpe-PowerShellProfilePathTest
+    $null = winpe-PowerShellProfileTest
+    $null = winpe-RealTimeClockUTCTest
+    $null = winpe-TimeServiceTest
+    $null = winpe-CurlExeTest
+    $null = winpe-PackageManagementTest
+    $null = winpe-NuGetPackageProviderTest
+    $null = winpe-NugetExeTest
+    $null = winpe-UpdatePackageManagementTest
+    $null = winpe-UpdatePowerShellGetTest
+    $null = winpe-PSGalleryTrustTest
+    $null = winpe-AzcopyExeTest
     # winpe-InstallPowerShellModule -Name OSD
     # winpe-InstallPowerShellModule -Name OSDCloud
     $EndTime = Get-Date

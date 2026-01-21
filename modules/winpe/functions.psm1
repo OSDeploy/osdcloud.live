@@ -7,20 +7,20 @@ Functions for configuring the Windows PE environment, including execution policy
 environment variables, package management, and tool installation.
 
 Recommended execution order for initial setup:
-    1. winpe-RepairExecutionPolicy
-    2. winpe-RepairUserShellFolder
-    3. winpe-RepairRegistryEnvironment
-    4. winpe-RepairSessionEnvironment
-    5. winpe-RepairPowerShellProfile
-    6. winpe-RepairRealTimeClockUTC
-    7. winpe-RepairTimeService
-    8. winpe-RepairCurl
-    9. winpe-RepairNugetPackageProvider
-    10. winpe-RepairNugetExe
-    11. winpe-UpdatePackageManagement
-    12. winpe-UpdatePowerShellGet
-    13. winpe-TrustPSGallery
-    14. winpe-InstallAzCopy
+    1. winpe-ExecutionPolicyRepair
+    2. winpe-UserShellFolderRepair
+    3. winpe-RegistryEnvironmentRepair
+    4. winpe-SessionEnvironmentRepair
+    5. winpe-PowerShellProfileRepair
+    6. winpe-RealTimeClockUTCRepair
+    7. winpe-TimeServiceRepair
+    8. winpe-CurlExeRepair
+    9. winpe-NugetPackageProviderRepair
+    10. winpe-NugetExeRepair
+    11. winpe-UpdatePackageManagementRepair
+    12. winpe-UpdatePowerShellGetRepair
+    13. winpe-PSGalleryTrustRepair
+    14. winpe-AzcopyExeRepair
 
 Additional functions (can be run after the core setup above):
     - winpe-InstallPowerShellModule -Name <ModuleName>
@@ -77,7 +77,7 @@ function winpe-RepairTls {
     }
 }
 
-function winpe-TestExecutionPolicy {
+function winpe-ExecutionPolicyTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
@@ -105,13 +105,13 @@ function winpe-TestExecutionPolicy {
     }
 }
 
-function winpe-RepairExecutionPolicy {
+function winpe-ExecutionPolicyRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
 
     # Test
-    $remediate = winpe-TestExecutionPolicy
+    $remediate = winpe-ExecutionPolicyTest
 
     # Success
     if ($remediate -eq 0) {
@@ -132,10 +132,10 @@ function winpe-RepairExecutionPolicy {
         Remove-Variable -Name executionPolicy -ErrorAction SilentlyContinue
     }
 
-    $results = winpe-TestExecutionPolicy
+    $results = winpe-ExecutionPolicyTest
 }
 
-function winpe-TestUserShellFolder {
+function winpe-UserShellFolderTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
@@ -176,7 +176,7 @@ function winpe-TestUserShellFolder {
     return 1
 }
 
-function winpe-RepairUserShellFolder {
+function winpe-UserShellFolderRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
@@ -192,7 +192,7 @@ function winpe-RepairUserShellFolder {
     )
 
     # Test
-    $remediate = winpe-TestUserShellFolder
+    $remediate = winpe-UserShellFolderTest
     if ($remediate -eq 0) {
         return
     }
@@ -213,10 +213,10 @@ function winpe-RepairUserShellFolder {
             throw
         }
     }
-    $results = winpe-TestUserShellFolder
+    $results = winpe-UserShellFolderTest
 }
 
-function winpe-TestRegistryEnvironment {
+function winpe-RegistryEnvironmentTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
@@ -263,7 +263,7 @@ function winpe-TestRegistryEnvironment {
     return 1
 }
 
-function winpe-RepairRegistryEnvironment {
+function winpe-RegistryEnvironmentRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
@@ -277,7 +277,7 @@ function winpe-RepairRegistryEnvironment {
     }
 
     # Test
-    $remediate = winpe-TestRegistryEnvironment
+    $remediate = winpe-RegistryEnvironmentTest
     if ($remediate -eq 0) {
         return
     }
@@ -301,10 +301,10 @@ function winpe-RepairRegistryEnvironment {
             }
         }
     }
-    $results = winpe-TestRegistryEnvironment
+    $results = winpe-RegistryEnvironmentTest
 }
 
-function winpe-TestSessionEnvironment {
+function winpe-SessionEnvironmentTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
@@ -360,13 +360,13 @@ function winpe-TestSessionEnvironment {
     return 1
 }
 
-function winpe-RepairSessionEnvironment {
+function winpe-SessionEnvironmentRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
 
     # Test
-    $remediate = winpe-TestSessionEnvironment
+    $remediate = winpe-SessionEnvironmentTest
     if ($remediate -eq 0) {
         return
     }
@@ -404,10 +404,10 @@ function winpe-RepairSessionEnvironment {
         }
     }
 
-    $results = winpe-TestSessionEnvironment
+    $results = winpe-SessionEnvironmentTest
 }
 
-function winpe-TestPowerShellProfilePath {
+function winpe-PowerShellProfilePathTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
@@ -442,12 +442,12 @@ function winpe-TestPowerShellProfilePath {
     return 1
 }
 
-function winpe-RepairPowerShellProfilePath {
+function winpe-PowerShellProfilePathRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
-    $remediate = winpe-TestPowerShellProfilePath
+    $remediate = winpe-PowerShellProfilePathTest
 
     # Success
     if ($remediate -eq 0) {
@@ -465,10 +465,10 @@ function winpe-RepairPowerShellProfilePath {
         Write-Host -ForegroundColor DarkGray "[REPAIR] CurrentUserCurrentHost: [$($PROFILE.CurrentUserCurrentHost)]"
     }
 
-    $results = winpe-TestPowerShellProfilePath
+    $results = winpe-PowerShellProfilePathTest
 }
 
-function winpe-TestPowerShellProfile {
+function winpe-PowerShellProfileTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
@@ -501,7 +501,7 @@ function winpe-TestPowerShellProfile {
     }
 }
 
-function winpe-RepairPowerShellProfile {
+function winpe-PowerShellProfileRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
@@ -521,7 +521,7 @@ $registryPath | ForEach-Object {
 '@
 
     # Test
-    $remediate = winpe-TestPowerShellProfile
+    $remediate = winpe-PowerShellProfileTest
 
     # Success
     if ($remediate -eq 0) {
@@ -545,7 +545,7 @@ $registryPath | ForEach-Object {
         }
         $winpePowerShellProfile | Set-Content -Path $profilePath -Force -Encoding Unicode
     }
-    $results = winpe-TestPowerShellProfile
+    $results = winpe-PowerShellProfileTest
 
     <#
     $repairPSProfilePath = $false
@@ -632,7 +632,7 @@ $registryPath | ForEach-Object {
     #>
 }
 
-function winpe-TestRealTimeClockUTC {
+function winpe-RealTimeClockUTCTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
@@ -649,13 +649,13 @@ function winpe-TestRealTimeClockUTC {
     }
 }
 
-function winpe-RepairRealTimeClockUTC {
+function winpe-RealTimeClockUTCRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
 
     # Test
-    $remediate = winpe-TestRealTimeClockUTC
+    $remediate = winpe-RealTimeClockUTCTest
     if ($remediate -eq 0) {
         return
     }
@@ -671,10 +671,10 @@ function winpe-RepairRealTimeClockUTC {
         throw
     }
 
-    $results = winpe-TestRealTimeClockUTC
+    $results = winpe-RealTimeClockUTCTest
 }
 
-function winpe-TestTimeService {
+function winpe-TimeServiceTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
@@ -704,12 +704,12 @@ function winpe-TestTimeService {
     }
 }
 
-function winpe-RepairTimeService {
+function winpe-TimeServiceRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
-    $remediate = winpe-TestTimeService
+    $remediate = winpe-TimeServiceTest
 
     # Success
     if ($remediate -eq 0) {
@@ -762,10 +762,10 @@ function winpe-RepairTimeService {
         }
     }
 
-    $results = winpe-TestTimeService
+    $results = winpe-TimeServiceTest
 }
 
-function winpe-TestCurl {
+function winpe-CurlExeTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
@@ -781,13 +781,13 @@ function winpe-TestCurl {
     }
 }
 
-function winpe-RepairCurl {
+function winpe-CurlExeRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
 
     # Test
-    $remediate = winpe-TestCurl
+    $remediate = winpe-CurlExeTest
 
     # Success
     if ($remediate -eq 0) {
@@ -825,10 +825,10 @@ function winpe-RepairCurl {
         if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
 
-    $results = winpe-TestCurl
+    $results = winpe-CurlExeTest
 }
 
-function winpe-TestPackageManagement {
+function winpe-PackageManagementTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
@@ -847,7 +847,7 @@ function winpe-TestPackageManagement {
     }
 }
 
-function winpe-RepairPackageManagement {
+function winpe-PackageManagementRepair {
     <#
     .SYNOPSIS
     Installs or updates the PackageManagement module in WinPE.
@@ -862,11 +862,11 @@ function winpe-RepairPackageManagement {
     When specified, performs installation/repair actions rather than only reporting status.
 
     .EXAMPLE
-    winpe-RepairPackageManagement
+    winpe-PackageManagementRepair
     Displays the current status of the PackageManagement module without making changes.
 
     .EXAMPLE
-    winpe-RepairPackageManagement -Force
+    winpe-PackageManagementRepair -Force
     Downloads and installs PackageManagement 1.4.8.1, then imports the module.
 
     .OUTPUTS
@@ -881,7 +881,7 @@ function winpe-RepairPackageManagement {
     param ()
 
     # Test
-    $remediate = winpe-TestPackageManagement
+    $remediate = winpe-PackageManagementTest
 
     # Success
     if ($remediate -eq 0) {
@@ -930,10 +930,10 @@ function winpe-RepairPackageManagement {
         if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
     
-    $results = winpe-TestPackageManagement
+    $results = winpe-PackageManagementTest
 }
 
-function winpe-TestNuGetPackageProvider {
+function winpe-NuGetPackageProviderTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
@@ -972,13 +972,13 @@ function winpe-TestNuGetPackageProvider {
     return 1
 }
 
-function winpe-RepairNugetPackageProvider {
+function winpe-NugetPackageProviderRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     
     # Test
-    $remediate = winpe-TestNuGetPackageProvider
+    $remediate = winpe-NuGetPackageProviderTest
 
     # Success
     if ($remediate -eq 0) {
@@ -995,10 +995,10 @@ function winpe-RepairNugetPackageProvider {
         throw
     }
     
-    $results = winpe-TestNuGetPackageProvider
+    $results = winpe-NuGetPackageProviderTest
 }
 
-function winpe-TestNugetExe {
+function winpe-NugetExeTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
@@ -1021,13 +1021,13 @@ function winpe-TestNugetExe {
     return 1
 }
 
-function winpe-RepairNugetExe {
+function winpe-NugetExeRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
 
     # Test
-    $remediate = winpe-TestNugetExe
+    $remediate = winpe-NugetExeTest
 
     # Success
     if ($remediate -eq 0) {
@@ -1035,6 +1035,7 @@ function winpe-RepairNugetExe {
     }
 
     # Repair
+    Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
     $nugetExeSourceURL = 'https://nuget.org/nuget.exe'
     $nugetFileName = 'NuGet.exe'
     # $env:LOCALAPPDATA may not be set in WinPE, so should not use env:LOCALAPPDATA
@@ -1068,31 +1069,28 @@ function winpe-RepairNugetExe {
         }
     }
 
-    $results = winpe-TestNugetExe
+    $results = winpe-NugetExeTest
 }
 
-function winpe-UpdatePackageManagement {
+function winpe-UpdatePackageManagementTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param (
-        [System.Management.Automation.SwitchParameter]
-        $Force
-    )
+    param ()
     $installedModule = Get-Module -Name PackageManagement -ListAvailable | Where-Object { $_.Version -ge '1.4.8.1' }
 
     # Success
     if ($installedModule) {
         # Write-Host -ForegroundColor Green "[✓] $($MyInvocation.MyCommand.Name)"
         $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
-        # Write-Host -ForegroundColor Green "[✓] PackageManagement PowerShell Module is installed [$latestVersion]"
-        return
+        Write-Host -ForegroundColor Green "[✓] PackageManagement PowerShell Module is installed [$latestVersion]"
+        return 0
     }
 
     # Warning only
     if (-not ($Force)) {
         Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is NOT updated to version 1.4.8.1 or later"
-        return
+        return 1
     }
 
     # Test if Execution Policy allows installing Package Providers
@@ -1101,10 +1099,24 @@ function winpe-UpdatePackageManagement {
         Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor DarkGray "Execution Policy is set to $executionPolicy"
         Write-Host -ForegroundColor DarkGray "Execution Policy is blocking installation of Package Providers"
+        return 1
+    }
+}
+
+function winpe-UpdatePackageManagementRepair {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param ()
+
+    # Test
+    $remediate = winpe-UpdatePackageManagementTest
+
+    # Success
+    if ($remediate -eq 0) {
         return
     }
 
-    # Repair / Install
+    # Repair
     Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
     try {
         $tempZip = "$env:TEMP\packagemanagement.1.4.8.1.zip"
@@ -1145,9 +1157,11 @@ function winpe-UpdatePackageManagement {
         if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
         if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
+
+    $results = winpe-UpdatePackageManagementTest
 }
 
-function winpe-UpdatePowerShellGet {
+function winpe-UpdatePowerShellGetTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
@@ -1220,7 +1234,80 @@ function winpe-UpdatePowerShellGet {
     }
 }
 
-function winpe-TrustPSGallery {
+function winpe-UpdatePowerShellGetRepair {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Force
+    )
+    
+    $installedModule = Get-Module -Name PowerShellGet -ListAvailable | Where-Object { $_.Version -ge '2.2.5' }
+    if ($installedModule) {
+        $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
+        Write-Host -ForegroundColor Green "[✓] PowerShellGet PowerShell Module is installed [$($latestVersion)]"
+        return
+    }
+
+    # Warning
+    if (-not ($Force)) {
+        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "PowerShellGet PowerShell Module is NOT updated to version 2.2.5 or later"
+        return
+    }
+
+    try {
+        Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
+        $tempZip = "$env:TEMP\powershellget.2.2.5.zip"
+        $tempDir = "$env:TEMP\2.2.5"
+        $moduleDir = "$env:ProgramFiles\WindowsPowerShell\Modules\PowerShellGet"
+        
+        # Download using curl if available, fallback to Invoke-WebRequest
+        $url = 'https://www.powershellgallery.com/api/v2/package/PowerShellGet/2.2.5'
+        Write-Host -ForegroundColor DarkGray $url
+        $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
+        if (Test-Path $curlPath) {
+            & $curlPath --fail --location --silent --show-error `
+                $url `
+                --output $tempZip
+            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $tempZip)) {
+                throw "curl download failed with exit code $LASTEXITCODE"
+            }
+        }
+        else {
+            Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $tempZip -ErrorAction Stop
+        }
+        
+        # Extract
+        $null = New-Item -Path $tempDir -ItemType Directory -Force
+        Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force -ErrorAction Stop
+        
+        # Install
+        $null = New-Item -Path $moduleDir -ItemType Directory -Force -ErrorAction SilentlyContinue
+        Move-Item -Path $tempDir -Destination "$moduleDir\2.2.5" -Force -ErrorAction Stop
+        
+        # Import
+        Import-Module PowerShellGet -Force -Scope Global -ErrorAction Stop
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red $_
+        throw
+    }
+    finally {
+        # Cleanup
+        if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
+        if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+    $installedModule = Get-Module -Name PowerShellGet -ListAvailable | Where-Object { $_.Version -ge '2.2.5' }
+    if ($installedModule) {
+        $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
+        Write-Host -ForegroundColor Green "[✓] PowerShellGet PowerShell Module is installed [$($latestVersion)]"
+        return
+    }
+}
+
+function winpe-PSGalleryTrustTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
@@ -1265,7 +1352,52 @@ function winpe-TrustPSGallery {
     }
 }
 
-function winpe-InstallAzCopy {
+function winpe-PSGalleryTrustRepair {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Force
+    )
+    # Test if Execution Policy allows PSGallery trust change
+    $executionPolicy = Get-ExecutionPolicy -ErrorAction SilentlyContinue
+    if ($executionPolicy -ne 'Bypass' -and $executionPolicy -ne 'Unrestricted') {
+        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "Execution Policy is set to $executionPolicy"
+        Write-Host -ForegroundColor DarkGray "Execution Policy is blocking enumerating the PowerShell Gallery PSRepository"
+        return
+    }
+
+    $PowerShellGallery = Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue
+    if (-not $PowerShellGallery) {
+        Write-Host -ForegroundColor Red "[✗] PSRepository PSGallery not found"
+        return
+    }
+
+    if ($PowerShellGallery.InstallationPolicy -eq 'Trusted') {
+        Write-Host -ForegroundColor Green "[✓] PowerShell Gallery PSRepository Installation Policy is Trusted"
+        return
+    }
+
+    if (-not $Force) {
+        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "PowerShell Gallery PSRepository Installation Policy is NOT Trusted"
+        return
+    }
+
+    try {
+        Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
+        Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction Stop
+        Write-Host -ForegroundColor Green "[✓] PowerShell Gallery PSRepository Installation Policy is Trusted"
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red $_
+        throw
+    }
+}
+
+function winpe-AzcopyExeTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
@@ -1343,6 +1475,91 @@ function winpe-InstallAzCopy {
         return
     }
 }
+
+function winpe-AzcopyExeRepair {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Force
+    )
+    $azcopyPath = "$env:SystemRoot\System32\azcopy.exe"
+
+    # Test if AzCopy is already installed
+    if (Test-Path $azcopyPath) {
+        $azcopy = Get-Item -Path $azcopyPath
+        Write-Host -ForegroundColor Green "[✓] Microsoft AzCopy is installed"
+        return
+    }
+
+    # Warning
+    if (-not ($Force)) {
+        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor DarkGray "Microsoft AzCopy is NOT installed"
+        return
+    }
+    
+    try {
+        Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
+        $tempZip = "$env:TEMP\azcopy.zip"
+        $tempDir = "$env:TEMP\azcopy"
+        
+        # Determine download URL based on architecture
+        if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") {
+            $downloadUrl = 'https://aka.ms/downloadazcopy-v10-windows-arm64'
+        }
+        elseif ($env:PROCESSOR_ARCHITECTURE -eq "AMD64") {
+            $downloadUrl = 'https://aka.ms/downloadazcopy-v10-windows'
+        }
+        else {
+            throw "Unsupported processor architecture: $env:PROCESSOR_ARCHITECTURE"
+        }
+        Write-Host -ForegroundColor DarkGray $downloadUrl
+
+        # Download using curl if available, fallback to Invoke-WebRequest
+        $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
+        if (Test-Path $curlPath) {
+            & $curlPath --fail --location --silent --show-error `
+                $downloadUrl `
+                --output $tempZip
+            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $tempZip)) {
+                throw "curl download failed with exit code $LASTEXITCODE"
+            }
+        }
+        else {
+            Invoke-WebRequest -UseBasicParsing -Uri $downloadUrl -OutFile $tempZip -ErrorAction Stop
+        }
+        
+        # Extract
+        $null = New-Item -Path $tempDir -ItemType Directory -Force
+        Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force -ErrorAction Stop
+        
+        # Install
+        Get-ChildItem $tempDir -Include 'azcopy.exe' -Recurse -ErrorAction Stop | 
+            ForEach-Object { Copy-Item -Path $_.FullName -Destination $azcopyPath -Force -ErrorAction Stop }
+    }
+    catch {
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red $_
+        throw
+    }
+    finally {
+        # Cleanup
+        if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
+        if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+    if (Test-Path $azcopyPath) {
+        $azcopy = Get-Item -Path $azcopyPath
+        Write-Host -ForegroundColor Green "[✓] Microsoft AzCopy is installed"
+        return
+    }
+}
+
+
+
+
+
+
 
 function winpe-InstallDotNetCore {
     [CmdletBinding()]
