@@ -941,7 +941,7 @@ function winpe-NuGetPackageProviderTest {
     # Test PackageManagement
     if (-not (Get-Module -Name PackageManagement -ListAvailable)) {
         Write-Host -ForegroundColor Red "[✗] NuGet Package Provider"
-        Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is required"
+        Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is a required prerequisite"
         return 1
     }
 
@@ -949,7 +949,7 @@ function winpe-NuGetPackageProviderTest {
     # Test Get-PackageProvider
     if (-not (Get-Command -Name Get-PackageProvider -ErrorAction SilentlyContinue)) {
         Write-Host -ForegroundColor Red "[✗] NuGet Package Provider"
-        Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is required"
+        Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is a required prerequisite"
         return 1
     }
 
@@ -1025,7 +1025,6 @@ function winpe-NugetExeRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
-
     # Test
     $remediate = winpe-NugetExeTest
 
@@ -1086,12 +1085,8 @@ function winpe-UpdatePackageManagementTest {
         return 0
     }
 
-    # Warning only
-    if (-not ($Force)) {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is NOT updated to version 1.4.8.1 or later"
-        return 1
-    }
+    Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is NOT updated to version 1.4.8.1 or later"
+    return 1
 
     # Test if Execution Policy allows installing Package Providers
     $executionPolicy = Get-ExecutionPolicy -ErrorAction SilentlyContinue
@@ -1310,200 +1305,92 @@ function winpe-UpdatePowerShellGetRepair {
 function winpe-PSGalleryTrustTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param (
-        [System.Management.Automation.SwitchParameter]
-        $Force
-    )
-    # Test if Execution Policy allows PSGallery trust change
+    param ()
+    # Test
     $executionPolicy = Get-ExecutionPolicy -ErrorAction SilentlyContinue
     if ($executionPolicy -ne 'Bypass' -and $executionPolicy -ne 'Unrestricted') {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red "[✗] PSGallery Repository Installation Policy is NOT Trusted"
         Write-Host -ForegroundColor DarkGray "Execution Policy is set to $executionPolicy"
         Write-Host -ForegroundColor DarkGray "Execution Policy is blocking enumerating the PowerShell Gallery PSRepository"
-        return
+        return 1
     }
 
     $PowerShellGallery = Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue
     if (-not $PowerShellGallery) {
-        Write-Host -ForegroundColor Red "[✗] PSRepository PSGallery not found"
-        return
+        Write-Host -ForegroundColor Red "[✗] PSGallery Repository was NOT found"
+        return 1
     }
 
     if ($PowerShellGallery.InstallationPolicy -eq 'Trusted') {
-        Write-Host -ForegroundColor Green "[✓] PowerShell Gallery PSRepository Installation Policy is Trusted"
-        return
-    }
-
-    if (-not $Force) {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "PowerShell Gallery PSRepository Installation Policy is NOT Trusted"
-        return
-    }
-
-    try {
-        Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
-        Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction Stop
-        Write-Host -ForegroundColor Green "[✓] PowerShell Gallery PSRepository Installation Policy is Trusted"
-    }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor Red $_
-        throw
+        Write-Host -ForegroundColor Green "[✓] PSGallery Repository Installation Policy is Trusted"
+        return 0
     }
 }
 
 function winpe-PSGalleryTrustRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param (
-        [System.Management.Automation.SwitchParameter]
-        $Force
-    )
-    # Test if Execution Policy allows PSGallery trust change
-    $executionPolicy = Get-ExecutionPolicy -ErrorAction SilentlyContinue
-    if ($executionPolicy -ne 'Bypass' -and $executionPolicy -ne 'Unrestricted') {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "Execution Policy is set to $executionPolicy"
-        Write-Host -ForegroundColor DarkGray "Execution Policy is blocking enumerating the PowerShell Gallery PSRepository"
+    param ()
+    # Test
+    $results = winpe-PSGalleryTrustTest
+
+    # Success
+    if ($results -eq 0) {
         return
     }
 
-    $PowerShellGallery = Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue
-    if (-not $PowerShellGallery) {
-        Write-Host -ForegroundColor Red "[✗] PSRepository PSGallery not found"
-        return
-    }
-
-    if ($PowerShellGallery.InstallationPolicy -eq 'Trusted') {
-        Write-Host -ForegroundColor Green "[✓] PowerShell Gallery PSRepository Installation Policy is Trusted"
-        return
-    }
-
-    if (-not $Force) {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "PowerShell Gallery PSRepository Installation Policy is NOT Trusted"
-        return
-    }
-
+    # Repair
     try {
         Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
         Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction Stop
-        Write-Host -ForegroundColor Green "[✓] PowerShell Gallery PSRepository Installation Policy is Trusted"
     }
     catch {
         Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
+
+    # Test
+    $results = winpe-PSGalleryTrustTest
 }
 
 function winpe-AzcopyExeTest {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param (
-        [System.Management.Automation.SwitchParameter]
-        $Force
-    )
+    param ()
     $azcopyPath = "$env:SystemRoot\System32\azcopy.exe"
 
-    # Test if AzCopy is already installed
+    # Success
     if (Test-Path $azcopyPath) {
         $azcopy = Get-Item -Path $azcopyPath
         Write-Host -ForegroundColor Green "[✓] Microsoft AzCopy is installed"
-        return
+        return 0
     }
 
-    # Warning
-    if (-not ($Force)) {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "Microsoft AzCopy is NOT installed"
-        return
-    }
-    
-    try {
-        Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
-        $tempZip = "$env:TEMP\azcopy.zip"
-        $tempDir = "$env:TEMP\azcopy"
-        
-        # Determine download URL based on architecture
-        if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") {
-            $downloadUrl = 'https://aka.ms/downloadazcopy-v10-windows-arm64'
-        }
-        elseif ($env:PROCESSOR_ARCHITECTURE -eq "AMD64") {
-            $downloadUrl = 'https://aka.ms/downloadazcopy-v10-windows'
-        }
-        else {
-            throw "Unsupported processor architecture: $env:PROCESSOR_ARCHITECTURE"
-        }
-        Write-Host -ForegroundColor DarkGray $downloadUrl
-
-        # Download using curl if available, fallback to Invoke-WebRequest
-        $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
-        if (Test-Path $curlPath) {
-            & $curlPath --fail --location --silent --show-error `
-                $downloadUrl `
-                --output $tempZip
-            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $tempZip)) {
-                throw "curl download failed with exit code $LASTEXITCODE"
-            }
-        }
-        else {
-            Invoke-WebRequest -UseBasicParsing -Uri $downloadUrl -OutFile $tempZip -ErrorAction Stop
-        }
-        
-        # Extract
-        $null = New-Item -Path $tempDir -ItemType Directory -Force
-        Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force -ErrorAction Stop
-        
-        # Install
-        Get-ChildItem $tempDir -Include 'azcopy.exe' -Recurse -ErrorAction Stop | 
-            ForEach-Object { Copy-Item -Path $_.FullName -Destination $azcopyPath -Force -ErrorAction Stop }
-    }
-    catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor Red $_
-        throw
-    }
-    finally {
-        # Cleanup
-        if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
-        if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
-    }
-    if (Test-Path $azcopyPath) {
-        $azcopy = Get-Item -Path $azcopyPath
-        Write-Host -ForegroundColor Green "[✓] Microsoft AzCopy is installed"
-        return
-    }
+    # Failure
+    Write-Host -ForegroundColor Red "[✗] Microsoft AzCopy is NOT installed"
+    return 1
 }
 
 function winpe-AzcopyExeRepair {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param (
-        [System.Management.Automation.SwitchParameter]
-        $Force
-    )
+    param ()
+    # Test
+    $remediate = winpe-AzcopyExeTest
+
+    # Success
+    if ($remediate -eq 0) {
+        return
+    }
+
+    # Repair
+    Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
     $azcopyPath = "$env:SystemRoot\System32\azcopy.exe"
+    $tempZip = "$env:TEMP\azcopy.zip"
+    $tempDir = "$env:TEMP\azcopy"
 
-    # Test if AzCopy is already installed
-    if (Test-Path $azcopyPath) {
-        $azcopy = Get-Item -Path $azcopyPath
-        Write-Host -ForegroundColor Green "[✓] Microsoft AzCopy is installed"
-        return
-    }
-
-    # Warning
-    if (-not ($Force)) {
-        Write-Host -ForegroundColor Yellow "[!] $($MyInvocation.MyCommand.Name)"
-        Write-Host -ForegroundColor DarkGray "Microsoft AzCopy is NOT installed"
-        return
-    }
-    
     try {
-        Write-Host -ForegroundColor Cyan "[→] $($MyInvocation.MyCommand.Name)"
-        $tempZip = "$env:TEMP\azcopy.zip"
-        $tempDir = "$env:TEMP\azcopy"
-        
         # Determine download URL based on architecture
         if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") {
             $downloadUrl = 'https://aka.ms/downloadazcopy-v10-windows-arm64'
@@ -1548,11 +1435,7 @@ function winpe-AzcopyExeRepair {
         if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
         if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
-    if (Test-Path $azcopyPath) {
-        $azcopy = Get-Item -Path $azcopyPath
-        Write-Host -ForegroundColor Green "[✓] Microsoft AzCopy is installed"
-        return
-    }
+    $results = winpe-AzcopyExeTest
 }
 
 
