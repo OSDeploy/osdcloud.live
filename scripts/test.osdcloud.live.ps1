@@ -67,7 +67,6 @@ Write-Host -ForegroundColor DarkGray "OSDCloud Live Test [$WindowsPhase]"
 #region WinPE
 if ($WindowsPhase -eq 'WinPE') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
-    # winpe-RepairTls
     $null = winpe-ExecutionPolicyTest
     $null = winpe-UserShellFolderTest
     $null = winpe-RegistryEnvironmentTest
@@ -84,8 +83,6 @@ if ($WindowsPhase -eq 'WinPE') {
     $null = winpe-UpdatePowerShellGetTest
     $null = winpe-PSGalleryTrustTest
     $null = winpe-AzcopyExeTest
-    # winpe-InstallPowerShellModule -Name OSD
-    # winpe-InstallPowerShellModule -Name OSDCloud
     $EndTime = Get-Date
     $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
     Write-Host -ForegroundColor DarkGray "[i] Finished in $TotalSeconds seconds"
@@ -95,45 +92,58 @@ if ($WindowsPhase -eq 'WinPE') {
 
 #region Specialize
 if ($WindowsPhase -eq 'Specialize') {
-    Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [TLS 1.2]"
-    # Write-Host -ForegroundColor DarkGray "[✓] [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12"
-    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-    Invoke-Expression -Command (Invoke-RestMethod -Uri https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/specialize/functions.ps1)
+    Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/specialize/functions.psm1')
+    $EndTime = Get-Date
+    $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
+    Write-Host -ForegroundColor DarkGray "[i] Finished in $TotalSeconds seconds"
     $null = Stop-Transcript -ErrorAction Ignore
 }
 #endregion
 
 #region AuditMode
 if ($WindowsPhase -eq 'AuditMode') {
-    Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [TLS 1.2]"
-    # Write-Host -ForegroundColor DarkGray "[✓] [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12"
-    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-    Invoke-Expression -Command (Invoke-RestMethod -Uri https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/auditmode/functions.ps1)
+    Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/audit/functions.psm1')
+    $EndTime = Get-Date
+    $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
+    Write-Host -ForegroundColor DarkGray "[i] Finished in $TotalSeconds seconds"
     $null = Stop-Transcript -ErrorAction Ignore
 }
 #endregion
 
 #region OOBE
 if ($WindowsPhase -eq 'OOBE') {
-    Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [TLS 1.2]"
-    # Write-Host -ForegroundColor DarkGray "[✓] [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12"
-    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
     if ($isElevated) {
         Write-Host -ForegroundColor Green "[✓] Running as $whoiam (Admin Elevated)"
     }
     else {
         Write-Host -ForegroundColor Red "[!] Running as $whoiam (NOT Admin Elevated)"
     }
-    Invoke-Expression -Command (Invoke-RestMethod -Uri https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/oobe/functions.psm1)
+    Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/oobe/functions.psm1')
+    $null = oobe-ExecutionPolicyTest
+    $null = oobe-UserShellFolderTest
+    $null = oobe-RegistryEnvironmentTest
+    $null = oobe-SessionEnvironmentTest
+    $null = oobe-PowerShellProfilePathTest
+    $null = oobe-PowerShellProfileTest
+    $null = oobe-RealTimeClockUTCTest
+    $null = oobe-TimeServiceTest
+    $null = oobe-CurlExeTest
+    $null = oobe-PackageManagementTest
+    $null = oobe-NuGetPackageProviderTest
+    $null = oobe-NugetExeTest
+    $null = oobe-UpdatePackageManagementTest
+    $null = oobe-UpdatePowerShellGetTest
+    $null = oobe-PSGalleryTrustTest
+    $null = oobe-AzcopyExeTest
+    $EndTime = Get-Date
+    $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
+    Write-Host -ForegroundColor DarkGray "[i] Finished in $TotalSeconds seconds"
     $null = Stop-Transcript -ErrorAction Ignore
 }
 #endregion
 
 #region Windows
 if ($WindowsPhase -eq 'Windows') {
-    Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [TLS 1.2]"
-    # Write-Host -ForegroundColor DarkGray "[✓] [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12"
-    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
     if ($isElevated) {
         Write-Host -ForegroundColor Green "[✓] Running as $whoiam (Admin Elevated)"
     }
@@ -141,7 +151,10 @@ if ($WindowsPhase -eq 'Windows') {
         Write-Host -ForegroundColor Red "[!] Running as $whoiam (NOT Admin Elevated)"
         Break
     }
-    Invoke-Expression -Command (Invoke-RestMethod -Uri https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/windows/functions.ps1)
+    Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/windows/functions.psm1')
+    $EndTime = Get-Date
+    $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
+    Write-Host -ForegroundColor DarkGray "[i] Finished in $TotalSeconds seconds"
     $null = Stop-Transcript -ErrorAction Ignore
 }
 #endregion
