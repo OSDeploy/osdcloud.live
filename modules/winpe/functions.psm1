@@ -722,6 +722,7 @@ function winpe-CurlExeRepair {
 
     # Repair
     Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
+    $curlPath = "$env:SystemRoot\System32\curl.exe"
     try {
         $tempZip = "$env:TEMP\curl.zip"
         $tempDir = "$env:TEMP\curl"
