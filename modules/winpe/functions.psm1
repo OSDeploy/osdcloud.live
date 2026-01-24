@@ -7,20 +7,7 @@ Functions for configuring the Windows PE environment, including execution policy
 environment variables, package management, and tool installation.
 
 Recommended execution order for initial setup:
-    1. winpe-ExecutionPolicyRepair
-    2. winpe-UserShellFolderRepair
-    3. winpe-RegistryEnvironmentRepair
-    4. winpe-SessionEnvironmentRepair
-    5. winpe-PowerShellProfileRepair
-    6. winpe-RealTimeClockUTCRepair
-    7. winpe-TimeServiceRepair
-    8. winpe-CurlExeRepair
-    9. winpe-NugetPackageProviderRepair
-    10. winpe-NugetExeRepair
-    11. winpe-UpdatePackageManagementRepair
-    12. winpe-UpdatePowerShellGetRepair
-    13. winpe-PSGalleryTrustRepair
-    14. winpe-AzcopyExeRepair
+
 
 Additional functions (can be run after the core setup above):
     - winpe-InstallPowerShellModule -Name <ModuleName>
@@ -59,7 +46,14 @@ function Invoke-WinpeDownload {
         Write-Host -ForegroundColor Yellow "[!] curl download failed with exit code $LASTEXITCODE, retrying with Start-BitsTransfer"
     }
 
-    $bitsCommand = Get-Command -Name Start-BitsTransfer -Module BitsTransfer -ErrorAction SilentlyContinue
+    $bitsDllPath = Join-Path $env:SystemRoot 'System32\QMgr.dll'
+    $bitsCommand = $null
+    if (Test-Path $bitsDllPath) {
+        $bitsCommand = Get-Command -Name Start-BitsTransfer -Module BitsTransfer -ErrorAction SilentlyContinue
+    }
+    else {
+        # Write-Host -ForegroundColor Yellow "[!] QMgr.dll not found; skipping Start-BitsTransfer"
+    }
     if ($bitsCommand) {
         try {
             Start-BitsTransfer -Source $Uri -Destination $Destination -ErrorAction Stop
@@ -132,6 +126,52 @@ function winpe-ExecutionPolicyRepair {
     }
 
     $results = winpe-ExecutionPolicyTest
+}
+#endregion
+
+#region Modules
+function winpe-PowerShellModulesTest {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Quiet
+    )
+
+    $requiredModules = @(
+        "Dism",
+        "iSCSI",
+        "Storage",
+        "StorageBusCache"
+    )
+
+    # Test if a repair is needed
+    $remediate = $false
+    foreach ($module in $requiredModules) {
+        if (-not (Get-Module -ListAvailable -Name $module)) {
+            $remediate = $true
+            break
+        }
+    }
+
+    # Success
+    if (-not $remediate) {
+        if ($Quiet) { return 0 }
+        Write-Host -ForegroundColor Green "[✓] Required PowerShell Modules exist"
+        return 0
+    }
+
+    # Failure
+    if ($Quiet) { return 1 }
+    Write-Host -ForegroundColor Red "[✗] Required PowerShell Modules do NOT exist. This issue cannot be resolved"
+    foreach ($module in $requiredModules) {
+        # If Module is installed, continue
+        if (Get-Module -ListAvailable -Name $item) {
+            continue
+        }
+        Write-Host -ForegroundColor DarkGray $item
+    }
+    return 1
 }
 #endregion
 
