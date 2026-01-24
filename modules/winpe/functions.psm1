@@ -163,7 +163,7 @@ function winpe-PowerShellModulesTest {
 
     # Failure
     if ($Quiet) { return 1 }
-    Write-Host -ForegroundColor Red "[✗] Required PowerShell Modules do NOT exist. This issue cannot be resolved"
+    Write-Host -ForegroundColor Red "[✗] Required PowerShell Modules do NOT exist. This can NOT be repaired online."
     foreach ($module in $requiredModules) {
         # If Module is installed, continue
         if (Get-Module -ListAvailable -Name $module) {
