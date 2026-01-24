@@ -68,7 +68,7 @@ Write-Host -ForegroundColor DarkGray "OSDCloud Live Deploy [$WindowsPhase]"
 if ($WindowsPhase -eq 'WinPE') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
     # winpe-RepairTls
-    winpe-PowerShellModulesTest
+    $fatal = winpe-PowerShellModulesTest
     winpe-ExecutionPolicyRepair
     winpe-UserShellFolderRepair
     winpe-RegistryEnvironmentRepair
@@ -85,6 +85,11 @@ if ($WindowsPhase -eq 'WinPE') {
     winpe-UpdatePowerShellGetRepair
     winpe-PSGalleryTrustRepair
     winpe-AzcopyExeRepair
+    if ($fatal) {
+        Write-Host -ForegroundColor Red "[!] Fatal errors detected. Aborting deployment."
+        $null = Stop-Transcript -ErrorAction Ignore
+        Break
+    }
     winpe-InstallPowerShellModule -Name OSD
     winpe-InstallPowerShellModule -Name OSDCloud
     $EndTime = Get-Date
