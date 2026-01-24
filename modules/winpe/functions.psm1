@@ -32,6 +32,48 @@ Functions are designed to be idempotent and can be safely re-run.
 Most functions will skip if the target is already configured/installed.
 #>
 
+#region Helpers
+function Invoke-WinpeDownload {
+    [CmdletBinding()]
+    param (
+        [Parameter(Mandatory = $true)]
+        [string]
+        $Uri,
+
+        [Parameter(Mandatory = $true)]
+        [string]
+        $Destination,
+
+        [System.Management.Automation.SwitchParameter]
+        $AllowCurlFallback
+    )
+
+    $curlPath = Join-Path $env:SystemRoot 'System32\\curl.exe'
+    if (Test-Path $curlPath) {
+        & $curlPath --fail --location --silent --show-error `
+            $Uri `
+            --output $Destination
+        if ($LASTEXITCODE -eq 0 -and (Test-Path $Destination)) {
+            return
+        }
+        Write-Host -ForegroundColor Yellow "[!] curl download failed with exit code $LASTEXITCODE, retrying with Start-BitsTransfer"
+    }
+
+    $bitsCommand = Get-Command -Name Start-BitsTransfer -Module BitsTransfer -ErrorAction SilentlyContinue
+    if ($bitsCommand) {
+        try {
+            Start-BitsTransfer -Source $Uri -Destination $Destination -ErrorAction Stop
+            return
+        }
+        catch {
+            Write-Host -ForegroundColor Yellow "[!] Start-BitsTransfer failed, retrying with Invoke-WebRequest"
+        }
+    }
+
+    Invoke-WebRequest -UseBasicParsing -Uri $Uri -OutFile $Destination -ErrorAction Stop
+}
+#endregion
+
 #region ExecutionPolicy
 function winpe-ExecutionPolicyTest {
     [CmdletBinding()]
@@ -730,8 +772,7 @@ function winpe-CurlExeRepair {
         # Download
         $url = 'https://curl.se/windows/latest.cgi?p=win64-mingw.zip'
         # Write-Host -ForegroundColor DarkGray "$url"
-        Invoke-WebRequest -UseBasicParsing -Uri $url `
-            -OutFile $tempZip -ErrorAction Stop
+        Invoke-WinpeDownload -Uri $url -Destination $tempZip
         
         # Extract
         $null = New-Item -Path $tempDir -ItemType Directory -Force
@@ -807,7 +848,7 @@ function winpe-PackageManagementRepair {
     None. Writes status and progress messages to the host.
 
     .NOTES
-    Designed for Windows PE. Uses curl when available, otherwise Invoke-WebRequest.
+    Designed for Windows PE. Prefers curl when available, then BitsTransfer, then Invoke-WebRequest.
     Safe to re-run; no changes are made if the desired state is already present.
     #>
     [CmdletBinding()]
@@ -830,20 +871,8 @@ function winpe-PackageManagementRepair {
 
         $url = 'https://www.powershellgallery.com/api/v2/package/PackageManagement/1.4.8.1'
         # Write-Host -ForegroundColor DarkGray $url
-        
-        # Download using curl if available, fallback to Invoke-WebRequest
-        $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
-        if (Test-Path $curlPath) {
-            & $curlPath --fail --location --silent --show-error `
-                $url `
-                --output $tempZip
-            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $tempZip)) {
-                throw "curl download failed with exit code $LASTEXITCODE"
-            }
-        }
-        else {
-            Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $tempZip -ErrorAction Stop
-        }
+
+        Invoke-WinpeDownload -Uri $url -Destination $tempZip -AllowCurlFallback
 
         $null = New-Item -Path $tempDir -ItemType Directory -Force
         Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force -ErrorAction Stop
@@ -995,26 +1024,8 @@ function winpe-NugetExeRepair {
         $null = New-Item -Path $nugetPath -ItemType Directory -Force -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
     }
     
-    # Download using curl if available, fallback to Invoke-WebRequest
-    $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
-    if (Test-Path $curlPath) {
-        & $curlPath --fail --location --silent --show-error `
-            $nugetExeSourceURL `
-            --output $nugetExeFilePath
-        if ($LASTEXITCODE -ne 0 -or -not (Test-Path $nugetExeFilePath)) {
-            throw "curl download failed with exit code $LASTEXITCODE"
-        }
-    }
-    else {
-        try {
-            Invoke-WebRequest -UseBasicParsing -Uri $nugetExeSourceURL -OutFile $nugetExeFilePath -ErrorAction Stop
-        }
-        catch {
-            Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
-            Write-Host -ForegroundColor Red $_
-            throw
-        }
-    }
+    # Download using curl when available, then BitsTransfer, then Invoke-WebRequest
+    Invoke-WinpeDownload -Uri $nugetExeSourceURL -Destination $nugetExeFilePath -AllowCurlFallback
 
     $results = winpe-NugetExeTest
 }
@@ -1064,20 +1075,8 @@ function winpe-UpdatePackageManagementRepair {
 
         $url = 'https://www.powershellgallery.com/api/v2/package/PackageManagement/1.4.8.1'
         # Write-Host -ForegroundColor DarkGray $url
-        
-        # Download using curl if available, fallback to Invoke-WebRequest
-        $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
-        if (Test-Path $curlPath) {
-            & $curlPath --fail --location --silent --show-error `
-                $url `
-                --output $tempZip
-            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $tempZip)) {
-                throw "curl download failed with exit code $LASTEXITCODE"
-            }
-        }
-        else {
-            Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $tempZip -ErrorAction Stop
-        }
+
+        Invoke-WinpeDownload -Uri $url -Destination $tempZip -AllowCurlFallback
 
         $null = New-Item -Path $tempDir -ItemType Directory -Force
         Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force -ErrorAction Stop
@@ -1144,21 +1143,10 @@ function winpe-UpdatePowerShellGetRepair {
         $tempDir = "$env:TEMP\2.2.5"
         $moduleDir = "$env:ProgramFiles\WindowsPowerShell\Modules\PowerShellGet"
         
-        # Download using curl if available, fallback to Invoke-WebRequest
+        # Download using curl when available, then BitsTransfer, then Invoke-WebRequest
         $url = 'https://www.powershellgallery.com/api/v2/package/PowerShellGet/2.2.5'
         # Write-Host -ForegroundColor DarkGray $url
-        $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
-        if (Test-Path $curlPath) {
-            & $curlPath --fail --location --silent --show-error `
-                $url `
-                --output $tempZip
-            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $tempZip)) {
-                throw "curl download failed with exit code $LASTEXITCODE"
-            }
-        }
-        else {
-            Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $tempZip -ErrorAction Stop
-        }
+        Invoke-WinpeDownload -Uri $url -Destination $tempZip -AllowCurlFallback
         
         # Extract
         $null = New-Item -Path $tempDir -ItemType Directory -Force
@@ -1305,19 +1293,7 @@ function winpe-AzcopyExeRepair {
         }
         # Write-Host -ForegroundColor DarkGray $downloadUrl
 
-        # Download using curl if available, fallback to Invoke-WebRequest
-        $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
-        if (Test-Path $curlPath) {
-            & $curlPath --fail --location --silent --show-error `
-                $downloadUrl `
-                --output $tempZip
-            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $tempZip)) {
-                throw "curl download failed with exit code $LASTEXITCODE"
-            }
-        }
-        else {
-            Invoke-WebRequest -UseBasicParsing -Uri $downloadUrl -OutFile $tempZip -ErrorAction Stop
-        }
+        Invoke-WinpeDownload -Uri $downloadUrl -Destination $tempZip -AllowCurlFallback
         
         # Extract
         $null = New-Item -Path $tempDir -ItemType Directory -Force
@@ -1402,20 +1378,8 @@ function winpe-InstallDotNetCore {
     $dotNetCoreDir = Join-Path -Path $env:ProgramFiles -ChildPath 'dotnet'
 
     try {
-        $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
-        if (Test-Path $curlPath) {
-            Write-Host -ForegroundColor DarkGray "[→] Downloading .NET Runtime with curl"
-            & $curlPath --fail --location --silent --show-error `
-                $dotNetCoreUrl `
-                --output $dotNetCoreZip
-            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $dotNetCoreZip)) {
-                throw "curl download failed with exit code $LASTEXITCODE"
-            }
-        }
-        else {
-            Write-Host -ForegroundColor DarkGray "[→] Downloading .NET Runtime with Invoke-WebRequest"
-            Invoke-WebRequest -UseBasicParsing -Uri $dotNetCoreUrl -OutFile $dotNetCoreZip -ErrorAction Stop
-        }
+        Write-Host -ForegroundColor DarkGray "[→] Downloading .NET Runtime"
+        Invoke-WinpeDownload -Uri $dotNetCoreUrl -Destination $dotNetCoreZip -AllowCurlFallback
         Write-Host -ForegroundColor Green "[✓] .NET Runtime downloaded successfully"
 
         Write-Host -ForegroundColor DarkGray "[→] Extracting .NET Runtime"
@@ -1517,19 +1481,7 @@ function winpe-InstallZip {
         Write-Host -ForegroundColor DarkCyan "[→] 7-Zip [25.01]"
         Write-Host -ForegroundColor DarkGray $downloadUrl
         
-        # Download using curl if available, fallback to Invoke-WebRequest
-        $curlPath = Join-Path $env:SystemRoot 'System32\curl.exe'
-        if (Test-Path $curlPath) {
-            & $curlPath --fail --location --silent --show-error `
-                $downloadUrl `
-                --output $tempZip
-            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $tempZip)) {
-                throw "curl download failed with exit code $LASTEXITCODE"
-            }
-        }
-        else {
-            Invoke-WebRequest -UseBasicParsing -Uri $downloadUrl -OutFile $tempZip -ErrorAction Stop
-        }
+        Invoke-WinpeDownload -Uri $downloadUrl -Destination $tempZip -AllowCurlFallback
         
         # Extract
         $null = New-Item -Path $tempDir -ItemType Directory -Force
