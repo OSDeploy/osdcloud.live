@@ -140,9 +140,7 @@ function winpe-PowerShellModulesTest {
 
     $requiredModules = @(
         "Dism",
-        "iSCSI",
-        "Storage",
-        "StorageBusCache"
+        "Storage"
     )
 
     # Test if a repair is needed
@@ -167,6 +165,14 @@ function winpe-PowerShellModulesTest {
     foreach ($module in $requiredModules) {
         # If Module is installed, continue
         if (Get-Module -ListAvailable -Name $module) {
+            continue
+        }
+        if $module -eq "Dism" {
+            Write-Host -ForegroundColor DarkGray "Dism PowerShell Module requires ADK Optional Component WinPE-DismCmdlets"
+            continue
+        }
+        if $module -eq "Storage" {
+            Write-Host -ForegroundColor DarkGray "Storage PowerShell Module requires ADK Optional Component WinPE-StorageWMI"
             continue
         }
         Write-Host -ForegroundColor DarkGray $module
