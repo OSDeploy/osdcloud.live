@@ -130,7 +130,7 @@ popd
     #>
 }
 
-function winpe-SetupCompleteApplicationWorkspaceGH {
+function winpe-SetupCompleteApplicationWorkspace {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (

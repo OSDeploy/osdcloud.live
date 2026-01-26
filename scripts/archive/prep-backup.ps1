@@ -90,7 +90,7 @@ if ($WindowsPhase -eq 'WinPE') {
     Write-Host -ForegroundColor DarkGray "[✓] Initialization Time: $TotalSeconds seconds"
     $null = Stop-Transcript -ErrorAction Ignore
     Deploy-OSDCloud
-    winpe-SetupCompleteApplicationWorkspaceGH
+    winpe-SetupCompleteApplicationWorkspace
 }
 #endregion
 
