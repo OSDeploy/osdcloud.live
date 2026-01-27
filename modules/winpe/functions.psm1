@@ -43,7 +43,7 @@ function Invoke-WinpeDownload {
         if ($LASTEXITCODE -eq 0 -and (Test-Path $Destination)) {
             return
         }
-        Write-Host -ForegroundColor Yellow "[!] curl download failed with exit code $LASTEXITCODE, retrying with Start-BitsTransfer"
+        Write-Host -ForegroundColor Yellow "[!] curl download failed with exit code $LASTEXITCODE, retrying"
     }
 
     $bitsDllPath = Join-Path $env:SystemRoot 'System32\QMgr.dll'
@@ -1572,40 +1572,101 @@ function Demo-ApplicationWorkspaceSetupComplete {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [String]$agentbootstrapperURL = "https://download.liquit.com/extra/Bootstrapper/AgentBootstrapper-Win-2.1.0.2.exe",
-        [String]$agentcertificateURL = "https://raw.githubusercontent.com/OSDeploy/osdcloudaw/refs/heads/master/AgentRegistration.cer",
-        [String]$agentjsonURL = "https://raw.githubusercontent.com/OSDeploy/osdcloudaw/refs/heads/master/Agent.json",
         [String]$DestinationPath = "C:\Windows\Temp",
         [string]$logPath = "C:\Windows\Temp",
-        [switch]$StartDeployment = $false,
-        [switch]$UseCertificate = $true
+        [switch]$StartDeployment = $false
     )
+
+    $AWAgentJson = @'
+{
+  "zone": "https://david.liquit.com/",
+  "promptZone": "Disabled",
+  "registration": {
+    "type": "Certificate"
+  },
+  "deployment": {
+    "zoneTimeout": 60,
+    "enabled": false,
+    "start": false,
+    "context": "Device",
+    "cancel": false,
+    "triggers": false,
+    "autoStart": {
+      "enabled": true,
+      "deployment": "OSDCloud Live"
+    }
+  },
+  "log": {
+    "level": "Debug",
+    "rotateCount": 5,
+    "rotateSize": 1048576
+  },
+  "icon": {
+    "enabled": false,
+    "exit": false,
+    "timeout": 1
+  },
+  "login": {
+    "enabled": false,
+    "identitySource": "LOCAL",
+    "timeout": 15
+  },
+  "launcher": {
+    "state": "Default",
+    "close": true,
+    "start": "Disabled",
+    "contextMenu": true,
+    "minimal": true,
+    "enabled": true
+  },
+  "restrictZones": true,
+  "trustedZones": [
+    "david.liquit.com"
+  ]
+}
+'@
+
+    $AWAgentCer = @'
+-----BEGIN CERTIFICATE-----
+MIIDazCCAlOgAwIBAgIQexCxml36kblBc7bgKEEQSzANBgkqhkiG9w0BAQsFADAzMTEwLwYDVQQD
+DChBcHBsaWNhdGlvbiBXb3Jrc3BhY2UgQWdlbnQgUmVnaXN0cmF0aW9uMB4XDTI2MDEwMjIxMzIz
+MFoXDTM1MTIzMTIxMzIzMFowMzExMC8GA1UEAwwoQXBwbGljYXRpb24gV29ya3NwYWNlIEFnZW50
+IFJlZ2lzdHJhdGlvbjCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAPdbbW0GusvkBdc3
+pnGL3B3AXPzALAVQu6zY+2fyYVjQdn2lk/qwwtasn20pvwHvDFKOnprknqvNh1IrcQaMP+kJ6I1w
+8jxd6t+25ZSb1By2369WXEQcsCU0nic6WNH1A6hzw1d57UxKgsx0ZuVa06M9JKJIF6fSb7D9o5Vs
+LNC7/GdGl7fvzAeIeuCVZpV5xsFtzAQYuWGEU5TmvbQnJuKqpyJ5YifDYVHM95wvTphHEaC/Dptp
+V0R0EaOXu24mqZuPBfhL/gV2YzabK8SjAqhOKjM4mBhdP8IXAVl1xKRyU6utIWQkD/YeotVmgeEZ
+/dUMDFfR3aKIu20VgO0bGOMCAwEAAaN7MHkwDgYDVR0PAQH/BAQDAgeAMBMGA1UdJQQMMAoGCCsG
+AQUFBwMCMDMGA1UdEQQsMCqCKEFwcGxpY2F0aW9uIFdvcmtzcGFjZSBBZ2VudCBSZWdpc3RyYXRp
+b24wHQYDVR0OBBYEFO0P+6liUf1Jt/oQe0U6IIheWBoHMA0GCSqGSIb3DQEBCwUAA4IBAQAuGq/Z
+2Po7O3F3eNL1aX3rE5tNsVIq7ThvFp+vU+wZd0XEjGMT+b7T+kNExQ8fVjlO+2AGvM+seMO5a7X8
++8iKERpKrKCJEGy8Uoe/cnyRKQXjET4Zl/b/Feel583vAGKKntAY0CO0JvbHvjpAgJXi2kDmWNli
+30EKZYRpD7Y3ejVoB4FGa6Hg+pYhrMPgmr4OR5cOtbhgNjH7K7EnxX//PvTGd4yAcrcttFd0r/PC
+QQ3+2uDROk8+8iuBcvRRCJ+XFlXj4M3VFZFtnESY16Krf3BqZDFYi2oMgpHhdfYE+8RL672ClrzH
+8jN/Zx0EhesWn7xJMh2j4kFxjYqBm6mf
+-----END CERTIFICATE-----
+'@
     
     Write-Host -ForegroundColor Cyan "[→] Recast Software Application Workspace"
 
+    # Agent Bootstrapper
     $InstallerPath = "$DestinationPath\AgentBootstrapper.exe"
-
-    If ($StartDeployment) {$InstallerArguments += " /startDeployment /waitForDeployment"}
-    If ($logPath) {$InstallerArguments += " /logPath=$($logPath)"}
-    If ($UseCertificate) {$InstallerArguments += " /certificate=$DestinationPath\AgentRegistration.cer"}
-    #$InstallerArguments = "/certificate=$DestinationPath\AgentRegistration.cer /startDeployment /waitForDeployment /logPath=$($logPath)"
-
     if (!(Test-Path $DestinationPath)) {  
         New-Item -ItemType Directory -Path $DestinationPath -Force | Out-Null
     }
-
-    # Download Agent Bootstrapper
     Write-Host -ForegroundColor DarkGray "[↓] $agentbootstrapperURL"
     Write-Host -ForegroundColor DarkGray "[→] $InstallerPath"
     Invoke-WebRequest -Uri $agentbootstrapperURL -OutFile $InstallerPath -UseBasicParsing
 
-    # Download Application Workspace Agent files
-    Write-Host -ForegroundColor DarkGray "[↓] $agentcertificateURL"
+    # Agent Registration Certificate
     Write-Host -ForegroundColor DarkGray "[→] $DestinationPath\AgentRegistration.cer"
-    Invoke-WebRequest -Uri $agentcertificateURL -OutFile "$DestinationPath\AgentRegistration.cer" -UseBasicParsing
-    Write-Host -ForegroundColor DarkGray "[↓] $agentjsonURL"
-    Write-Host -ForegroundColor DarkGray "[→] $DestinationPath\Agent.json"
-    Invoke-WebRequest -Uri $agentjsonURL -OutFile "$DestinationPath\Agent.json" -UseBasicParsing
+    $AWAgentCer | Out-File -FilePath "$DestinationPath\AgentRegistration.cer" -Encoding ascii -Force
 
+    # Agent Registration Json
+    Write-Host -ForegroundColor DarkGray "[→] $DestinationPath\Agent.json"
+    $AWAgentJson | Out-File -FilePath "$DestinationPath\Agent.json" -Encoding ascii -Force
+
+    # SetupComplete.cmd
     $ScriptsPath = "C:\Windows\Setup\Scripts"
     if (-not (Test-Path $ScriptsPath)) {
         New-Item -Path $ScriptsPath -ItemType Directory -Force -ErrorAction Ignore | Out-Null
@@ -1624,24 +1685,5 @@ popd
     $Content | Out-File -FilePath $SetupCompleteCmd -Append -Encoding ascii -Width 2000 -Force
     Write-Host -ForegroundColor DarkGray "[→] $SetupCompleteCmd"
     Set-Clipboard $SetupCompleteCmd
-
-    <#
-        Set-Location $DestinationPath
-        # Start the install process
-        Write-Host "Starting the installation process..."
-        if (Test-Path -Path $InstallerPath) {
-            try {
-                Start-Process -FilePath $InstallerPath -ArgumentList $InstallerArguments -Wait
-                Write-Host "Installation process completed."
-            }
-            catch {
-                Write-Error "Error starting the installer '$InstallerPath': $($_.Exception.Message)"
-                exit 1
-            }
-        }
-        else {
-            Write-Warning "Installer executable not found: '$InstallerPath'"
-        }
-    #>
 }
 #endregion
