@@ -1571,7 +1571,7 @@ function Demo-ApplicationWorkspaceSetupComplete {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
-        [String]$agentbootstrapperURL = "https://download.liquit.com/extra/Bootstrapper/AgentBootstrapper-Win-4.4.4130.3708.exe",
+        [String]$agentbootstrapperURL = "https://download.liquit.com/extra/Bootstrapper/AgentBootstrapper-Win-2.1.0.2.exe",
         [String]$DestinationPath = "C:\Windows\Temp"
     )
 
@@ -1675,8 +1675,8 @@ QQ3+2uDROk8+8iuBcvRRCJ+XFlXj4M3VFZFtnESY16Krf3BqZDFYi2oMgpHhdfYE+8RL672ClrzH
 :: ========================================================
 :: Recast Software - Application Workspace Demo
 :: ========================================================
-pushd $DestinationPath
-AgentBootstrapper.exe --certificate AgentRegistration.cer --startDeployment --wait
+pushd C:\Windows\Temp
+AgentBootstrapper.exe /certificate=AgentRegistration.cer /startDeployment /waitForDeployment
 popd
 :: ========================================================
 "@
