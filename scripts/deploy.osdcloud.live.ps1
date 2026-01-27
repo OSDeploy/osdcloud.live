@@ -97,7 +97,7 @@ if ($WindowsPhase -eq 'WinPE') {
     Write-Host -ForegroundColor DarkGray "[i] Finished in $TotalSeconds seconds"
     $null = Stop-Transcript -ErrorAction Ignore
     
-    Deploy-OSDCloud
+    Deploy-OSDCloud Recast
 }
 #endregion
 
