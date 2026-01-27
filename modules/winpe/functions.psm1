@@ -1622,8 +1622,8 @@ popd
 :: ========================================================
 "@
     $Content | Out-File -FilePath $SetupCompleteCmd -Append -Encoding ascii -Width 2000 -Force
-    Write-Host -ForegroundColor DarkGray "[→] $ScriptsPath\SetupComplete.cmd"
-    notepad.exe $SetupCompleteCmd
+    Write-Host -ForegroundColor DarkGray "[→] $SetupCompleteCmd"
+    Set-Clipboard $SetupCompleteCmd
 
     <#
         Set-Location $DestinationPath
