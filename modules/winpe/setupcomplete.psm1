@@ -32,7 +32,7 @@
 [Info] /msiProperties=    Specify properties that are passed along to the installer.
 #>
 
-function winpe-SetupCompleteApplicationWorkspaceAZ {
+function Demo-ApplicationWorkspaceSetupCompleteAZ {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
@@ -130,7 +130,7 @@ popd
     #>
 }
 
-function winpe-SetupCompleteApplicationWorkspace {
+function Demo-ApplicationWorkspaceSetupComplete {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (

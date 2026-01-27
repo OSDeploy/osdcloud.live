@@ -1567,7 +1567,7 @@ function Send-SettingChange {
   [void] ([Win32.Nativemethods]::SendMessageTimeout($HWND_BROADCAST, $WM_SETTINGCHANGE, [UIntPtr]::Zero, "Environment", 2, 5000, [ref] $result))
 }
 
-function winpe-SetupCompleteApplicationWorkspace {
+function Demo-ApplicationWorkspaceSetupComplete {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
