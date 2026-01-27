@@ -1595,12 +1595,15 @@ function Demo-ApplicationWorkspaceSetupComplete {
 
     # Download Agent Bootstrapper
     Write-Host -ForegroundColor DarkGray "[↓] $agentbootstrapperURL"
+    Write-Host -ForegroundColor DarkGray "[→] $InstallerPath"
     Invoke-WebRequest -Uri $agentbootstrapperURL -OutFile $InstallerPath -UseBasicParsing
 
     # Download Application Workspace Agent files
     Write-Host -ForegroundColor DarkGray "[↓] $agentcertificateURL"
+    Write-Host -ForegroundColor DarkGray "[→] $DestinationPath\AgentRegistration.cer"
     Invoke-WebRequest -Uri $agentcertificateURL -OutFile "$DestinationPath\AgentRegistration.cer" -UseBasicParsing
     Write-Host -ForegroundColor DarkGray "[↓] $agentjsonURL"
+    Write-Host -ForegroundColor DarkGray "[→] $DestinationPath\Agent.json"
     Invoke-WebRequest -Uri $agentjsonURL -OutFile "$DestinationPath\Agent.json" -UseBasicParsing
 
     $ScriptsPath = "C:\Windows\Setup\Scripts"
@@ -1619,6 +1622,8 @@ popd
 :: ========================================================
 "@
     $Content | Out-File -FilePath $SetupCompleteCmd -Append -Encoding ascii -Width 2000 -Force
+    Write-Host -ForegroundColor DarkGray "[→] $ScriptsPath\SetupComplete.cmd"
+    notepad.exe $SetupCompleteCmd
 
     <#
         Set-Location $DestinationPath
