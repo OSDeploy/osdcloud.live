@@ -191,13 +191,11 @@ function winpe-UserShellFolderTest {
     )
 
     $requiredFolders = @(
-        "$env:ProgramFiles\WindowsPowerShell\Modules",
         "$env:ProgramFiles\WindowsPowerShell\Scripts",
         "$env:UserProfile\AppData\Local",
         "$env:UserProfile\AppData\Roaming",
         "$env:UserProfile\Desktop",
         "$env:UserProfile\Documents\WindowsPowerShell",
-        "$env:SystemRoot\system32\WindowsPowerShell\v1.0\Modules",
         "$env:SystemRoot\system32\WindowsPowerShell\v1.0\Scripts"
     )
 
