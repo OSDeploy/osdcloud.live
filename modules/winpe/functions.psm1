@@ -82,7 +82,7 @@ function winpe-ExecutionPolicyTest {
         $executionPolicy = Get-ExecutionPolicy -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -96,7 +96,7 @@ function winpe-ExecutionPolicyTest {
 
     # Failure
     if ($Quiet) { return 1 }
-    Write-Host -ForegroundColor Red "[✗] PowerShell Execution Policy is NOT set to Bypass [$executionPolicy]"
+    Write-Host -ForegroundColor Gray "[✗] PowerShell Execution Policy is NOT set to Bypass [$executionPolicy]"
     return 1
 }
 function winpe-ExecutionPolicyRepair {
@@ -117,7 +117,7 @@ function winpe-ExecutionPolicyRepair {
         Set-ExecutionPolicy -ExecutionPolicy Bypass -Force -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -161,7 +161,7 @@ function winpe-PowerShellModulesTest {
 
     # Failure
     if ($Quiet) { return 1 }
-    Write-Host -ForegroundColor Red "[✗] Required PowerShell Modules do NOT exist. This can NOT be repaired online."
+    Write-Host -ForegroundColor Gray "[✗] Required PowerShell Modules do NOT exist. This can NOT be repaired online."
     foreach ($module in $requiredModules) {
         # If Module is installed, continue
         if (Get-Module -ListAvailable -Name $module) {
@@ -217,7 +217,7 @@ function winpe-UserShellFolderTest {
 
     # Failure
     if ($Quiet) { return 1 }
-    Write-Host -ForegroundColor Red "[✗] User Shell Folders do NOT exist"
+    Write-Host -ForegroundColor Gray "[✗] User Shell Folders do NOT exist"
     foreach ($item in $requiredFolders) {
         if (Test-Path -Path $item) {
             continue
@@ -260,7 +260,7 @@ function winpe-UserShellFolderRepair {
             $null = New-Item -Path $item -ItemType Directory -Force -ErrorAction Stop
         }
         catch {
-            Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+            Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
             Write-Host -ForegroundColor Red $_
             throw
         }
@@ -283,7 +283,7 @@ function winpe-RegistryEnvironmentTest {
         'HOMEDRIVE'     = "$env:SystemDrive"
         'HOMEPATH'      = "\windows\system32\config\systemprofile"
         'LOCALAPPDATA'  = "$env:UserProfile\AppData\Local"
-        'USERPROFILE'   = "$env:UserProfile"
+        # 'USERPROFILE'   = "$env:UserProfile"
     }
 
     # Test
@@ -308,7 +308,7 @@ function winpe-RegistryEnvironmentTest {
 
     # Failure
     if ($Quiet) { return 1 }
-    Write-Host -ForegroundColor Red "[✗] Environment Variables do NOT exist in the Registry"
+    Write-Host -ForegroundColor Gray "[✗] Environment Variables do NOT exist in the Registry"
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
@@ -339,7 +339,7 @@ function winpe-RegistryEnvironmentRepair {
         'HOMEDRIVE'     = "$env:SystemDrive"
         'HOMEPATH'      = "\windows\system32\config\systemprofile"
         'LOCALAPPDATA'  = "$env:UserProfile\AppData\Local"
-        'USERPROFILE'   = "$env:UserProfile"
+        # 'USERPROFILE'   = "$env:UserProfile"
     }
 
     # Repair
@@ -355,7 +355,7 @@ function winpe-RegistryEnvironmentRepair {
                 Set-ItemProperty -Path $registryPath -Name $name -Value $value -Force -ErrorAction Stop
             }
             catch {
-                Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+                Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
                 Write-Host -ForegroundColor Red $_
                 throw
             }
@@ -408,7 +408,7 @@ function winpe-SessionEnvironmentTest {
 
     # Failure
     if ($Quiet) { return 1 }
-    Write-Host -ForegroundColor Red "[✗] Environment Variables do NOT exist in the current PowerShell Session"
+    Write-Host -ForegroundColor Gray "[✗] Environment Variables do NOT exist in the current PowerShell Session"
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
@@ -464,7 +464,7 @@ function winpe-SessionEnvironmentRepair {
                 Set-Item -Path "env:$name" -Value $value -ErrorAction Stop
             }
             catch {
-                Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+                Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
                 Write-Host -ForegroundColor Red $_
                 throw
             }
@@ -504,7 +504,7 @@ function winpe-PowerShellProfilePathTest {
 
     # Failure
     if ($Quiet) { return 1 }
-    Write-Host -ForegroundColor Red "[✗] PowerShell Profile CurrentUser Paths are NOT properly configured"
+    Write-Host -ForegroundColor Gray "[✗] PowerShell Profile CurrentUser Paths are NOT properly configured"
     if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
         Write-Host -ForegroundColor DarkGray "CurrentUserAllHosts: [$($PROFILE.CurrentUserAllHosts)]"
     }
@@ -573,7 +573,7 @@ function winpe-PowerShellProfileTest {
 
     # Failure
     if ($Quiet) { return 1 }
-    Write-Host -ForegroundColor Red "[✗] PowerShell Profile AllUsersAllHosts is NOT configured"
+    Write-Host -ForegroundColor Gray "[✗] PowerShell Profile AllUsersAllHosts is NOT configured"
     # Write-Host -ForegroundColor DarkGray "Causes issues with new PowerShell sessions not inheriting Registry Environment Variables"
     return 1
 }
@@ -643,7 +643,7 @@ function winpe-RealTimeClockUTCTest {
     }
     else {
         if ($Quiet) { return 1 }
-        Write-Host -ForegroundColor Red "[✗] RealTime Clock is NOT set to UTC"
+        Write-Host -ForegroundColor Gray "[✗] RealTime Clock is NOT set to UTC"
         return 1
     }
 }
@@ -666,7 +666,7 @@ function winpe-RealTimeClockUTCRepair {
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -Value 1 -Type DWord -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -688,7 +688,7 @@ function winpe-TimeServiceTest {
         $w32timeService = Get-Service -Name w32time -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -702,10 +702,10 @@ function winpe-TimeServiceTest {
     else {
         if ($Quiet) { return 1 }
         if ($w32timeService.StartType -ne 'Automatic') {
-            Write-Host -ForegroundColor Red "[✗] Time Service [w32time] StartType is NOT set to Automatic"
+            Write-Host -ForegroundColor Gray "[✗] Time Service [w32time] StartType is NOT set to Automatic"
         }
         if ($w32timeService.Status -ne 'Running') {
-            Write-Host -ForegroundColor Red "[✗] Time Service [w32time] is NOT Running"
+            Write-Host -ForegroundColor Gray "[✗] Time Service [w32time] is NOT Running"
         }
         return 1
     }
@@ -728,7 +728,7 @@ function winpe-TimeServiceRepair {
         $w32timeService = Get-Service -Name w32time -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -739,7 +739,7 @@ function winpe-TimeServiceRepair {
             # Write-Host -ForegroundColor DarkGray "Time Service [w32time] StartType is set to Automatic"
         }
         catch {
-            Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+            Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
             Write-Host -ForegroundColor Red $_
             throw
         }
@@ -751,7 +751,7 @@ function winpe-TimeServiceRepair {
             Restart-Service -Name w32time -ErrorAction Stop
         }
         catch {
-            Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+            Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
             Write-Host -ForegroundColor Red $_
             throw
         }
@@ -762,7 +762,7 @@ function winpe-TimeServiceRepair {
             Start-Service -Name w32time -ErrorAction Stop
         }
         catch {
-            Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+            Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
             Write-Host -ForegroundColor Red $_
             throw
         }
@@ -789,7 +789,7 @@ function winpe-CurlExeTest {
     }
     else {
         if ($Quiet) { return 1 }
-        Write-Host -ForegroundColor Red "[✗] Curl is NOT installed at $curlPath"
+        Write-Host -ForegroundColor Gray "[✗] Curl is NOT installed at $curlPath"
         return 1
     }
 }
@@ -827,7 +827,7 @@ function winpe-CurlExeRepair {
             ForEach-Object { Copy-Item -Path $_ -Destination $curlPath -Force -ErrorAction Stop }
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -861,7 +861,7 @@ function winpe-PackageManagementTest {
     }
     else {
         if ($Quiet) { return 1 }
-        Write-Host -ForegroundColor Red "[✗] PackageManagement PowerShell Module is NOT installed"
+        Write-Host -ForegroundColor Gray "[✗] PackageManagement PowerShell Module is NOT installed"
         return 1
     }
 }
@@ -927,7 +927,7 @@ function winpe-PackageManagementRepair {
         Import-Module PackageManagement -Force -Scope Global -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -952,7 +952,7 @@ function winpe-NuGetPackageProviderTest {
     # Test PackageManagement
     if (-not (Get-Module -Name PackageManagement -ListAvailable)) {
         if ($Quiet) { return 1 }
-        Write-Host -ForegroundColor Red "[✗] NuGet Package Provider is NOT installed"
+        Write-Host -ForegroundColor Gray "[✗] NuGet Package Provider is NOT installed"
         # Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is a required prerequisite"
         return 1
     }
@@ -961,7 +961,7 @@ function winpe-NuGetPackageProviderTest {
     # Test Get-PackageProvider
     if (-not (Get-Command -Name Get-PackageProvider -ErrorAction SilentlyContinue)) {
         if ($Quiet) { return 1 }
-        Write-Host -ForegroundColor Red "[✗] NuGet Package Provider is NOT installed"
+        Write-Host -ForegroundColor Gray "[✗] NuGet Package Provider is NOT installed"
         # Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is a required prerequisite"
         return 1
     }
@@ -970,7 +970,7 @@ function winpe-NuGetPackageProviderTest {
     $executionPolicy = Get-ExecutionPolicy -ErrorAction SilentlyContinue
     if ($executionPolicy -ne 'Bypass' -and $executionPolicy -ne 'Unrestricted') {
         if ($Quiet) { return 1 }
-        Write-Host -ForegroundColor Red "[✗] NuGet Package Provider is NOT installed"
+        Write-Host -ForegroundColor Gray "[✗] NuGet Package Provider is NOT installed"
         # Write-Host -ForegroundColor DarkGray "PowerShell Execution Policy is blocking installation of NuGetPackage Providers"
         return 1
     }
@@ -984,7 +984,7 @@ function winpe-NuGetPackageProviderTest {
     }
 
     if ($Quiet) { return 1 }
-    Write-Host -ForegroundColor Red "[✗] NuGet Package Provider is NOT installed"
+    Write-Host -ForegroundColor Gray "[✗] NuGet Package Provider is NOT installed"
     return 1
 }
 
@@ -1005,7 +1005,7 @@ function winpe-NugetPackageProviderRepair {
         Install-PackageProvider -Name NuGet -Force -Scope AllUsers -ErrorAction Stop | Out-Null
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -1039,7 +1039,7 @@ function winpe-NugetExeTest {
     }
 
     if ($Quiet) { return 1 }
-    Write-Host -ForegroundColor Red "[✗] NuGet.exe is NOT installed"
+    Write-Host -ForegroundColor Gray "[✗] NuGet.exe is NOT installed"
     return 1
 }
 function winpe-NugetExeRepair {
@@ -1094,7 +1094,7 @@ function winpe-UpdatePackageManagementTest {
     }
 
     # Failure
-    Write-Host -ForegroundColor Red "[✗] PackageManagement PowerShell Module is NOT updated to version 1.4.8.1 or later"
+    Write-Host -ForegroundColor Gray "[✗] PackageManagement PowerShell Module is NOT updated to version 1.4.8.1 or later"
     if ($Quiet) { return 1 }
     return 1
 }
@@ -1131,7 +1131,7 @@ function winpe-UpdatePackageManagementRepair {
         Import-Module PackageManagement -Force -Scope Global -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -1165,7 +1165,7 @@ function winpe-UpdatePowerShellGetTest {
 
     # Failure
     if ($Quiet) { return 1 }
-    Write-Host -ForegroundColor Red "[✗] PowerShellGet PowerShell Module is NOT updated to version 2.2.5 or later"
+    Write-Host -ForegroundColor Gray "[✗] PowerShellGet PowerShell Module is NOT updated to version 2.2.5 or later"
     return 1
 }
 function winpe-UpdatePowerShellGetRepair {
@@ -1204,7 +1204,7 @@ function winpe-UpdatePowerShellGetRepair {
         Import-Module PowerShellGet -Force -Scope Global -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -1231,7 +1231,7 @@ function winpe-PSGalleryTrustTest {
     $executionPolicy = Get-ExecutionPolicy -ErrorAction SilentlyContinue
     if ($executionPolicy -ne 'Bypass' -and $executionPolicy -ne 'Unrestricted') {
         if ($Quiet) { return 1 }
-        Write-Host -ForegroundColor Red "[✗] PSGallery Repository Installation Policy is NOT Trusted [Execution Policy $executionPolicy]"
+        Write-Host -ForegroundColor Gray "[✗] PSGallery Repository Installation Policy is NOT Trusted [Execution Policy $executionPolicy]"
         # Write-Host -ForegroundColor DarkGray "Execution Policy is set to $executionPolicy"
         # Write-Host -ForegroundColor DarkGray "Execution Policy is blocking enumerating the PowerShell Gallery PSRepository"
         return 1
@@ -1240,7 +1240,7 @@ function winpe-PSGalleryTrustTest {
     $PowerShellGallery = Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue
     if (-not $PowerShellGallery) {
         if ($Quiet) { return 1 }
-        Write-Host -ForegroundColor Red "[✗] PSGallery Repository was NOT found"
+        Write-Host -ForegroundColor Gray "[✗] PSGallery Repository was NOT found"
         return 1
     }
 
@@ -1251,7 +1251,7 @@ function winpe-PSGalleryTrustTest {
     }
 
     if ($Quiet) { return 1 }
-    Write-Host -ForegroundColor Red "[✗] PSGallery Repository Installation Policy is NOT Trusted"
+    Write-Host -ForegroundColor Gray "[✗] PSGallery Repository Installation Policy is NOT Trusted"
     return 1
 }
 function winpe-PSGalleryTrustRepair {
@@ -1272,7 +1272,7 @@ function winpe-PSGalleryTrustRepair {
         Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -1302,7 +1302,7 @@ function winpe-AzcopyExeTest {
 
     # Failure
     if ($Quiet) { return 1 }
-    Write-Host -ForegroundColor Red "[✗] Microsoft AzCopy [NOT installed]"
+    Write-Host -ForegroundColor Gray "[✗] Microsoft AzCopy [NOT installed]"
     return 1
 }
 
@@ -1348,7 +1348,7 @@ function winpe-AzcopyExeRepair {
             ForEach-Object { Copy-Item -Path $_.FullName -Destination $azcopyPath -Force -ErrorAction Stop }
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -1404,7 +1404,7 @@ function winpe-RepairTls {
         [Net.ServicePointManager]::SecurityProtocol = $SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name) failed: $_"
+        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name) failed: $_"
         throw
     }
 }
@@ -1434,7 +1434,7 @@ function winpe-InstallDotNetCore {
         Write-Host -ForegroundColor Green "[✓] .NET Runtime installed successfully to $dotNetCoreDir"
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] Failed to install .NET Runtime: $_"
+        Write-Host -ForegroundColor Gray "[✗] Failed to install .NET Runtime: $_"
         throw
     }
     finally {
@@ -1476,7 +1476,7 @@ function winpe-InstallPowerShellModule {
             return
         }
         catch {
-            Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+            Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
             Write-Host -ForegroundColor Red $_
             throw
         }
@@ -1496,7 +1496,7 @@ function winpe-InstallPowerShellModule {
         Write-Host -ForegroundColor Green "[✓] $Name [$($GalleryModule.Version)]"
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -1542,7 +1542,7 @@ function winpe-InstallZip {
         Write-Host -ForegroundColor Green "[✓] 7-Zip [25.01]"
     }
     catch {
-        Write-Host -ForegroundColor Red "[✗] 7-Zip [25.01] failed: $_"
+        Write-Host -ForegroundColor Gray "[✗] 7-Zip [25.01] failed: $_"
         throw
     }
     finally {
