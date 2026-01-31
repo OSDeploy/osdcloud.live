@@ -82,7 +82,7 @@ function winpe-ExecutionPolicyTest {
         $executionPolicy = Get-ExecutionPolicy -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -117,7 +117,7 @@ function winpe-ExecutionPolicyRepair {
         Set-ExecutionPolicy -ExecutionPolicy Bypass -Force -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -260,7 +260,7 @@ function winpe-UserShellFolderRepair {
             $null = New-Item -Path $item -ItemType Directory -Force -ErrorAction Stop
         }
         catch {
-            Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
+            Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
             Write-Host -ForegroundColor Red $_
             throw
         }
@@ -355,7 +355,7 @@ function winpe-RegistryEnvironmentRepair {
                 Set-ItemProperty -Path $registryPath -Name $name -Value $value -Force -ErrorAction Stop
             }
             catch {
-                Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
+                Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
                 Write-Host -ForegroundColor Red $_
                 throw
             }
@@ -464,7 +464,7 @@ function winpe-SessionEnvironmentRepair {
                 Set-Item -Path "env:$name" -Value $value -ErrorAction Stop
             }
             catch {
-                Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
+                Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
                 Write-Host -ForegroundColor Red $_
                 throw
             }
@@ -559,7 +559,7 @@ function winpe-PowerShellProfileTest {
     }
     else {
         $existingContent = Get-Content -Path $profilePath -Raw -ErrorAction Stop
-        if (-not ($existingContent -match 'OSDCloud by Recast Software')) {
+        if (-not ($existingContent -match 'OSD PowerShell Profile')) {
             $repairPSProfileFile = $true
         }
     }
@@ -592,7 +592,7 @@ function winpe-PowerShellProfileRepair {
 
     # Repair
     $winpePowerShellProfile = @'
-# OSDCloud by Recast Software
+# OSD PowerShell Profile
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 $registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
 $registryPath | ForEach-Object {
@@ -611,7 +611,7 @@ $registryPath | ForEach-Object {
 
     if (Test-Path -Path $profilePath) {
         $existingContent = Get-Content -Path $profilePath -Raw -ErrorAction Stop
-        if (-not ($existingContent -match 'OSDCloud by Recast Software')) {
+        if (-not ($existingContent -match 'OSD PowerShell Profile')) {
             Add-Content -Path $profilePath -Value ("`r`n" + $winpePowerShellProfile) -Encoding Unicode -ErrorAction Stop
         }
     }
@@ -666,7 +666,7 @@ function winpe-RealTimeClockUTCRepair {
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -Value 1 -Type DWord -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -688,7 +688,7 @@ function winpe-TimeServiceTest {
         $w32timeService = Get-Service -Name w32time -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -728,7 +728,7 @@ function winpe-TimeServiceRepair {
         $w32timeService = Get-Service -Name w32time -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -739,7 +739,7 @@ function winpe-TimeServiceRepair {
             # Write-Host -ForegroundColor DarkGray "Time Service [w32time] StartType is set to Automatic"
         }
         catch {
-            Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
+            Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
             Write-Host -ForegroundColor Red $_
             throw
         }
@@ -751,7 +751,7 @@ function winpe-TimeServiceRepair {
             Restart-Service -Name w32time -ErrorAction Stop
         }
         catch {
-            Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
+            Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
             Write-Host -ForegroundColor Red $_
             throw
         }
@@ -762,7 +762,7 @@ function winpe-TimeServiceRepair {
             Start-Service -Name w32time -ErrorAction Stop
         }
         catch {
-            Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
+            Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
             Write-Host -ForegroundColor Red $_
             throw
         }
@@ -827,7 +827,7 @@ function winpe-CurlExeRepair {
             ForEach-Object { Copy-Item -Path $_ -Destination $curlPath -Force -ErrorAction Stop }
     }
     catch {
-        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -927,7 +927,7 @@ function winpe-PackageManagementRepair {
         Import-Module PackageManagement -Force -Scope Global -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -1005,7 +1005,7 @@ function winpe-NugetPackageProviderRepair {
         Install-PackageProvider -Name NuGet -Force -Scope AllUsers -ErrorAction Stop | Out-Null
     }
     catch {
-        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -1131,7 +1131,7 @@ function winpe-UpdatePackageManagementRepair {
         Import-Module PackageManagement -Force -Scope Global -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -1204,7 +1204,7 @@ function winpe-UpdatePowerShellGetRepair {
         Import-Module PowerShellGet -Force -Scope Global -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -1272,7 +1272,7 @@ function winpe-PSGalleryTrustRepair {
         Set-PSRepository -Name PSGallery -InstallationPolicy Trusted -ErrorAction Stop
     }
     catch {
-        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -1348,7 +1348,7 @@ function winpe-AzcopyExeRepair {
             ForEach-Object { Copy-Item -Path $_.FullName -Destination $azcopyPath -Force -ErrorAction Stop }
     }
     catch {
-        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }
@@ -1476,7 +1476,7 @@ function winpe-InstallPowerShellModule {
             return
         }
         catch {
-            Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
+            Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
             Write-Host -ForegroundColor Red $_
             throw
         }
@@ -1496,7 +1496,7 @@ function winpe-InstallPowerShellModule {
         Write-Host -ForegroundColor Green "[✓] $Name [$($GalleryModule.Version)]"
     }
     catch {
-        Write-Host -ForegroundColor Gray "[✗] $($MyInvocation.MyCommand.Name)"
+        Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
         Write-Host -ForegroundColor Red $_
         throw
     }

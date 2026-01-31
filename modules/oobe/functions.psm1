@@ -473,7 +473,7 @@ function oobe-PowerShellProfileTest {
     }
     else {
         $existingContent = Get-Content -Path $profilePath -Raw -ErrorAction Stop
-        if (-not ($existingContent -match 'OSDCloud by Recast Software')) {
+        if (-not ($existingContent -match 'OSD PowerShell Profile')) {
             $repairPSProfileFile = $true
         }
     }
@@ -506,7 +506,7 @@ function oobe-PowerShellProfileRepair {
 
     # Repair
     $winpePowerShellProfile = @'
-# OSDCloud by Recast Software
+# OSD PowerShell Profile
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 $registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
 $registryPath | ForEach-Object {
@@ -525,7 +525,7 @@ $registryPath | ForEach-Object {
 
     if (Test-Path -Path $profilePath) {
         $existingContent = Get-Content -Path $profilePath -Raw -ErrorAction Stop
-        if (-not ($existingContent -match 'OSDCloud by Recast Software')) {
+        if (-not ($existingContent -match 'OSD PowerShell Profile')) {
             Add-Content -Path $profilePath -Value ("`r`n" + $winpePowerShellProfile) -Encoding Unicode -ErrorAction Stop
         }
     }
