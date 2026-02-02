@@ -76,14 +76,14 @@ if ($WindowsPhase -eq 'WinPE') {
     # Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/osdcloudazure.psm1')
     # Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/archive/secrets.psm1')
     Repair-WinpeExecutionPolicyBypass
-    winpe-RegistryEnvironmentRepair
-    winpe-PowerShellProfileRepair
-    winpe-RealTimeClockUTCRepair
-    winpe-CurlExeRepair
-    winpe-UpdatePackageManagementRepair
-    winpe-UpdatePowerShellGetRepair
-    winpe-PSGalleryTrustRepair
-    winpe-AzcopyExeRepair
+    Repair-WinpeRegistryEnvironment
+    Repair-WinpePowerShellProfile
+    Repair-WinpeRealTimeClockUTC
+    Repair-WinpeCurlExe
+    Repair-WinpeUpdatePackageManagement
+    Repair-WinpeUpdatePowerShellGet
+    Repair-WinpePSGalleryTrust
+    Repair-WinpeAzcopyExe
     winpe-Setup -OSDCloud
     $EndTime = Get-Date
     $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)

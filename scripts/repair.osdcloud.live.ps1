@@ -68,23 +68,23 @@ Write-Host -ForegroundColor DarkGray "OSDCloud Live Repair [$WindowsPhase]"
 if ($WindowsPhase -eq 'WinPE') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
     # winpe-RepairTls
-    $null = winpe-PowerShellModulesTest
+    $null = Test-WinpePowerShellModules
     Repair-WinpeExecutionPolicyBypass
-    winpe-UserShellFolderRepair
-    winpe-RegistryEnvironmentRepair
-    winpe-SessionEnvironmentRepair
-    winpe-PowerShellProfilePathRepair
-    winpe-PowerShellProfileRepair
-    winpe-RealTimeClockUTCRepair
-    winpe-TimeServiceRepair
-    winpe-CurlExeRepair
-    winpe-PackageManagementRepair
-    winpe-NugetPackageProviderRepair
-    winpe-NugetExeRepair
-    winpe-UpdatePackageManagementRepair
-    winpe-UpdatePowerShellGetRepair
-    winpe-PSGalleryTrustRepair
-    winpe-AzcopyExeRepair
+    Repair-WinpeUserShellFolder
+    Repair-WinpeRegistryEnvironment
+    Repair-WinpeSessionEnvironment
+    Repair-WinpePowerShellProfilePath
+    Repair-WinpePowerShellProfile
+    Repair-WinpeRealTimeClockUTC
+    Repair-WinpeTimeService
+    Repair-WinpeCurlExe
+    Repair-WinpePackageManagement
+    Repair-WinpeNugetPackageProvider
+    Repair-WinpeNugetExe
+    Repair-WinpeUpdatePackageManagement
+    Repair-WinpeUpdatePowerShellGet
+    Repair-WinpePSGalleryTrust
+    Repair-WinpeAzcopyExe
     # winpe-InstallPowerShellModule -Name OSD
     # winpe-InstallPowerShellModule -Name OSDCloud
     $EndTime = Get-Date

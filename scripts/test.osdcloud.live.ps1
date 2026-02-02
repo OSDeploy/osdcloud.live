@@ -67,23 +67,23 @@ Write-Host -ForegroundColor DarkGray "OSDCloud Live Test [$WindowsPhase]"
 #region WinPE
 if ($WindowsPhase -eq 'WinPE') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
-    $null = winpe-PowerShellModulesTest
+    $null = Test-WinpePowerShellModules
     $null = Test-WinpeExecutionPolicyBypass -Interactive
-    $null = winpe-UserShellFolderTest
-    $null = winpe-RegistryEnvironmentTest
-    $null = winpe-SessionEnvironmentTest
-    $null = winpe-PowerShellProfilePathTest
-    $null = winpe-PowerShellProfileTest
-    $null = winpe-RealTimeClockUTCTest
-    $null = winpe-TimeServiceTest
-    $null = winpe-CurlExeTest
-    $null = winpe-PackageManagementTest
-    $null = winpe-NuGetPackageProviderTest
-    $null = winpe-NugetExeTest
-    $null = winpe-UpdatePackageManagementTest
-    $null = winpe-UpdatePowerShellGetTest
-    $null = winpe-PSGalleryTrustTest
-    $null = winpe-AzcopyExeTest
+    $null = Test-WinpeUserShellFolder
+    $null = Test-WinpeRegistryEnvironment
+    $null = Test-WinpeSessionEnvironment
+    $null = Test-WinpePowerShellProfilePath
+    $null = Test-WinpePowerShellProfile
+    $null = Test-WinpeRealTimeClockUTC
+    $null = Test-WinpeTimeService
+    $null = Test-WinpeCurlExe
+    $null = Test-WinpePackageManagement
+    $null = Test-WinpeNuGetPackageProvider
+    $null = Test-WinpeNugetExe
+    $null = Test-WinpeUpdatePackageManagement
+    $null = Test-WinpeUpdatePowerShellGet
+    $null = Test-WinpePSGalleryTrust
+    $null = Test-WinpeAzcopyExe
     $EndTime = Get-Date
     $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
     Write-Host -ForegroundColor DarkGray "[i] Finished in $TotalSeconds seconds"

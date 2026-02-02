@@ -68,23 +68,23 @@ Write-Host -ForegroundColor DarkGray "OSDCloud Live Deploy [$WindowsPhase]"
 if ($WindowsPhase -eq 'WinPE') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
     # winpe-RepairTls
-    $fatal = winpe-PowerShellModulesTest
+    $fatal = Test-WinpePowerShellModules
     Repair-WinpeExecutionPolicyBypass
-    winpe-UserShellFolderRepair
-    winpe-RegistryEnvironmentRepair
-    winpe-SessionEnvironmentRepair
-    winpe-PowerShellProfilePathRepair
-    winpe-PowerShellProfileRepair
-    winpe-RealTimeClockUTCRepair
-    winpe-TimeServiceRepair
-    winpe-CurlExeRepair
-    winpe-PackageManagementRepair
-    winpe-NugetPackageProviderRepair
-    winpe-NugetExeRepair
-    winpe-UpdatePackageManagementRepair
-    winpe-UpdatePowerShellGetRepair
-    winpe-PSGalleryTrustRepair
-    winpe-AzcopyExeRepair
+    Repair-WinpeUserShellFolder
+    Repair-WinpeRegistryEnvironment
+    Repair-WinpeSessionEnvironment
+    Repair-WinpePowerShellProfilePath
+    Repair-WinpePowerShellProfile
+    Repair-WinpeRealTimeClockUTC
+    Repair-WinpeTimeService
+    Repair-WinpeCurlExe
+    Repair-WinpePackageManagement
+    Repair-WinpeNugetPackageProvider
+    Repair-WinpeNugetExe
+    Repair-WinpeUpdatePackageManagement
+    Repair-WinpeUpdatePowerShellGet
+    Repair-WinpePSGalleryTrust
+    Repair-WinpeAzcopyExe
     if ($fatal) {
         Write-Host -ForegroundColor Red "[!] Fatal errors detected. Aborting deployment."
         $null = Stop-Transcript -ErrorAction Ignore
