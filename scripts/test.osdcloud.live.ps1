@@ -68,7 +68,7 @@ Write-Host -ForegroundColor DarkGray "OSDCloud Live Test [$WindowsPhase]"
 if ($WindowsPhase -eq 'WinPE') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
     $null = winpe-PowerShellModulesTest
-    $null = winpe-ExecutionPolicyTest
+    $null = Test-WinpeExecutionPolicyBypass -Interactive
     $null = winpe-UserShellFolderTest
     $null = winpe-RegistryEnvironmentTest
     $null = winpe-SessionEnvironmentTest

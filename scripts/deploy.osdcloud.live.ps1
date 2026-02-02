@@ -69,7 +69,7 @@ if ($WindowsPhase -eq 'WinPE') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
     # winpe-RepairTls
     $fatal = winpe-PowerShellModulesTest
-    winpe-ExecutionPolicyRepair
+    Repair-WinpeExecutionPolicyBypass
     winpe-UserShellFolderRepair
     winpe-RegistryEnvironmentRepair
     winpe-SessionEnvironmentRepair

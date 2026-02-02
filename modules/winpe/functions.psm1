@@ -69,14 +69,13 @@ function Invoke-WinpeDownload {
 #endregion
 
 #region ExecutionPolicy
-function winpe-ExecutionPolicyTest {
+function Test-WinpeExecutionPolicyBypass {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
-        $Quiet
+        $Interactive
     )
-
     # Get the current execution policy
     try {
         $executionPolicy = Get-ExecutionPolicy -ErrorAction Stop
@@ -89,27 +88,34 @@ function winpe-ExecutionPolicyTest {
 
     # Success
     if ($executionPolicy -eq 'Bypass') {
-        if ($Quiet) { return 0 }
-        Write-Host -ForegroundColor Green "[✓] PowerShell Execution Policy is set to Bypass"
-        return 0
+        if ($Interactive) {
+            Write-Host -ForegroundColor Green "[✓] PowerShell Execution Policy is set to Bypass"
+        }
+        return $true
     }
 
     # Failure
-    if ($Quiet) { return 1 }
-    Write-Host -ForegroundColor Gray "[✗] PowerShell Execution Policy is NOT set to Bypass [$executionPolicy]"
-    return 1
+    if ($Interactive) {
+        Write-Host -ForegroundColor Gray "[✗] PowerShell Execution Policy is NOT set to Bypass [$executionPolicy]"
+    }
+    return $false
 }
-function winpe-ExecutionPolicyRepair {
+function Repair-WinpeExecutionPolicyBypass {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
-    # Test
-    $results = winpe-ExecutionPolicyTest -Quiet
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Interactive
+    )
+    if ($Interactive) {
+        $results = Test-WinpeExecutionPolicyBypass -Interactive
+    }
+    else {
+        $results = Test-WinpeExecutionPolicyBypass
+    }
 
     # Success
-    if ($results -eq 0) {
-        return
-    }
+    if ($results -eq $true) { return }
 
     # Repair
     Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
@@ -125,7 +131,7 @@ function winpe-ExecutionPolicyRepair {
         Remove-Variable -Name executionPolicy -ErrorAction SilentlyContinue
     }
 
-    $results = winpe-ExecutionPolicyTest
+    $results = Test-WinpeExecutionPolicyBypass
 }
 #endregion
 
