@@ -70,7 +70,7 @@ if ($WindowsPhase -eq 'WinPE') {
     $null = Test-WinpePowerShellModuleDism -Interactive
     $null = Test-WinpePowerShellModuleStorage -Interactive
     $null = Test-WinpeExecutionPolicyBypass -Interactive
-    $null = Test-WinpeUserShellFolders
+    $null = Test-WinpeUserShellFolders -Interactive
     $null = Test-WinpeRegistryEnvironment
     $null = Test-WinpeSessionEnvironment
     $null = Test-WinpePowerShellProfilePaths

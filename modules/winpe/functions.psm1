@@ -150,6 +150,7 @@ function Repair-WinpeExecutionPolicyBypass {
         [System.Management.Automation.SwitchParameter]
         $Interactive
     )
+    # Test
     if ($Interactive) {
         $results = Test-WinpeExecutionPolicyBypass -Interactive
     }
@@ -184,7 +185,7 @@ function Test-WinpeUserShellFolders {
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
-        $Quiet
+        $Interactive
     )
 
     $requiredFolders = @(
@@ -197,41 +198,50 @@ function Test-WinpeUserShellFolders {
     )
 
     # Test if a repair is needed
-    $remediate = $false
+    $success = $true
     foreach ($folder in $requiredFolders) {
         if (-not (Test-Path -Path $folder)) {
-            $remediate = $true
-            break
+            $success = $false
         }
     }
 
     # Success
-    if (-not $remediate) {
-        if ($Quiet) { return 0 }
-        Write-Host -ForegroundColor Green "[✓] User Shell Folders exist"
-        return 0
+    if ($success -eq $true) {
+        if ($Interactive) {
+            Write-Host -ForegroundColor Green "[✓] User Shell Folders exist"
+        }
+        return $true
     }
 
     # Failure
-    if ($Quiet) { return 1 }
-    Write-Host -ForegroundColor Gray "[✗] User Shell Folders do NOT exist"
-    foreach ($item in $requiredFolders) {
-        if (Test-Path -Path $item) {
-            continue
+    if ($Interactive) {
+        Write-Host -ForegroundColor Gray "[✗] User Shell Folders do NOT exist"
+        foreach ($item in $requiredFolders) {
+            if (Test-Path -Path $item) {
+                continue
+            }
+            Write-Host -ForegroundColor DarkGray $item
         }
-        Write-Host -ForegroundColor DarkGray $item
     }
-    return 1
+    return $false
 }
 function Repair-WinpeUserShellFolders {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Interactive
+    )
     # Test
-    $results = Test-WinpeUserShellFolders -Quiet
-    
+    if ($Interactive) {
+        $results = Test-WinpeUserShellFolders -Interactive
+    }
+    else {
+        $results = Test-WinpeUserShellFolders
+    }
+
     # Success
-    if ($results -eq 0) {
+    if ($results -eq $true) {
         return
     }
 
@@ -262,7 +272,7 @@ function Repair-WinpeUserShellFolders {
             throw
         }
     }
-    $results = Test-WinpeUserShellFolders
+    $results = Test-WinpeUserShellFolders -Interactive
 }
 #endregion
 
