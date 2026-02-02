@@ -79,11 +79,11 @@ if ($WindowsPhase -eq 'WinPE') {
     Repair-WinpeRegistryEnvironment
     Repair-WinpePowerShellProfile
     Repair-WinpeRealTimeClockUTC
-    Repair-WinpeCurlExe
-    Repair-WinpeUpdatePackageManagement
-    Repair-WinpeUpdatePowerShellGet
+    Repair-WinpeFileCurlExe
+    Update-WinpePackageManagementVersion
+    Update-WinpePowerShellGetVersion
     Repair-WinpePSGalleryTrust
-    Repair-WinpeAzcopyExe
+    Repair-WinpeFileAzcopyExe
     winpe-Setup -OSDCloud
     $EndTime = Get-Date
     $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)

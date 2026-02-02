@@ -67,23 +67,24 @@ Write-Host -ForegroundColor DarkGray "OSDCloud Live Test [$WindowsPhase]"
 #region WinPE
 if ($WindowsPhase -eq 'WinPE') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
-    $null = Test-WinpePowerShellModules
+    $null = Test-WinpePowerShellModuleDism -Interactive
+    $null = Test-WinpePowerShellModuleStorage -Interactive
     $null = Test-WinpeExecutionPolicyBypass -Interactive
-    $null = Test-WinpeUserShellFolder
+    $null = Test-WinpeUserShellFolders
     $null = Test-WinpeRegistryEnvironment
     $null = Test-WinpeSessionEnvironment
-    $null = Test-WinpePowerShellProfilePath
+    $null = Test-WinpePowerShellProfilePaths
     $null = Test-WinpePowerShellProfile
     $null = Test-WinpeRealTimeClockUTC
     $null = Test-WinpeTimeService
-    $null = Test-WinpeCurlExe
+    $null = Test-WinpeFileCurlExe
     $null = Test-WinpePackageManagement
     $null = Test-WinpeNuGetPackageProvider
-    $null = Test-WinpeNugetExe
-    $null = Test-WinpeUpdatePackageManagement
-    $null = Test-WinpeUpdatePowerShellGet
+    $null = Test-WinpeFileNugetExe
+    $null = Test-WinpePackageManagementVersion
+    $null = Test-WinpePowerShellGetVersion
     $null = Test-WinpePSGalleryTrust
-    $null = Test-WinpeAzcopyExe
+    $null = Test-WinpeFileAzcopyExe
     $EndTime = Get-Date
     $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
     Write-Host -ForegroundColor DarkGray "[i] Finished in $TotalSeconds seconds"

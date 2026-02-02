@@ -68,7 +68,50 @@ function Invoke-WinpeDownload {
 }
 #endregion
 
-#region ExecutionPolicy
+#region PowerShell Modules
+function Test-WinpePowerShellModuleDism {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Interactive
+    )
+
+    if (Get-Module -ListAvailable -Name "Dism") {
+        if ($Interactive) {
+            Write-Host -ForegroundColor Green "[✓] Dism PowerShell Module exists"
+        }
+        return $true
+    }
+    if ($Interactive) {
+        Write-Host -ForegroundColor Gray "[✗] Dism PowerShell Module does NOT exist. This can NOT be repaired online."
+        Write-Host -ForegroundColor DarkGray "WinPE requires ADK Optional Component WinPE-DismCmdlets"
+    }
+    return $false
+}
+function Test-WinpePowerShellModuleStorage {
+    [CmdletBinding()]
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Interactive
+    )
+
+    if (Get-Module -ListAvailable -Name "Storage") {
+        if ($Interactive) {
+            Write-Host -ForegroundColor Green "[✓] Storage PowerShell Module exists"
+        }
+        return $true
+    }
+    if ($Interactive) {
+        Write-Host -ForegroundColor Gray "[✗] Storage PowerShell Module does NOT exist. This can NOT be repaired online."
+        Write-Host -ForegroundColor DarkGray "WinPE requires ADK Optional Component WinPE-StorageWMI"
+    }
+    return $false
+}
+#endregion
+
+#region WinpeExecutionPolicyBypass
 function Test-WinpeExecutionPolicyBypass {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -135,60 +178,8 @@ function Repair-WinpeExecutionPolicyBypass {
 }
 #endregion
 
-#region Modules
-function Test-WinpePowerShellModules {
-    [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
-    param (
-        [System.Management.Automation.SwitchParameter]
-        $Quiet
-    )
-
-    $requiredModules = @(
-        "Dism",
-        "Storage"
-    )
-
-    # Test if a repair is needed
-    $remediate = $false
-    foreach ($module in $requiredModules) {
-        if (-not (Get-Module -ListAvailable -Name $module)) {
-            $remediate = $true
-            break
-        }
-    }
-
-    # Success
-    if (-not $remediate) {
-        if ($Quiet) { return 0 }
-        Write-Host -ForegroundColor Green "[✓] Required PowerShell Modules exist"
-        return 0
-    }
-
-    # Failure
-    if ($Quiet) { return 1 }
-    Write-Host -ForegroundColor Gray "[✗] Required PowerShell Modules do NOT exist. This can NOT be repaired online."
-    foreach ($module in $requiredModules) {
-        # If Module is installed, continue
-        if (Get-Module -ListAvailable -Name $module) {
-            continue
-        }
-        if ($module -eq "Dism") {
-            Write-Host -ForegroundColor DarkGray "$module PowerShell Module requires ADK Optional Component WinPE-DismCmdlets"
-            continue
-        }
-        if ($module -eq "Storage") {
-            Write-Host -ForegroundColor DarkGray "$module PowerShell Module requires ADK Optional Component WinPE-StorageWMI"
-            continue
-        }
-        Write-Host -ForegroundColor DarkGray $module
-    }
-    return 1
-}
-#endregion
-
-#region UserShellFolders
-function Test-WinpeUserShellFolder {
+#region WinpeUserShellFolders
+function Test-WinpeUserShellFolders {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
@@ -232,12 +223,12 @@ function Test-WinpeUserShellFolder {
     }
     return 1
 }
-function Repair-WinpeUserShellFolder {
+function Repair-WinpeUserShellFolders {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
-    $results = Test-WinpeUserShellFolder -Quiet
+    $results = Test-WinpeUserShellFolders -Quiet
     
     # Success
     if ($results -eq 0) {
@@ -271,11 +262,11 @@ function Repair-WinpeUserShellFolder {
             throw
         }
     }
-    $results = Test-WinpeUserShellFolder
+    $results = Test-WinpeUserShellFolders
 }
 #endregion
 
-#region RegistryEnvironment
+#region WinpeRegistryEnvironment
 function Test-WinpeRegistryEnvironment {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -371,7 +362,7 @@ function Repair-WinpeRegistryEnvironment {
 }
 #endregion
 
-#region SessionEnvironment
+#region WinpeSessionEnvironment
 function Test-WinpeSessionEnvironment {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -481,8 +472,8 @@ function Repair-WinpeSessionEnvironment {
 }
 #endregion
 
-#region PowerShellProfilePath
-function Test-WinpePowerShellProfilePath {
+#region WinpePowerShellProfilePaths
+function Test-WinpePowerShellProfilePaths {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
@@ -520,12 +511,12 @@ function Test-WinpePowerShellProfilePath {
     return 1
 }
 
-function Repair-WinpePowerShellProfilePath {
+function Repair-WinpePowerShellProfilePaths {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
-    $results = Test-WinpePowerShellProfilePath -Quiet
+    $results = Test-WinpePowerShellProfilePaths -Quiet
 
     # Success
     if ($results -eq 0) {
@@ -543,11 +534,11 @@ function Repair-WinpePowerShellProfilePath {
         # Write-Host -ForegroundColor DarkGray "CurrentUserCurrentHost: [$($PROFILE.CurrentUserCurrentHost)]"
     }
 
-    $results = Test-WinpePowerShellProfilePath
+    $results = Test-WinpePowerShellProfilePaths
 }
 #endregion
 
-#region PowerShellProfile
+#region WinpePowerShellProfile
 function Test-WinpePowerShellProfile {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -631,7 +622,7 @@ $registryPath | ForEach-Object {
 }
 #endregion
 
-#region RealTimeClockUTC
+#region WinpeRealTimeClockUTC
 function Test-WinpeRealTimeClockUTC {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -681,7 +672,7 @@ function Repair-WinpeRealTimeClockUTC {
 }
 #endregion
 
-#region TimeService
+#region WinpeTimeService
 function Test-WinpeTimeService {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -778,8 +769,8 @@ function Repair-WinpeTimeService {
 }
 #endregion
 
-#region CurlExe
-function Test-WinpeCurlExe {
+#region WinpeFileCurlExe
+function Test-WinpeFileCurlExe {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
@@ -800,12 +791,12 @@ function Test-WinpeCurlExe {
     }
 }
 
-function Repair-WinpeCurlExe {
+function Repair-WinpeFileCurlExe {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
-    $results = Test-WinpeCurlExe -Quiet
+    $results = Test-WinpeFileCurlExe -Quiet
 
     # Success
     if ($results -eq 0) {
@@ -843,11 +834,11 @@ function Repair-WinpeCurlExe {
         if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
 
-    $results = Test-WinpeCurlExe
+    $results = Test-WinpeFileCurlExe
 }
 #endregion
 
-#region PackageManagement
+#region WinpePackageManagement
 function Test-WinpePackageManagement {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -946,7 +937,7 @@ function Repair-WinpePackageManagement {
 }
 #endregion
 
-#region NuGetPackageProvider
+#region WinpeNuGetPackageProvider
 function Test-WinpeNuGetPackageProvider {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -1020,8 +1011,8 @@ function Repair-WinpeNugetPackageProvider {
 }
 #endregion
 
-#region NuGetExe
-function Test-WinpeNugetExe {
+#region WinpeFileNugetExe
+function Test-WinpeFileNugetExe {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
@@ -1048,12 +1039,12 @@ function Test-WinpeNugetExe {
     Write-Host -ForegroundColor Gray "[✗] NuGet.exe is NOT installed"
     return 1
 }
-function Repair-WinpeNugetExe {
+function Repair-WinpeFileNugetExe {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
-    $results = Test-WinpeNugetExe -Quiet
+    $results = Test-WinpeFileNugetExe -Quiet
 
     # Success
     if ($results -eq 0) {
@@ -1077,12 +1068,12 @@ function Repair-WinpeNugetExe {
     # Download using curl when available, then BitsTransfer, then Invoke-WebRequest
     Invoke-WinpeDownload -Uri $nugetExeSourceURL -Destination $nugetExeFilePath -AllowCurlFallback
 
-    $results = Test-WinpeNugetExe
+    $results = Test-WinpeFileNugetExe
 }
 #endregion
 
-#region UpdatePackageManagement
-function Test-WinpeUpdatePackageManagement {
+#region WinpePackageManagementVersion
+function Test-WinpePackageManagementVersion {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
@@ -1104,12 +1095,12 @@ function Test-WinpeUpdatePackageManagement {
     if ($Quiet) { return 1 }
     return 1
 }
-function Repair-WinpeUpdatePackageManagement {
+function Update-WinpePackageManagementVersion {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
-    $results = Test-WinpeUpdatePackageManagement -Quiet
+    $results = Test-WinpePackageManagementVersion -Quiet
 
     # Success
     if ($results -eq 0) {
@@ -1147,12 +1138,12 @@ function Repair-WinpeUpdatePackageManagement {
     }
 
     # Test again
-    $results = Test-WinpeUpdatePackageManagement
+    $results = Test-WinpePackageManagementVersion
 }
 #endregion
 
-#region PowerShellGet
-function Test-WinpeUpdatePowerShellGet {
+#region WinpePowerShellGetVersion
+function Test-WinpePowerShellGetVersion {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
@@ -1174,12 +1165,12 @@ function Test-WinpeUpdatePowerShellGet {
     Write-Host -ForegroundColor Gray "[✗] PowerShellGet PowerShell Module is NOT updated to version 2.2.5 or later"
     return 1
 }
-function Repair-WinpeUpdatePowerShellGet {
+function Update-WinpePowerShellGetVersion {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
-    $results = Test-WinpeUpdatePowerShellGet -Quiet
+    $results = Test-WinpePowerShellGetVersion -Quiet
 
     # Success
     if ($results -eq 0) {
@@ -1221,11 +1212,11 @@ function Repair-WinpeUpdatePowerShellGet {
     }
 
     # Test again
-    $results = Test-WinpeUpdatePowerShellGet
+    $results = Test-WinpePowerShellGetVersion
 }
 #endregion
 
-#region PSGalleryTrust
+#region WinpePSGalleryTrust
 function Test-WinpePSGalleryTrust {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
@@ -1288,8 +1279,8 @@ function Repair-WinpePSGalleryTrust {
 }
 #endregion
 
-#region AzCopyExe
-function Test-WinpeAzcopyExe {
+#region WinpeFileAzcopyExe
+function Test-WinpeFileAzcopyExe {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
@@ -1312,12 +1303,12 @@ function Test-WinpeAzcopyExe {
     return 1
 }
 
-function Repair-WinpeAzcopyExe {
+function Repair-WinpeFileAzcopyExe {
     [CmdletBinding()]
     [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
-    $results = Test-WinpeAzcopyExe -Quiet
+    $results = Test-WinpeFileAzcopyExe -Quiet
 
     # Success
     if ($results -eq 0) {
@@ -1363,11 +1354,9 @@ function Repair-WinpeAzcopyExe {
         if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
         if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
-    $results = Test-WinpeAzcopyExe
+    $results = Test-WinpeFileAzcopyExe
 }
 #endregion
-
-
 
 #region Other
 function winpe-RepairTls {

@@ -68,25 +68,34 @@ Write-Host -ForegroundColor DarkGray "OSDCloud Live Deploy [$WindowsPhase]"
 if ($WindowsPhase -eq 'WinPE') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
     # winpe-RepairTls
-    $fatal = Test-WinpePowerShellModules
+    $Dism = Test-WinpePowerShellModuleDism
+    $Storage = Test-WinpePowerShellModuleStorage
     Repair-WinpeExecutionPolicyBypass
-    Repair-WinpeUserShellFolder
+    Repair-WinpeUserShellFolders
     Repair-WinpeRegistryEnvironment
     Repair-WinpeSessionEnvironment
-    Repair-WinpePowerShellProfilePath
+    Repair-WinpePowerShellProfilePaths
     Repair-WinpePowerShellProfile
     Repair-WinpeRealTimeClockUTC
     Repair-WinpeTimeService
-    Repair-WinpeCurlExe
+    Repair-WinpeFileCurlExe
     Repair-WinpePackageManagement
     Repair-WinpeNugetPackageProvider
-    Repair-WinpeNugetExe
-    Repair-WinpeUpdatePackageManagement
-    Repair-WinpeUpdatePowerShellGet
+    Repair-WinpeFileNugetExe
+    Update-WinpePackageManagementVersion
+    Update-WinpePowerShellGetVersion
     Repair-WinpePSGalleryTrust
-    Repair-WinpeAzcopyExe
-    if ($fatal) {
-        Write-Host -ForegroundColor Red "[!] Fatal errors detected. Aborting deployment."
+    Repair-WinpeFileAzcopyExe
+    if ($Dism -ne $true -or $Storage -ne $true) {
+        if ($Dism -ne $true) {
+            Write-Host -ForegroundColor Red "[!] OSDCloud deployment cannot continue due to missing DISM PowerShell module."
+        }
+        if ($Storage -ne $true) {
+            Write-Host -ForegroundColor Red "[!] OSDCloud deployment cannot continue due to missing Storage PowerShell module."
+        }
+        $EndTime = Get-Date
+        $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
+        Write-Host -ForegroundColor DarkGray "[i] Finished in $TotalSeconds seconds"
         $null = Stop-Transcript -ErrorAction Ignore
         Break
     }
@@ -96,7 +105,6 @@ if ($WindowsPhase -eq 'WinPE') {
     $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
     Write-Host -ForegroundColor DarkGray "[i] Finished in $TotalSeconds seconds"
     $null = Stop-Transcript -ErrorAction Ignore
-    
     Deploy-OSDCloud Recast
 }
 #endregion
