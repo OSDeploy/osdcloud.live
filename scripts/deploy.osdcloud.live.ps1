@@ -68,8 +68,8 @@ Write-Host -ForegroundColor DarkGray "OSDCloud Live Deploy [$WindowsPhase]"
 if ($WindowsPhase -eq 'WinPE') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
     # winpe-RepairTls
-    $Dism = Test-WinpePowerShellModuleDism
-    $Storage = Test-WinpePowerShellModuleStorage
+    $Dism = Test-WinpePowerShellModuleDism -Interactive
+    $Storage = Test-WinpePowerShellModuleStorage -Interactive
     Repair-WinpeExecutionPolicyBypass
     Repair-WinpeUserShellFolders
     Repair-WinpeRegistryEnvironment

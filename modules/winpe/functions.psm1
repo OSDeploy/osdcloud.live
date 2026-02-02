@@ -79,7 +79,7 @@ function Test-WinpePowerShellModuleDism {
 
     if (Get-Module -ListAvailable -Name "Dism") {
         if ($Interactive) {
-            Write-Host -ForegroundColor Green "[✓] Dism PowerShell Module exists"
+            Write-Host -ForegroundColor Green "[✓] Dism PowerShell Module is available"
         }
         return $true
     }
@@ -99,7 +99,7 @@ function Test-WinpePowerShellModuleStorage {
 
     if (Get-Module -ListAvailable -Name "Storage") {
         if ($Interactive) {
-            Write-Host -ForegroundColor Green "[✓] Storage PowerShell Module exists"
+            Write-Host -ForegroundColor Green "[✓] Storage PowerShell Module is available"
         }
         return $true
     }
