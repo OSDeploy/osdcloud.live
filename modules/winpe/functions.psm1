@@ -175,7 +175,13 @@ function Repair-WinpeExecutionPolicyBypass {
         Remove-Variable -Name executionPolicy -ErrorAction SilentlyContinue
     }
 
-    $results = Test-WinpeExecutionPolicyBypass
+    # Test
+    if ($Interactive) {
+        $results = Test-WinpeExecutionPolicyBypass -Interactive
+    }
+    else {
+        $results = Test-WinpeExecutionPolicyBypass
+    }
 }
 #endregion
 
@@ -272,7 +278,14 @@ function Repair-WinpeUserShellFolders {
             throw
         }
     }
-    $results = Test-WinpeUserShellFolders -Interactive
+
+    # Test
+    if ($Interactive) {
+        $results = Test-WinpeUserShellFolders -Interactive
+    }
+    else {
+        $results = Test-WinpeUserShellFolders
+    }
 }
 #endregion
 
