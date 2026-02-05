@@ -153,7 +153,6 @@ if ($WindowsPhase -eq 'Windows') {
         Write-Host -ForegroundColor Red "[!] Running as $whoiam (NOT Admin Elevated)"
         Break
     }
-    Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/windows/functions.psm1')
     $EndTime = Get-Date
     $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
     Write-Host -ForegroundColor DarkGray "[i] Finished in $TotalSeconds seconds"
