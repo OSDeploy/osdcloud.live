@@ -136,21 +136,21 @@ $deviceSkuNumber = ((Get-CimInstance -ClassName CIM_ComputerSystem).SystemSKUNum
 $deviceVersion = ((Get-CimInstance -ClassName Win32_ComputerSystemProduct).Version).Trim()
 if ($deviceManufacturer -match 'Dell') {
     $deviceManufacturer = 'Dell'
-    $deviceId = $deviceSkuNumber
+    $deviceModelId = $deviceSkuNumber
 }
 if ($deviceManufacturer -match 'Hewlett|Packard|\bHP\b') {
     $deviceManufacturer = 'HP'
-    $deviceId = $deviceProduct
+    $deviceModelId = $deviceProduct
 }
 if ($deviceManufacturer -match 'Lenovo') {
     $deviceManufacturer = 'Lenovo'
     $deviceModel = $deviceVersion
-    $deviceId = (Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object -ExpandProperty Model).SubString(0, 4)
+    $deviceModelId = (Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object -ExpandProperty Model).SubString(0, 4)
 }
 if ($deviceManufacturer -match 'Microsoft') {
     $deviceManufacturer = 'Microsoft'
     # Surface_Book or Surface_Pro_3
-    $deviceId = $deviceSkuNumber
+    $deviceModelId = $deviceSkuNumber
     # Surface Book or Surface Pro 3
     # $deviceProduct
 }
@@ -188,20 +188,31 @@ $eventProperties = @{
     deploymentPhase             = [string]$deploymentPhase
     deviceManufacturer          = [string]$deviceManufacturer
     deviceModel                 = [string]$deviceModel
-    deviceId                    = [string]$deviceId
+    deviceModelId               = [string]$deviceModelId
     deviceProduct               = [string]$deviceProduct
     deviceSkuNumber             = [string]$deviceSkuNumber
     deviceVersion               = [string]$deviceVersion
     deviceSystemFamily          = [string]$deviceSystemFamily
     deviceSystemType            = [string]$computerInfo.CsPCSystemType
-    deviceKeyboardLayout        = [string]$computerInfo.KeyboardLayout
+    biosFirmwareType            = [string]$computerInfo.BiosFirmwareType
+    biosReleaseDate             = [string]$computerInfo.BiosReleaseDate
+    biosSMBIOSBIOSVersion       = [string]$computerInfo.BiosSMBIOSBIOSVersion
     osArchitecture              = [string]$env:PROCESSOR_ARCHITECTURE
     osBuildNumber               = [string]$computerInfo.OsBuildNumber
+    osCountryCode               = [string]$computerInfo.OsCountryCode
+    osCurrentTimeZone           = [string]$computerInfo.OsCurrentTimeZone
+    osInstallDate               = [string]$computerInfo.OsInstallDate
+    osKeyboardLayout            = [string]$computerInfo.KeyboardLayout
     osLanguage                  = [string]$computerInfo.OsLanguage
-    #osName                  = [string]$computerInfo.OsName
+    osName                      = [string]$computerInfo.OsName
     osVersion                   = [string]$osVersion
-    #WindowsBuildLabEx       = [string]$computerInfo.WindowsBuildLabEx
-    #WindowsInstallationType = [string]$computerInfo.WindowsInstallationType
+    timeZone                    = [string]$computerInfo.TimeZone
+    winEditionId                = [string]$computerInfo.WindowsEditionId
+    winInstallationType         = [string]$computerInfo.WindowsInstallationType
+    winInstallDateFromRegistry  = [string]$computerInfo.WindowsInstallDateFromRegistry
+    winBuildLabEx               = [string]$computerInfo.WindowsBuildLabEx
+    winProductName              = [string]$computerInfo.WindowsProductName
+    winUBR                      = [string]$computerInfo.WindowsUBR
 }
 $postApi = 'phc_2h7nQJCo41Hc5C64B2SkcEBZOvJ6mHr5xAHZyjPl3ZK'
 Send-OSDCloudLiveEvent -EventName 'osdcloud_live_test' -ApiKey $postApi -DistinctId $distinctId -Properties $eventProperties
