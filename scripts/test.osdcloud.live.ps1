@@ -110,6 +110,8 @@ function Send-OSDCloudLiveEvent {
 }
 # Win32_ComputerSystemProduct
 $computerUUID = (Get-CimInstance -ClassName Win32_ComputerSystemProduct -ErrorAction Ignore).UUID
+# Convert the UUID to a hash value to protect user privacy
+$computerUUIDHash = [System.BitConverter]::ToString([System.Security.Cryptography.SHA256]::Create().ComputeHash([System.Text.Encoding]::UTF8.GetBytes($computerUUID))).Replace("-", "")
 # Win32_ComputerSystemProduct
 $computerManufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Ignore).Manufacturer
 $computerModel = (Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Ignore).Model
@@ -122,7 +124,7 @@ $computerProduct = (Get-CimInstance -ClassName Win32_BaseBoard -ErrorAction Igno
 $osCaption = (Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction Ignore).Caption
 $osVersion = (Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction Ignore).Version
 
-[string]$distinctId = $computerUUID
+[string]$distinctId = $computerUUIDHash
 if ([string]::IsNullOrWhiteSpace($distinctId)) {
     $distinctId = [System.Guid]::NewGuid().ToString()
 }
