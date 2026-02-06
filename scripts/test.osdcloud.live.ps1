@@ -32,19 +32,47 @@ powershell iex (irm test.osdcloud.live)
 #>
 [CmdletBinding()]
 param()
-$StartTime = Get-Date
-$ScriptName = 'test.osdcloud.live'
-$ScriptVersion = '26.02.05'
+$startTime = Get-Date
+$scriptName = 'test.osdcloud.live'
+$scriptVersion = '26.02.05'
 
-Write-Host -ForegroundColor DarkYellow "OSDCloud collects diagnostic data to improve functionality"
-Write-Host -ForegroundColor DarkYellow "By using OSDCloud, you consent to the collection of diagnostic data as outlined in the privacy policy"
-Write-Host -ForegroundColor DarkGray "Privacy Policy: https://github.com/OSDeploy/osdcloud.live/privacy"
+Write-Host -ForegroundColor DarkCyan "OSDCloud Live collects diagnostic data to improve functionality"
+Write-Host -ForegroundColor DarkCyan "By using OSDCloud Live, you consent to the collection of diagnostic data as outlined in the privacy policy"
+Write-Host -ForegroundColor DarkGray "https://github.com/OSDeploy/osdcloud.live/privacy"
 Write-Host ""
 Write-Host -ForegroundColor DarkGray "Press Ctrl+C to cancel. Resuming in 5 seconds..."
 Start-Sleep -Seconds 5
 Write-Host ""
-    #=================================================
-    # Analytics - PostHog Telemetry
+#=================================================
+#region Initialize
+$Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-$scriptName.log"
+$null = Start-Transcript -Path (Join-Path "$env:SystemRoot\Temp" $Transcript) -ErrorAction Ignore
+
+if ($env:SystemDrive -eq 'X:') {
+    $deploymentPhase = 'WinPE'
+}
+else {
+    $ImageState = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Setup\State' -ErrorAction Ignore).ImageState
+    if ($env:UserName -eq 'defaultuser0') {$deploymentPhase = 'OOBE'}
+    elseif ($ImageState -eq 'IMAGE_STATE_SPECIALIZE_RESEAL_TO_OOBE') {$deploymentPhase = 'Specialize'}
+    elseif ($ImageState -eq 'IMAGE_STATE_SPECIALIZE_RESEAL_TO_AUDIT') {$deploymentPhase = 'AuditMode'}
+    else {$deploymentPhase = 'Windows'}
+}
+
+$whoiam = [system.security.principal.windowsidentity]::getcurrent().name
+$isElevated = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
+
+# Write-Host -ForegroundColor DarkGray "$scriptName $scriptVersion ($deploymentPhase)"
+Write-Host -ForegroundColor DarkGray "OSDCloud Live Test [$deploymentPhase]"
+#endregion
+
+#region Transport Layer Security (TLS) 1.2
+# Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [TLS 1.2]"
+# Write-Host -ForegroundColor DarkGray "[✓] [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12"
+[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+#endregion
+#=================================================
+#region OSDCloud Live Analytics
 function Send-OSDCloudLiveEvent {
     param(
         [Parameter(Mandatory)]
@@ -80,63 +108,42 @@ function Send-OSDCloudLiveEvent {
         Write-Verbose "[$(Get-Date -format s)] [OSDCloud Live] Failed to send event: $($_.Exception.Message)"
     }
 }
-
-# Send Event
-$postApiKey = 'phc_2h7nQJCo41Hc5C64B2SkcEBZOvJ6mHr5xAHZyjPl3ZK'
-$computerUUID = (Get-CimInstance -Class Win32_ComputerSystemProduct -ErrorAction Ignore).UUID
-$computerManufacturer = (Get-CimInstance -Class Win32_ComputerSystem -ErrorAction Ignore).Manufacturer
-$computerModel = (Get-CimInstance -Class Win32_ComputerSystem -ErrorAction Ignore).Model
+# Win32_ComputerSystemProduct
+$computerUUID = (Get-CimInstance -ClassName Win32_ComputerSystemProduct -ErrorAction Ignore).UUID
+# Win32_ComputerSystemProduct
+$computerManufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Ignore).Manufacturer
+$computerModel = (Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Ignore).Model
 $computerModelSubstring = (Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Ignore | Select-Object -ExpandProperty Model).SubString(0, 4)
+$computerSystemFamily = (Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Ignore).SystemFamily
+$computerSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Ignore).SystemSKUNumber
+# Win32_BaseBoard
 $computerProduct = (Get-CimInstance -ClassName Win32_BaseBoard -ErrorAction Ignore).Product
-$computerSystemFamily = (Get-CimInstance -Class Win32_ComputerSystem -ErrorAction Ignore).SystemFamily
-$computerSystemSKUNumber = (Get-CimInstance -Class Win32_ComputerSystemProduct -ErrorAction Ignore).SystemSKUNumber
+# Win32_OperatingSystem
+$osCaption = (Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction Ignore).Caption
+$osVersion = (Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction Ignore).Version
 
 [string]$distinctId = $computerUUID
 if ([string]::IsNullOrWhiteSpace($distinctId)) {
     $distinctId = [System.Guid]::NewGuid().ToString()
 }
-
 $eventProperties = @{
+    deploymentPhase         = [string]$deploymentPhase
     computerManufacturer    = [string]$computerManufacturer
     computerModel           = [string]$computerModel
     computerModelSubstring  = [string]$computerModelSubstring
     computerProduct         = [string]$computerProduct
     computerSystemFamily    = [string]$computerSystemFamily
-    computerSystemSKUNumber = [string]$computerSystemSKUNumber
+    computerSKUNumber       = [string]$computerSKUNumber
+    deploymentPhase         = [string]$deploymentPhase
+    osCaption               = [string]$osCaption
+    osVersion               = [string]$osVersion
 }
-
-Send-OSDCloudLiveEvent -EventName 'osdcloud_live_test' -ApiKey $postApiKey -DistinctId $distinctId -Properties $eventProperties
+$postApi = 'phc_2h7nQJCo41Hc5C64B2SkcEBZOvJ6mHr5xAHZyjPl3ZK'
+Send-OSDCloudLiveEvent -EventName 'osdcloud_live_test' -ApiKey $postApi -DistinctId $distinctId -Properties $eventProperties
+#endregion
 #=================================================
-#region Initialize
-$Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-$ScriptName.log"
-$null = Start-Transcript -Path (Join-Path "$env:SystemRoot\Temp" $Transcript) -ErrorAction Ignore
-
-if ($env:SystemDrive -eq 'X:') {
-    $WindowsPhase = 'WinPE'
-}
-else {
-    $ImageState = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Setup\State' -ErrorAction Ignore).ImageState
-    if ($env:UserName -eq 'defaultuser0') {$WindowsPhase = 'OOBE'}
-    elseif ($ImageState -eq 'IMAGE_STATE_SPECIALIZE_RESEAL_TO_OOBE') {$WindowsPhase = 'Specialize'}
-    elseif ($ImageState -eq 'IMAGE_STATE_SPECIALIZE_RESEAL_TO_AUDIT') {$WindowsPhase = 'AuditMode'}
-    else {$WindowsPhase = 'Windows'}
-}
-
-$whoiam = [system.security.principal.windowsidentity]::getcurrent().name
-$isElevated = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
-
-# Write-Host -ForegroundColor DarkGray "$ScriptName $ScriptVersion ($WindowsPhase)"
-Write-Host -ForegroundColor DarkGray "OSDCloud Live Test [$WindowsPhase]"
-#endregion
-
-#region Transport Layer Security (TLS) 1.2
-# Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [TLS 1.2]"
-# Write-Host -ForegroundColor DarkGray "[✓] [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12"
-[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-#endregion
-
 #region WinPE
-if ($WindowsPhase -eq 'WinPE') {
+if ($deploymentPhase -eq 'WinPE') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
     $null = Test-WinpePowerShellModuleDism -Interactive
     $null = Test-WinpePowerShellModuleStorage -Interactive
@@ -156,35 +163,35 @@ if ($WindowsPhase -eq 'WinPE') {
     $null = Test-WinpePowerShellGetVersion
     $null = Test-WinpePSGalleryTrust
     $null = Test-WinpeFileAzcopyExe
-    $EndTime = Get-Date
-    $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
-    Write-Host -ForegroundColor DarkGray "[i] Finished in $TotalSeconds seconds"
+    $endTime = Get-Date
+    $totalSeconds = [math]::Round(($endTime - $startTime).TotalSeconds, 2)
+    Write-Host -ForegroundColor DarkGray "[i] Finished in $totalSeconds seconds"
     $null = Stop-Transcript -ErrorAction Ignore
 }
 #endregion
 
 #region Specialize
-if ($WindowsPhase -eq 'Specialize') {
+if ($deploymentPhase -eq 'Specialize') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/specialize/functions.psm1')
-    $EndTime = Get-Date
-    $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
-    Write-Host -ForegroundColor DarkGray "[i] Finished in $TotalSeconds seconds"
+    $endTime = Get-Date
+    $totalSeconds = [math]::Round(($endTime - $startTime).TotalSeconds, 2)
+    Write-Host -ForegroundColor DarkGray "[i] Finished in $totalSeconds seconds"
     $null = Stop-Transcript -ErrorAction Ignore
 }
 #endregion
 
 #region AuditMode
-if ($WindowsPhase -eq 'AuditMode') {
+if ($deploymentPhase -eq 'AuditMode') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/audit/functions.psm1')
-    $EndTime = Get-Date
-    $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
-    Write-Host -ForegroundColor DarkGray "[i] Finished in $TotalSeconds seconds"
+    $endTime = Get-Date
+    $totalSeconds = [math]::Round(($endTime - $startTime).TotalSeconds, 2)
+    Write-Host -ForegroundColor DarkGray "[i] Finished in $totalSeconds seconds"
     $null = Stop-Transcript -ErrorAction Ignore
 }
 #endregion
 
 #region OOBE
-if ($WindowsPhase -eq 'OOBE') {
+if ($deploymentPhase -eq 'OOBE') {
     if ($isElevated) {
         Write-Host -ForegroundColor Green "[✓] Running as $whoiam (Admin Elevated)"
     }
@@ -208,15 +215,15 @@ if ($WindowsPhase -eq 'OOBE') {
     $null = oobe-UpdatePowerShellGetTest
     $null = oobe-PSGalleryTrustTest
     $null = oobe-AzcopyExeTest
-    $EndTime = Get-Date
-    $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
-    Write-Host -ForegroundColor DarkGray "[i] Finished in $TotalSeconds seconds"
+    $endTime = Get-Date
+    $totalSeconds = [math]::Round(($endTime - $startTime).TotalSeconds, 2)
+    Write-Host -ForegroundColor DarkGray "[i] Finished in $totalSeconds seconds"
     $null = Stop-Transcript -ErrorAction Ignore
 }
 #endregion
 
 #region Windows
-if ($WindowsPhase -eq 'Windows') {
+if ($deploymentPhase -eq 'Windows') {
     if ($isElevated) {
         Write-Host -ForegroundColor Green "[✓] Running as $whoiam (Admin Elevated)"
     }
@@ -224,12 +231,12 @@ if ($WindowsPhase -eq 'Windows') {
         Write-Host -ForegroundColor Red "[!] Running as $whoiam (NOT Admin Elevated)"
         Break
     }
-    $EndTime = Get-Date
-    $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
-    Write-Host -ForegroundColor DarkGray "[i] Finished in $TotalSeconds seconds"
+    $endTime = Get-Date
+    $totalSeconds = [math]::Round(($endTime - $startTime).TotalSeconds, 2)
+    Write-Host -ForegroundColor DarkGray "[i] Finished in $totalSeconds seconds"
     $null = Stop-Transcript -ErrorAction Ignore
 }
 #endregion
 
-$EndTime = Get-Date
-$TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
+$endTime = Get-Date
+$totalSeconds = [math]::Round(($endTime - $startTime).TotalSeconds, 2)
