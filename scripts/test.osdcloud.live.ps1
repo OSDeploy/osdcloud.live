@@ -127,7 +127,6 @@ if ([string]::IsNullOrWhiteSpace($distinctId)) {
     $distinctId = [System.Guid]::NewGuid().ToString()
 }
 $eventProperties = @{
-    deploymentPhase         = [string]$deploymentPhase
     computerManufacturer    = [string]$computerManufacturer
     computerModel           = [string]$computerModel
     computerModelSubstring  = [string]$computerModelSubstring
