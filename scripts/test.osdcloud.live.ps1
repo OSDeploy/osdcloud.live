@@ -132,11 +132,11 @@ if ([string]::IsNullOrWhiteSpace($deviceModel)) {
     $deviceModel = 'OEM'
 }
 $deviceProduct = ((Get-CimInstance -ClassName Win32_BaseBoard).Product).Trim()
-$deviceSkuNumber = ((Get-CimInstance -ClassName CIM_ComputerSystem).SystemSKUNumber).Trim()
+$deviceSystemSKU = ((Get-CimInstance -ClassName CIM_ComputerSystem).SystemSKUNumber).Trim()
 $deviceVersion = ((Get-CimInstance -ClassName Win32_ComputerSystemProduct).Version).Trim()
 if ($deviceManufacturer -match 'Dell') {
     $deviceManufacturer = 'Dell'
-    $deviceModelId = $deviceSkuNumber
+    $deviceModelId = $deviceSystemSKU
 }
 if ($deviceManufacturer -match 'Hewlett|Packard|\bHP\b') {
     $deviceManufacturer = 'HP'
@@ -150,7 +150,7 @@ if ($deviceManufacturer -match 'Lenovo') {
 if ($deviceManufacturer -match 'Microsoft') {
     $deviceManufacturer = 'Microsoft'
     # Surface_Book or Surface_Pro_3
-    $deviceModelId = $deviceSkuNumber
+    $deviceModelId = $deviceSystemSKU
     # Surface Book or Surface Pro 3
     # $deviceProduct
 }
@@ -176,9 +176,9 @@ $eventProperties = @{
     deviceModel                 = [string]$deviceModel
     deviceModelId               = [string]$deviceModelId
     deviceProduct               = [string]$deviceProduct
-    deviceSkuNumber             = [string]$deviceSkuNumber
     deviceVersion               = [string]$deviceVersion
     deviceSystemFamily          = [string]$deviceSystemFamily
+    deviceSystemSKU             = [string]$deviceSystemSKU
     deviceSystemType            = [string]$computerInfo.CsPCSystemType
     biosFirmwareType            = [string]$computerInfo.BiosFirmwareType
     biosReleaseDate             = [string]$computerInfo.BiosReleaseDate
