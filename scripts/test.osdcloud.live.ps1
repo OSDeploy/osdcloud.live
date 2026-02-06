@@ -170,20 +170,6 @@ if ($deploymentPhase -eq 'WinPE') {
 else {
     $osName = [string]$computerInfo.OsName
 }
-
-    <#
-    $computerInfo = [PSCustomObject]@{
-        DeviceSystemType = 'WinPE'
-        KeyboardLayout = (Get-WinUserLanguageList -ErrorAction Ignore)[0].InputMethodTips[0]
-        OsBuildNumber = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction Ignore).CurrentBuild
-        OsLanguage = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction Ignore).InstallLanguage
-        OsName = $osCaption
-        OsVersion = $osVersion
-        WindowsBuildLabEx = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction Ignore).BuildLabEx
-        WindowsInstallationType = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction Ignore).InstallationType
-    }
-    
-    #>
 $eventProperties = @{
     deploymentPhase             = [string]$deploymentPhase
     deviceManufacturer          = [string]$deviceManufacturer
@@ -198,21 +184,16 @@ $eventProperties = @{
     biosReleaseDate             = [string]$computerInfo.BiosReleaseDate
     biosSMBIOSBIOSVersion       = [string]$computerInfo.BiosSMBIOSBIOSVersion
     osArchitecture              = [string]$env:PROCESSOR_ARCHITECTURE
+    osBuildLabEx                = [string]$computerInfo.WindowsBuildLabEx
     osBuildNumber               = [string]$computerInfo.OsBuildNumber
     osCountryCode               = [string]$computerInfo.OsCountryCode
-    # osCurrentTimeZone           = [string]$computerInfo.OsCurrentTimeZone
-    # osInstallDate               = [string]$computerInfo.OsInstallDate
+    osEditionId                 = [string]$computerInfo.WindowsEditionId
+    osInstallationType          = [string]$computerInfo.WindowsInstallationType
     osKeyboardLayout            = [string]$computerInfo.KeyboardLayout
     osLanguage                  = [string]$computerInfo.OsLanguage
     osName                      = [string]$osName
     osTimeZone                  = [string]$computerInfo.TimeZone
     osVersion                   = [string]$computerInfo.OsVersion
-    winEditionId                = [string]$computerInfo.WindowsEditionId
-    winInstallationType         = [string]$computerInfo.WindowsInstallationType
-    # winInstallDateFromRegistry  = [string]$computerInfo.WindowsInstallDateFromRegistry
-    winBuildLabEx               = [string]$computerInfo.WindowsBuildLabEx
-    # winProductName              = [string]$computerInfo.WindowsProductName
-    # winUBR                      = [string]$computerInfo.WindowsUBR
 }
 $postApi = 'phc_2h7nQJCo41Hc5C64B2SkcEBZOvJ6mHr5xAHZyjPl3ZK'
 Send-OSDCloudLiveEvent -EventName 'osdcloud_live_test' -ApiKey $postApi -DistinctId $distinctId -Properties $eventProperties
