@@ -108,37 +108,100 @@ function Send-OSDCloudLiveEvent {
         Write-Verbose "[$(Get-Date -format s)] [OSDCloud Live] Failed to send event: $($_.Exception.Message)"
     }
 }
-# Win32_ComputerSystemProduct
-$computerUUID = (Get-CimInstance -ClassName Win32_ComputerSystemProduct -ErrorAction Ignore).UUID
-# Convert the UUID to a hash value to protect user privacy
-$computerUUIDHash = [System.BitConverter]::ToString([System.Security.Cryptography.SHA256]::Create().ComputeHash([System.Text.Encoding]::UTF8.GetBytes($computerUUID))).Replace("-", "")
-# Win32_ComputerSystemProduct
-$computerManufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Ignore).Manufacturer
-$computerModel = (Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Ignore).Model
-$computerModelSubstring = (Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Ignore | Select-Object -ExpandProperty Model).SubString(0, 4)
-$computerSystemFamily = (Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Ignore).SystemFamily
-$computerSKUNumber = (Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Ignore).SystemSKUNumber
-# Win32_BaseBoard
-$computerProduct = (Get-CimInstance -ClassName Win32_BaseBoard -ErrorAction Ignore).Product
+# UUID
+$deviceUUID = (Get-CimInstance -ClassName Win32_ComputerSystemProduct -ErrorAction Ignore).UUID
+# Convert the UUID to a hash value to protect user privacyand ensure a consistent identifier across events
+$deviceUUIDHash = [System.BitConverter]::ToString([System.Security.Cryptography.SHA256]::Create().ComputeHash([System.Text.Encoding]::UTF8.GetBytes($deviceUUID))).Replace("-", "")
+[string]$distinctId = $deviceUUIDHash
+if ([string]::IsNullOrWhiteSpace($distinctId)) {
+    $distinctId = [System.Guid]::NewGuid().ToString()
+}
+# Device
+$deviceManufacturer = (Get-CimInstance -ClassName CIM_ComputerSystem -ErrorAction Stop).Manufacturer
+$deviceManufacturer = $deviceManufacturer -as [string]
+if ([string]::IsNullOrWhiteSpace($deviceManufacturer)) {
+    $deviceManufacturer = 'OEM'
+} else {
+    $deviceManufacturer = $deviceManufacturer.Trim()
+}
+$deviceModel = ((Get-CimInstance -ClassName CIM_ComputerSystem).Model).Trim()
+$deviceModel = $deviceModel -as [string]
+if ([string]::IsNullOrWhiteSpace($deviceModel)) {
+    $deviceModel = 'OEM'
+} elseif ($deviceModel -match 'OEM|to be filled') {
+    $deviceModel = 'OEM'
+}
+$deviceProduct = ((Get-CimInstance -ClassName Win32_BaseBoard).Product).Trim()
+$deviceSkuNumber = ((Get-CimInstance -ClassName CIM_ComputerSystem).SystemSKUNumber).Trim()
+$deviceVersion = ((Get-CimInstance -ClassName Win32_ComputerSystemProduct).Version).Trim()
+if ($deviceManufacturer -match 'Dell') {
+    $deviceManufacturer = 'Dell'
+    $deviceId = $deviceSkuNumber
+}
+if ($deviceManufacturer -match 'Hewlett|Packard|\bHP\b') {
+    $deviceManufacturer = 'HP'
+    $deviceId = $deviceProduct
+}
+if ($deviceManufacturer -match 'Lenovo') {
+    $deviceManufacturer = 'Lenovo'
+    $deviceModel = $deviceVersion
+    $deviceId = (Get-CimInstance -ClassName Win32_ComputerSystem | Select-Object -ExpandProperty Model).SubString(0, 4)
+}
+if ($deviceManufacturer -match 'Microsoft') {
+    $deviceManufacturer = 'Microsoft'
+    # Surface_Book or Surface_Pro_3
+    $deviceId = $deviceSkuNumber
+    # Surface Book or Surface Pro 3
+    # $deviceProduct
+}
+if ($deviceManufacturer -match 'Panasonic') { $deviceManufacturer = 'Panasonic' }
+if ($deviceManufacturer -match 'OEM|to be filled') { $deviceManufacturer = 'OEM' }
+# Win32_ComputerSystem
+$deviceSystemFamily = ((Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Ignore).SystemFamily).Trim()
 # Win32_OperatingSystem
 $osCaption = (Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction Ignore).Caption
 $osVersion = (Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction Ignore).Version
 
-[string]$distinctId = $computerUUIDHash
-if ([string]::IsNullOrWhiteSpace($distinctId)) {
-    $distinctId = [System.Guid]::NewGuid().ToString()
+$computerInfo = Get-ComputerInfo -ErrorAction Ignore
+
+if ($deploymentPhase -eq 'WinPE') {
+    $osVersion = 'WindowsPE'
 }
+else {
+    $osVersion = [string]$computerInfo.OsVersion
+}
+
+    <#
+    $computerInfo = [PSCustomObject]@{
+        DeviceSystemType = 'WinPE'
+        KeyboardLayout = (Get-WinUserLanguageList -ErrorAction Ignore)[0].InputMethodTips[0]
+        OsBuildNumber = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction Ignore).CurrentBuild
+        OsLanguage = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction Ignore).InstallLanguage
+        OsName = $osCaption
+        OsVersion = $osVersion
+        WindowsBuildLabEx = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction Ignore).BuildLabEx
+        WindowsInstallationType = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction Ignore).InstallationType
+    }
+    
+    #>
 $eventProperties = @{
-    computerManufacturer    = [string]$computerManufacturer
-    computerModel           = [string]$computerModel
-    computerModelSubstring  = [string]$computerModelSubstring
-    computerProduct         = [string]$computerProduct
-    computerSystemFamily    = [string]$computerSystemFamily
-    computerSKUNumber       = [string]$computerSKUNumber
-    deploymentPhase         = [string]$deploymentPhase
-    osArchitecture          = [string]$env:PROCESSOR_ARCHITECTURE
-    osCaption               = [string]$osCaption
-    osVersion               = [string]$osVersion
+    deploymentPhase             = [string]$deploymentPhase
+    deviceManufacturer          = [string]$deviceManufacturer
+    deviceModel                 = [string]$deviceModel
+    deviceId                    = [string]$deviceId
+    deviceProduct               = [string]$deviceProduct
+    deviceSkuNumber             = [string]$deviceSkuNumber
+    deviceVersion               = [string]$deviceVersion
+    deviceSystemFamily          = [string]$deviceSystemFamily
+    deviceSystemType            = [string]$computerInfo.CsPCSystemType
+    deviceKeyboardLayout        = [string]$computerInfo.KeyboardLayout
+    osArchitecture              = [string]$env:PROCESSOR_ARCHITECTURE
+    osBuildNumber               = [string]$computerInfo.OsBuildNumber
+    osLanguage                  = [string]$computerInfo.OsLanguage
+    #osName                  = [string]$computerInfo.OsName
+    osVersion                   = [string]$osVersion
+    #WindowsBuildLabEx       = [string]$computerInfo.WindowsBuildLabEx
+    #WindowsInstallationType = [string]$computerInfo.WindowsInstallationType
 }
 $postApi = 'phc_2h7nQJCo41Hc5C64B2SkcEBZOvJ6mHr5xAHZyjPl3ZK'
 Send-OSDCloudLiveEvent -EventName 'osdcloud_live_test' -ApiKey $postApi -DistinctId $distinctId -Properties $eventProperties
