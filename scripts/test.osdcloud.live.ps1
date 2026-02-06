@@ -136,6 +136,7 @@ $eventProperties = @{
     computerSystemFamily    = [string]$computerSystemFamily
     computerSKUNumber       = [string]$computerSKUNumber
     deploymentPhase         = [string]$deploymentPhase
+    osArchitecture          = [string]$env:PROCESSOR_ARCHITECTURE
     osCaption               = [string]$osCaption
     osVersion               = [string]$osVersion
 }
