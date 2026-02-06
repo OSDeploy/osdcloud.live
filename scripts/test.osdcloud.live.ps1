@@ -165,10 +165,10 @@ $osVersion = (Get-CimInstance -ClassName Win32_OperatingSystem -ErrorAction Igno
 $computerInfo = Get-ComputerInfo -ErrorAction Ignore
 
 if ($deploymentPhase -eq 'WinPE') {
-    $osVersion = 'WindowsPE'
+    $osName = 'Microsoft WindowsPE'
 }
 else {
-    $osVersion = [string]$computerInfo.OsVersion
+    $osName = [string]$computerInfo.OsName
 }
 
     <#
@@ -200,19 +200,19 @@ $eventProperties = @{
     osArchitecture              = [string]$env:PROCESSOR_ARCHITECTURE
     osBuildNumber               = [string]$computerInfo.OsBuildNumber
     osCountryCode               = [string]$computerInfo.OsCountryCode
-    #osCurrentTimeZone           = [string]$computerInfo.OsCurrentTimeZone
-    osInstallDate               = [string]$computerInfo.OsInstallDate
+    # osCurrentTimeZone           = [string]$computerInfo.OsCurrentTimeZone
+    # osInstallDate               = [string]$computerInfo.OsInstallDate
     osKeyboardLayout            = [string]$computerInfo.KeyboardLayout
     osLanguage                  = [string]$computerInfo.OsLanguage
-    osName                      = [string]$computerInfo.OsName
+    osName                      = [string]$osName
     osTimeZone                  = [string]$computerInfo.TimeZone
-    osVersion                   = [string]$osVersion
+    osVersion                   = [string]$computerInfo.OsVersion
     winEditionId                = [string]$computerInfo.WindowsEditionId
     winInstallationType         = [string]$computerInfo.WindowsInstallationType
-    winInstallDateFromRegistry  = [string]$computerInfo.WindowsInstallDateFromRegistry
+    # winInstallDateFromRegistry  = [string]$computerInfo.WindowsInstallDateFromRegistry
     winBuildLabEx               = [string]$computerInfo.WindowsBuildLabEx
-    winProductName              = [string]$computerInfo.WindowsProductName
-    winUBR                      = [string]$computerInfo.WindowsUBR
+    # winProductName              = [string]$computerInfo.WindowsProductName
+    # winUBR                      = [string]$computerInfo.WindowsUBR
 }
 $postApi = 'phc_2h7nQJCo41Hc5C64B2SkcEBZOvJ6mHr5xAHZyjPl3ZK'
 Send-OSDCloudLiveEvent -EventName 'osdcloud_live_test' -ApiKey $postApi -DistinctId $distinctId -Properties $eventProperties
