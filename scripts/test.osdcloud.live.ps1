@@ -24,7 +24,7 @@ powershell iex (irm test.osdcloud.live)
 .DESCRIPTION
     PowerShell Script which supports the OSDCloud environment
 .NOTES
-    Version 26.01.20
+    Version 26.02.05
 .LINK
     https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/scripts/test.osdcloud.live.ps1
 .EXAMPLE
@@ -34,8 +34,79 @@ powershell iex (irm test.osdcloud.live)
 param()
 $StartTime = Get-Date
 $ScriptName = 'test.osdcloud.live'
-$ScriptVersion = '26.01.20'
+$ScriptVersion = '26.02.05'
 
+Write-Host -ForegroundColor DarkYellow "OSDCloud collects diagnostic data to improve functionality"
+Write-Host -ForegroundColor DarkYellow "By using OSDCloud, you consent to the collection of diagnostic data as outlined in the privacy policy"
+Write-Host -ForegroundColor DarkGray "Privacy Policy: https://github.com/OSDeploy/osdcloud.live/privacy"
+Write-Host ""
+Write-Host -ForegroundColor DarkGray "Press Ctrl+C to cancel. Resuming in 5 seconds..."
+Start-Sleep -Seconds 5
+Write-Host ""
+    #=================================================
+    # Analytics - PostHog Telemetry
+function Send-OSDCloudLiveEvent {
+    param(
+        [Parameter(Mandatory)]
+        [string]$EventName,
+        [Parameter(Mandatory)]
+        [string]$ApiKey,
+        [Parameter(Mandatory)]
+        [string]$DistinctId,
+        [Parameter()]
+        [hashtable]$Properties
+    )
+
+    try {
+        $payload = [ordered]@{
+            api_key     = $ApiKey
+            event       = $EventName
+            properties  = $Properties + @{
+                distinct_id = $DistinctId
+            }
+            timestamp   = (Get-Date).ToString('o')
+        }
+
+        $body = $payload | ConvertTo-Json -Depth 4 -Compress
+        Invoke-RestMethod -Method Post `
+            -Uri 'https://us.i.posthog.com/capture/' `
+            -Body $body `
+            -ContentType 'application/json' `
+            -TimeoutSec 2 `
+            -ErrorAction Stop | Out-Null
+
+        Write-Verbose "[$(Get-Date -format s)] [OSDCloud Live] Event sent: $EventName"
+    } catch {
+        Write-Verbose "[$(Get-Date -format s)] [OSDCloud Live] Failed to send event: $($_.Exception.Message)"
+    }
+}
+
+# Send Event
+$postApiKey = 'phc_2h7nQJCo41Hc5C64B2SkcEBZOvJ6mHr5xAHZyjPl3ZK'
+$computerUUID = (Get-CimInstance -Class Win32_ComputerSystemProduct -ErrorAction Ignore).UUID
+$computerManufacturer = (Get-CimInstance -Class Win32_ComputerSystem -ErrorAction Ignore).Manufacturer
+$computerModel = (Get-CimInstance -Class Win32_ComputerSystem -ErrorAction Ignore).Model
+$computerModelSubstring = (Get-CimInstance -ClassName Win32_ComputerSystem -ErrorAction Ignore | Select-Object -ExpandProperty Model).SubString(0, 4)
+$computerProduct = (Get-CimInstance -ClassName Win32_BaseBoard -ErrorAction Ignore).Product
+$computerSystemFamily = (Get-CimInstance -Class Win32_ComputerSystem -ErrorAction Ignore).SystemFamily
+$computerSystemSKUNumber = (Get-CimInstance -Class Win32_ComputerSystemProduct -ErrorAction Ignore).SystemSKUNumber
+
+[string]$distinctId = $computerUUID
+if ([string]::IsNullOrWhiteSpace($distinctId)) {
+    $distinctId = [System.Guid]::NewGuid().ToString()
+}
+
+$eventProperties = @{
+    computerManufacturer    = [string]$computerManufacturer
+    computerModel           = [string]$computerModel
+    computerModelSubstring  = [string]$computerModelSubstring
+    computerProduct         = [string]$computerProduct
+    computerSystemFamily    = [string]$computerSystemFamily
+    computerSystemSKUNumber = [string]$computerSystemSKUNumber
+}
+
+Send-OSDCloudLiveEvent -EventName 'osdcloud_live_test' -ApiKey $postApiKey -DistinctId $distinctId -Properties $eventProperties
+#=================================================
 #region Initialize
 $Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-$ScriptName.log"
 $null = Start-Transcript -Path (Join-Path "$env:SystemRoot\Temp" $Transcript) -ErrorAction Ignore
