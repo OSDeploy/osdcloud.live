@@ -193,7 +193,7 @@ Send-OSDCloudLiveEvent -EventName $eventName -ApiKey $postApi -DistinctId $disti
 #endregion
 #=================================================
 #region WinPE
-if ($WindowsPhase -eq 'WinPE') {
+if ($deploymentPhase -eq 'WinPE') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
     # winpe-RepairTls
     $null = Test-WinpePowerShellModuleDism -Interactive
@@ -224,21 +224,21 @@ if ($WindowsPhase -eq 'WinPE') {
 #endregion
 
 #region Specialize
-if ($WindowsPhase -eq 'Specialize') {
+if ($deploymentPhase -eq 'Specialize') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/specialize/functions.ps1)
     $null = Stop-Transcript -ErrorAction Ignore
 }
 #endregion
 
 #region AuditMode
-if ($WindowsPhase -eq 'AuditMode') {
+if ($deploymentPhase -eq 'AuditMode') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/auditmode/functions.ps1)
     $null = Stop-Transcript -ErrorAction Ignore
 }
 #endregion
 
 #region OOBE
-if ($WindowsPhase -eq 'OOBE') {
+if ($deploymentPhase -eq 'OOBE') {
     if ($isElevated) {
         Write-Host -ForegroundColor Green "[✓] Running as $whoiam (Admin Elevated)"
     }
@@ -251,7 +251,7 @@ if ($WindowsPhase -eq 'OOBE') {
 #endregion
 
 #region Windows
-if ($WindowsPhase -eq 'Windows') {
+if ($deploymentPhase -eq 'Windows') {
     if ($isElevated) {
         Write-Host -ForegroundColor Green "[✓] Running as $whoiam (Admin Elevated)"
     }
