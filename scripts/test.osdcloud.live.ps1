@@ -200,7 +200,7 @@ if ($deploymentPhase -eq 'WinPE') {
     $null = Test-WinpeExecutionPolicyBypass -Interactive
     $null = Test-WinpeUserShellFolders -Interactive
     $null = Test-WinpeRegistryEnvironment -Interactive
-    $null = Test-WinpeSessionEnvironment
+    $null = Test-WinpeSessionEnvironment -Interactive
     $null = Test-WinpePowerShellProfilePaths
     $null = Test-WinpePowerShellProfile
     $null = Test-WinpeRealTimeClockUTC

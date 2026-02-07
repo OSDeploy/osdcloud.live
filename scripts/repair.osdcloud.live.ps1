@@ -201,7 +201,7 @@ if ($deploymentPhase -eq 'WinPE') {
     $null = Repair-WinpeExecutionPolicyBypass -Interactive
     $null = Repair-WinpeUserShellFolders -Interactive
     $null = Repair-WinpeRegistryEnvironment -Interactive
-    Repair-WinpeSessionEnvironment
+    $null = Repair-WinpeSessionEnvironment -Interactive
     Repair-WinpePowerShellProfilePaths
     Repair-WinpePowerShellProfile
     Repair-WinpeRealTimeClockUTC

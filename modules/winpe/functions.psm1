@@ -421,17 +421,19 @@ function Test-WinpeSessionEnvironment {
     [CmdletBinding()]
     param (
         [System.Management.Automation.SwitchParameter]
-        $Quiet
+        $Interactive
     )
+    #=================================================
+    # Requirements
     $requiredEnvironment = [ordered]@{
         'APPDATA'       = "$env:UserProfile\AppData\Roaming"
         'HOMEDRIVE'     = "$env:SystemDrive"
         'HOMEPATH'      = "\windows\system32\config\systemprofile"
         'LOCALAPPDATA'  = "$env:UserProfile\AppData\Local"
     }
-
+    #=================================================
     # Test
-    $remediate = $false
+    $success = $false
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
@@ -444,56 +446,73 @@ function Test-WinpeSessionEnvironment {
         }
 
         if ($currentValue -ne $value) {
-            $remediate = $true
+            $success = $true
             break
         }
     }
-
-    # Success
-    if (-not $remediate) {
-        if ($Quiet) { return 0 }
-        Write-Host -ForegroundColor Green "[✓] Environment Variables exist in the current PowerShell Session"
-        return 0
+    #=================================================
+    # Results
+    if (-not $Interactive) {
+        if ($success -eq $true) {
+            return $true
+        }
+        else {
+            return $false
+        }
     }
-
-    # Failure
-    if ($Quiet) { return 1 }
+    #=================================================
+    # Interactive Success
+    if ($success -eq $true) {
+        Write-Host -ForegroundColor Green "[✓] Environment Variables exist in the current PowerShell Session"
+        return $true
+    }
+    #=================================================
+    # Interactive Failure
     Write-Host -ForegroundColor Gray "[✗] Environment Variables do NOT exist in the current PowerShell Session"
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
-
         try {
             $currentValue = Get-Item "env:$name" -ErrorAction Stop | Select-Object -ExpandProperty Value
         }
         catch {
             $currentValue = $null
         }
-
         if ($currentValue -ne $value) {
             Write-Host -ForegroundColor DarkGray "$name = $value"
         }
     }
-    return 1
+    return $false
+    #=================================================
 }
 function Repair-WinpeSessionEnvironment {
     [CmdletBinding()]
-    param ()
-    # Test
-    $results = Test-WinpeSessionEnvironment -Quiet
-
-    # Success
-    if ($results -eq 0) {
-        return
-    }
-
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Interactive
+    )
+    #=================================================
+    # Requirements
     $requiredEnvironment = [ordered]@{
         'APPDATA'       = "$env:UserProfile\AppData\Roaming"
         'HOMEDRIVE'     = "$env:SystemDrive"
         'HOMEPATH'      = "\windows\system32\config\systemprofile"
         'LOCALAPPDATA'  = "$env:UserProfile\AppData\Local"
     }
-
+    #=================================================
+    # Test
+    if ($Interactive) {
+        $results = Test-WinpeSessionEnvironment -Interactive
+    }
+    else {
+        $results = Test-WinpeSessionEnvironment
+    }
+    #=================================================
+    # Success
+    if ($results -eq $true) {
+        return
+    }
+    #=================================================
     # Repair
     Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
@@ -519,8 +538,15 @@ function Repair-WinpeSessionEnvironment {
             }
         }
     }
-
-    $results = Test-WinpeSessionEnvironment
+    #=================================================
+    # Test Again
+    if ($Interactive) {
+        $results = Test-WinpeSessionEnvironment -Interactive
+    }
+    else {
+        $results = Test-WinpeSessionEnvironment
+    }
+    #=================================================
 }
 #endregion
 
