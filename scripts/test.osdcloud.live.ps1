@@ -201,10 +201,10 @@ if ($deploymentPhase -eq 'WinPE') {
     $null = Test-WinpeUserShellFolders -Interactive
     $null = Test-WinpeRegistryEnvironment -Interactive
     $null = Test-WinpeSessionEnvironment -Interactive
-    $null = Test-WinpePowerShellProfilePaths
-    $null = Test-WinpePowerShellProfile
-    $null = Test-WinpeRealTimeClockUTC
-    $null = Test-WinpeTimeService
+    $null = Test-WinpePowerShellProfilePaths -Interactive
+    $null = Test-WinpePowerShellProfile -Interactive
+    $null = Test-WinpeRealTimeClockUTC -Interactive
+    $null = Test-WinpeTimeService -Interactive
     $null = Test-WinpeFileCurlExe
     $null = Test-WinpePackageManagement
     $null = Test-WinpeNuGetPackageProvider

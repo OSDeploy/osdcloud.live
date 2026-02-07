@@ -555,29 +555,40 @@ function Test-WinpePowerShellProfilePaths {
     [CmdletBinding()]
     param (
         [System.Management.Automation.SwitchParameter]
-        $Quiet
+        $Interactive
     )
+    #=================================================
+    # Requirements
     $profileDir = $PSHome
     $profilePath = Join-Path -Path $PSHome -ChildPath 'profile.ps1'
     $repairPSProfilePath = $false
-
+    #=================================================
     # Test
+    $success = $false
     if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
         $repairPSProfilePath = $true
     }
     if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1") {
         $repairPSProfilePath = $true
     }
-
-    # Success
-    if ($repairPSProfilePath -eq $false) {
-        if ($Quiet) { return 0 }
-        Write-Host -ForegroundColor Green "[✓] PowerShell Profile CurrentUser Paths are properly configured"
-        return 0
+    #=================================================
+    # Results
+    if (-not $Interactive) {
+        if ($success -eq $true) {
+            return $true
+        }
+        else {
+            return $false
+        }
     }
-
-    # Failure
-    if ($Quiet) { return 1 }
+    #=================================================
+    # Interactive Success
+    if ($success -eq $true) {
+        Write-Host -ForegroundColor Green "[✓] PowerShell Profile CurrentUser Paths are properly configured"
+        return $true
+    }
+    #=================================================
+    # Interactive Failure
     Write-Host -ForegroundColor Gray "[✗] PowerShell Profile CurrentUser Paths are NOT properly configured"
     if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
         Write-Host -ForegroundColor DarkGray "CurrentUserAllHosts: [$($PROFILE.CurrentUserAllHosts)]"
@@ -585,20 +596,30 @@ function Test-WinpePowerShellProfilePaths {
     if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1") {
         Write-Host -ForegroundColor DarkGray "CurrentUserCurrentHost: [$($PROFILE.CurrentUserCurrentHost)]"
     }
-    return 1
+    return $false
+    #=================================================
 }
 
 function Repair-WinpePowerShellProfilePaths {
     [CmdletBinding()]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Interactive
+    )
+    #=================================================
     # Test
-    $results = Test-WinpePowerShellProfilePaths -Quiet
-
+    if ($Interactive) {
+        $results = Test-WinpePowerShellProfilePaths -Interactive
+    }
+    else {
+        $results = Test-WinpePowerShellProfilePaths
+    }
+    #=================================================
     # Success
-    if ($results -eq 0) {
+    if ($results -eq $true) {
         return
     }
-
+    #=================================================
     # Repair
     Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
@@ -609,8 +630,15 @@ function Repair-WinpePowerShellProfilePaths {
         $PROFILE.CurrentUserCurrentHost = "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1"
         # Write-Host -ForegroundColor DarkGray "CurrentUserCurrentHost: [$($PROFILE.CurrentUserCurrentHost)]"
     }
-
-    $results = Test-WinpePowerShellProfilePaths
+    #=================================================
+    # Test Again
+    if ($Interactive) {
+        $results = Test-WinpePowerShellProfilePaths -Interactive
+    }
+    else {
+        $results = Test-WinpePowerShellProfilePaths
+    }
+    #=================================================
 }
 #endregion
 
@@ -661,15 +689,24 @@ function Test-WinpePowerShellProfile {
 
 function Repair-WinpePowerShellProfile {
     [CmdletBinding()]
-    param ()
-     # Test
-    $results = Test-WinpePowerShellProfile -Quiet
-
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Interactive
+    )
+    #=================================================
+    # Test
+    if ($Interactive) {
+        $results = Test-WinpePowerShellProfile -Interactive
+    }
+    else {
+        $results = Test-WinpePowerShellProfile
+    }
+    #=================================================
     # Success
-    if ($results -eq 0) {
+    if ($results -eq $true) {
         return
     }
-
+    #=================================================
     # Repair
     $winpePowerShellProfile = @'
 # OSD PowerShell Profile
@@ -684,7 +721,6 @@ $registryPath | ForEach-Object {
     }
 }
 '@
-
     Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     $profileDir = $PSHome
     $profilePath = Join-Path -Path $PSHome -ChildPath 'profile.ps1'
@@ -701,7 +737,15 @@ $registryPath | ForEach-Object {
         }
         $winpePowerShellProfile | Set-Content -Path $profilePath -Force -Encoding Unicode
     }
-    $results = Test-WinpePowerShellProfile
+    #=================================================
+    # Test Again
+    if ($Interactive) {
+        $results = Test-WinpePowerShellProfile -Interactive
+    }
+    else {
+        $results = Test-WinpePowerShellProfile
+    }
+    #=================================================
 }
 #endregion
 
@@ -710,34 +754,59 @@ function Test-WinpeRealTimeClockUTC {
     [CmdletBinding()]
     param (
         [System.Management.Automation.SwitchParameter]
-        $Quiet
+        $Interactive
     )
-    # Test if RealTimeIsUniversal is already set
+    #=================================================
+    # Requirements
     $realTimeIsUniversal = Get-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\TimeZoneInformation' -Name 'RealTimeIsUniversal' -ErrorAction SilentlyContinue
-
+    #=================================================
+    # Test
+    $success = $false
     if ($realTimeIsUniversal -and ($realTimeIsUniversal.RealTimeIsUniversal -eq 1)) {
-        if ($Quiet) { return 0 }
+        $success = $true
+    }
+    #=================================================
+    # Results
+    if (-not $Interactive) {
+        if ($success -eq $true) {
+            return $true
+        }
+        else {
+            return $false
+        }
+    }
+    #=================================================
+    # Interactive Success
+    if ($success -eq $true) {
         Write-Host -ForegroundColor Green "[✓] RealTime Clock is set to UTC"
-        return 0
+        return
     }
-    else {
-        if ($Quiet) { return 1 }
-        Write-Host -ForegroundColor Gray "[✗] RealTime Clock is NOT set to UTC"
-        return 1
-    }
+    #=================================================
+    # Interactive Failure
+    Write-Host -ForegroundColor Gray "[✗] RealTime Clock is NOT set to UTC"
+    #=================================================
 }
 
 function Repair-WinpeRealTimeClockUTC {
     [CmdletBinding()]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Interactive
+    )
+    #=================================================
     # Test
-    $results = Test-WinpeRealTimeClockUTC -Quiet
-
+    if ($Interactive) {
+        $results = Test-WinpeRealTimeClockUTC -Interactive
+    }
+    else {
+        $results = Test-WinpeRealTimeClockUTC
+    }
+    #=================================================
     # Success
-    if ($results -eq 0) {
+    if ($results -eq $true) {
         return
     }
-
+    #=================================================
     # Repair
     Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     try {
@@ -748,8 +817,15 @@ function Repair-WinpeRealTimeClockUTC {
         Write-Host -ForegroundColor Red $_
         throw
     }
-
-    $results = Test-WinpeRealTimeClockUTC
+    #=================================================
+    # Test Again
+    if ($Interactive) {
+        $results = Test-WinpeRealTimeClockUTC -Interactive
+    }
+    else {
+        $results = Test-WinpeRealTimeClockUTC
+    }
+    #=================================================
 }
 #endregion
 
@@ -758,9 +834,10 @@ function Test-WinpeTimeService {
     [CmdletBinding()]
     param (
         [System.Management.Automation.SwitchParameter]
-        $Quiet
+        $Interactive
     )
-    # Can we connect to Time Service?
+    #=================================================
+    # Test
     try {
         $w32timeService = Get-Service -Name w32time -ErrorAction Stop
     }
@@ -769,35 +846,52 @@ function Test-WinpeTimeService {
         Write-Host -ForegroundColor Red $_
         throw
     }
-
-    # Test if the Time Service is correctly configured
+    #=================================================
+    # Results
+    if (-not $Interactive) {
+        if (($w32timeService.StartType -eq 'Automatic') -and ($w32timeService.Status -eq 'Running')) {
+            return $true
+        }
+        else {
+            return $false
+        }
+    }
+    #=================================================
+    # Interactive Success
     if (($w32timeService.StartType -eq 'Automatic') -and ($w32timeService.Status -eq 'Running')) {
-        if ($Quiet) { return 0 }
         Write-Host -ForegroundColor Green "[✓] Time Service [w32time] is set to Automatic and is Running"
-        return 0
+        return $true
     }
-    else {
-        if ($Quiet) { return 1 }
-        if ($w32timeService.StartType -ne 'Automatic') {
-            Write-Host -ForegroundColor Gray "[✗] Time Service [w32time] StartType is NOT set to Automatic"
-        }
-        if ($w32timeService.Status -ne 'Running') {
-            Write-Host -ForegroundColor Gray "[✗] Time Service [w32time] is NOT Running"
-        }
-        return 1
+
+    if ($w32timeService.StartType -ne 'Automatic') {
+        Write-Host -ForegroundColor Gray "[✗] Time Service [w32time] StartType is NOT set to Automatic"
     }
+    if ($w32timeService.Status -ne 'Running') {
+        Write-Host -ForegroundColor Gray "[✗] Time Service [w32time] is NOT Running"
+    }
+    return $false
+    #=================================================
 }
 function Repair-WinpeTimeService {
     [CmdletBinding()]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Interactive
+    )
+    #=================================================
     # Test
-    $results = Test-WinpeTimeService -Quiet
-
+    if ($Interactive) {
+        $results = Test-WinpeTimeService -Interactive
+    }
+    else {
+        $results = Test-WinpeTimeService
+    }
+    #=================================================
     # Success
-    if ($results -eq 0) {
+    if ($results -eq $true) {
         return
     }
-
+    #=================================================
     # Repair
     Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     try {
@@ -843,8 +937,15 @@ function Repair-WinpeTimeService {
             throw
         }
     }
-
-    $results = Test-WinpeTimeService
+    #=================================================
+    # Test Again
+    if ($Interactive) {
+        $results = Test-WinpeTimeService -Interactive
+    }
+    else {
+        $results = Test-WinpeTimeService
+    }
+    #=================================================
 }
 #endregion
 
