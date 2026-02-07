@@ -24,7 +24,7 @@ powershell iex (irm test.osdcloud.live)
 .DESCRIPTION
     PowerShell Script which supports the OSDCloud environment
 .NOTES
-    Version 26.02.05
+    Version 26.02.06
 .LINK
     https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/scripts/test.osdcloud.live.ps1
 .EXAMPLE
@@ -34,11 +34,12 @@ powershell iex (irm test.osdcloud.live)
 param()
 $startTime = Get-Date
 $scriptName = 'test.osdcloud.live'
-$scriptVersion = '26.02.05'
-
+$scriptVersion = '26.02.06'
+$eventName = 'osdcloud_live_test'
+#=================================================
 Write-Host -ForegroundColor DarkCyan "OSDCloud Live collects diagnostic data to improve functionality"
 Write-Host -ForegroundColor DarkCyan "By using OSDCloud Live, you consent to the collection of diagnostic data as outlined in the privacy policy"
-Write-Host -ForegroundColor DarkGray "https://github.com/OSDeploy/osdcloud.live/privacy"
+Write-Host -ForegroundColor DarkGray "https://github.com/OSDeploy/osdcloud.live/privacy.md"
 Write-Host ""
 Write-Host -ForegroundColor DarkGray "Press Ctrl+C to cancel. Resuming in 5 seconds..."
 Start-Sleep -Seconds 5
@@ -47,7 +48,6 @@ Write-Host ""
 #region Initialize
 $Transcript = "$((Get-Date).ToString('yyyy-MM-dd-HHmmss'))-$scriptName.log"
 $null = Start-Transcript -Path (Join-Path "$env:SystemRoot\Temp" $Transcript) -ErrorAction Ignore
-
 if ($env:SystemDrive -eq 'X:') {
     $deploymentPhase = 'WinPE'
 }
@@ -58,18 +58,10 @@ else {
     elseif ($ImageState -eq 'IMAGE_STATE_SPECIALIZE_RESEAL_TO_AUDIT') {$deploymentPhase = 'AuditMode'}
     else {$deploymentPhase = 'Windows'}
 }
-
 $whoiam = [system.security.principal.windowsidentity]::getcurrent().name
 $isElevated = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
-
-# Write-Host -ForegroundColor DarkGray "$scriptName $scriptVersion ($deploymentPhase)"
-Write-Host -ForegroundColor DarkGray "OSDCloud Live Test [$deploymentPhase]"
-#endregion
-
-#region Transport Layer Security (TLS) 1.2
-# Write-Host -ForegroundColor DarkGray "[✓] Transport Layer Security [TLS 1.2]"
-# Write-Host -ForegroundColor DarkGray "[✓] [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12"
 [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+Write-Host -ForegroundColor DarkGray "OSDCloud Live Test [$deploymentPhase]"
 #endregion
 #=================================================
 #region OSDCloud Live Analytics
@@ -197,7 +189,7 @@ $eventProperties = @{
     winVersion                  = [string]$computerInfo.OsVersion
 }
 $postApi = 'phc_2h7nQJCo41Hc5C64B2SkcEBZOvJ6mHr5xAHZyjPl3ZK'
-Send-OSDCloudLiveEvent -EventName 'osdcloud_live_test' -ApiKey $postApi -DistinctId $distinctId -Properties $eventProperties
+Send-OSDCloudLiveEvent -EventName $eventName -ApiKey $postApi -DistinctId $distinctId -Properties $eventProperties
 #endregion
 #=================================================
 #region WinPE
