@@ -312,14 +312,14 @@ function Test-WinpeRegistryEnvironment {
     }
     #=================================================
     # Test
-    $success = $false
+    $success = $true
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
         $currentValue = (Get-ItemProperty -Path $registryPath -Name $name -ErrorAction SilentlyContinue).$name
 
         if ($currentValue -ne $value) {
-            $success = $true
+            $success = $false
             break
         }
     }
@@ -433,7 +433,7 @@ function Test-WinpeSessionEnvironment {
     }
     #=================================================
     # Test
-    $success = $false
+    $success = $true
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
@@ -446,7 +446,7 @@ function Test-WinpeSessionEnvironment {
         }
 
         if ($currentValue -ne $value) {
-            $success = $true
+            $success = $false
             break
         }
     }
@@ -862,14 +862,14 @@ function Test-WinpeTimeService {
         Write-Host -ForegroundColor Green "[✓] Time Service [w32time] is set to Automatic and is Running"
         return $true
     }
-
-    if ($w32timeService.StartType -ne 'Automatic') {
-        Write-Host -ForegroundColor Gray "[✗] Time Service [w32time] StartType is NOT set to Automatic"
-    }
     if ($w32timeService.Status -ne 'Running') {
         Write-Host -ForegroundColor Gray "[✗] Time Service [w32time] is NOT Running"
+        return $false
     }
-    return $false
+    if ($w32timeService.StartType -ne 'Automatic') {
+        Write-Host -ForegroundColor Gray "[✗] Time Service [w32time] StartType is NOT set to Automatic"
+        return $false
+    }
     #=================================================
 }
 function Repair-WinpeTimeService {
