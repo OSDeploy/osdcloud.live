@@ -190,13 +190,15 @@ function Repair-WinpeExecutionPolicyBypass {
         [System.Management.Automation.SwitchParameter]
         $Interactive
     )
+    #=================================================
     # Test
     $results = Test-WinpeExecutionPolicyBypass
-
-
+    #=================================================
     # Success
-    if ($results -eq $true) { return }
-
+    if ($results -eq $true) {
+        return
+    }
+    #=================================================
     # Repair
     Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     try {
@@ -210,14 +212,15 @@ function Repair-WinpeExecutionPolicyBypass {
     finally {
         Remove-Variable -Name executionPolicy -ErrorAction SilentlyContinue
     }
-
-    # Test
+    #=================================================
+    # Test Again
     if ($Interactive) {
         $results = Test-WinpeExecutionPolicyBypass -Interactive
     }
     else {
         $results = Test-WinpeExecutionPolicyBypass
     }
+    #=================================================
 }
 #endregion
 
@@ -292,12 +295,7 @@ function Repair-WinpeUserShellFolders {
     )
     #=================================================
     # Test
-    if ($Interactive) {
-        $results = Test-WinpeUserShellFolders -Interactive
-    }
-    else {
-        $results = Test-WinpeUserShellFolders
-    }
+    $results = Test-WinpeUserShellFolders
     #=================================================
     # Success
     if ($results -eq $true) {
@@ -413,12 +411,7 @@ function Repair-WinpeRegistryEnvironment {
     }
     #=================================================
     # Test
-    if ($Interactive) {
-        $results = Test-WinpeRegistryEnvironment -Interactive
-    }
-    else {
-        $results = Test-WinpeRegistryEnvironment
-    }
+    $results = Test-WinpeRegistryEnvironment
     #=================================================
     # Success
     if ($results -eq $true) {
@@ -541,12 +534,7 @@ function Repair-WinpeSessionEnvironment {
     }
     #=================================================
     # Test
-    if ($Interactive) {
-        $results = Test-WinpeSessionEnvironment -Interactive
-    }
-    else {
-        $results = Test-WinpeSessionEnvironment
-    }
+    $results = Test-WinpeSessionEnvironment
     #=================================================
     # Success
     if ($results -eq $true) {
@@ -648,12 +636,7 @@ function Repair-WinpePowerShellProfilePaths {
     )
     #=================================================
     # Test
-    if ($Interactive) {
-        $results = Test-WinpePowerShellProfilePaths -Interactive
-    }
-    else {
-        $results = Test-WinpePowerShellProfilePaths
-    }
+    $results = Test-WinpePowerShellProfilePaths
     #=================================================
     # Success
     if ($results -eq $true) {
@@ -735,12 +718,7 @@ function Repair-WinpePowerShellProfile {
     )
     #=================================================
     # Test
-    if ($Interactive) {
-        $results = Test-WinpePowerShellProfile -Interactive
-    }
-    else {
-        $results = Test-WinpePowerShellProfile
-    }
+    $results = Test-WinpePowerShellProfile
     #=================================================
     # Success
     if ($results -eq $true) {
