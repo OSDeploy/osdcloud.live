@@ -1168,59 +1168,79 @@ function Test-WinpeNuGetPackageProvider {
     [CmdletBinding()]
     param (
         [System.Management.Automation.SwitchParameter]
-        $Quiet
+        $Interactive
     )
-
-    # Test PackageManagement
-    if (-not (Get-Module -Name PackageManagement -ListAvailable)) {
-        if ($Quiet) { return 1 }
-        Write-Host -ForegroundColor Gray "[✗] NuGet Package Provider is NOT installed"
-        # Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is a required prerequisite"
-        return 1
+    #=================================================
+    # Test
+    if ($Interactive) {
+        # Test PackageManagement Module
+        if (-not (Get-Module -Name PackageManagement -ListAvailable)) {
+            Write-Host -ForegroundColor Gray "[✗] NuGet Package Provider is NOT installed"
+            return $false
+        }
+        # Test Get-PackageProvider cmdlet
+        if (-not (Get-Command -Name Get-PackageProvider -ErrorAction SilentlyContinue)) {
+            Write-Host -ForegroundColor Gray "[✗] NuGet Package Provider is NOT installed"
+            return $false
+        }
+        # Test Execution Policy
+        $executionPolicy = Get-ExecutionPolicy -ErrorAction SilentlyContinue
+        if ($executionPolicy -ne 'Bypass' -and $executionPolicy -ne 'Unrestricted') {
+            Write-Host -ForegroundColor Gray "[✗] NuGet Package Provider is NOT installed"
+            return $false
+        }
+        # Test if NuGet Package Provider is already installed
+        $provider = Get-PackageProvider -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq 'NuGet' }
+        if ($provider) {
+            Write-Host -ForegroundColor Green "[✓] NuGet Package Provider [$($provider.Version)]"
+            return $true
+        }
+        else {
+            Write-Host -ForegroundColor Gray "[✗] NuGet Package Provider is NOT installed"
+            return $false
+        }
     }
-
-
-    # Test Get-PackageProvider
-    if (-not (Get-Command -Name Get-PackageProvider -ErrorAction SilentlyContinue)) {
-        if ($Quiet) { return 1 }
-        Write-Host -ForegroundColor Gray "[✗] NuGet Package Provider is NOT installed"
-        # Write-Host -ForegroundColor DarkGray "PackageManagement PowerShell Module is a required prerequisite"
-        return 1
+    else {
+        # Test PackageManagement Module
+        if (-not (Get-Module -Name PackageManagement -ListAvailable)) {
+            return $false
+        }
+        # Test Get-PackageProvider cmdlet
+        if (-not (Get-Command -Name Get-PackageProvider -ErrorAction SilentlyContinue)) {
+            return $false
+        }
+        # Test Execution Policy
+        $executionPolicy = Get-ExecutionPolicy -ErrorAction SilentlyContinue
+        if ($executionPolicy -ne 'Bypass' -and $executionPolicy -ne 'Unrestricted') {
+            return $false
+        }
+        # Test if NuGet Package Provider is already installed
+        $provider = Get-PackageProvider -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq 'NuGet' }
+        if ($provider) {
+            return $true
+        }
+        else {
+            return $false
+        }
     }
-
-    # Test Execution Policy
-    $executionPolicy = Get-ExecutionPolicy -ErrorAction SilentlyContinue
-    if ($executionPolicy -ne 'Bypass' -and $executionPolicy -ne 'Unrestricted') {
-        if ($Quiet) { return 1 }
-        Write-Host -ForegroundColor Gray "[✗] NuGet Package Provider is NOT installed"
-        # Write-Host -ForegroundColor DarkGray "PowerShell Execution Policy is blocking installation of NuGetPackage Providers"
-        return 1
-    }
-
-    # Test if NuGet Package Provider is already installed
-    $provider = Get-PackageProvider -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq 'NuGet' }
-    if ($provider) {
-        if ($Quiet) { return 0 }
-        Write-Host -ForegroundColor Green "[✓] NuGet Package Provider [$($provider.Version)]"
-        return 0
-    }
-
-    if ($Quiet) { return 1 }
-    Write-Host -ForegroundColor Gray "[✗] NuGet Package Provider is NOT installed"
-    return 1
+    #=================================================
 }
 
 function Repair-WinpeNugetPackageProvider {
     [CmdletBinding()]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Interactive
+    )
+    #=================================================
     # Test
-    $results = Test-WinpeNuGetPackageProvider -Quiet
-
+    $results = Test-WinpeNuGetPackageProvider
+    #=================================================
     # Success
-    if ($results -eq 0) {
+    if ($results -eq $true) {
         return
     }
-
+    #=================================================
     # Repair
     try {
         Install-PackageProvider -Name NuGet -Force -Scope AllUsers -ErrorAction Stop | Out-Null
@@ -1230,8 +1250,15 @@ function Repair-WinpeNugetPackageProvider {
         Write-Host -ForegroundColor Red $_
         throw
     }
-    
-    $results = Test-WinpeNuGetPackageProvider
+    #=================================================
+    # Test Again
+    if ($Interactive) {
+        $results = Test-WinpeNuGetPackageProvider -Interactive
+    }
+    else {
+        $results = Test-WinpeNuGetPackageProvider
+    }
+    #=================================================
 }
 #endregion
 
