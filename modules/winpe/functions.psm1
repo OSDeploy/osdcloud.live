@@ -893,12 +893,7 @@ function Repair-WinpeTimeService {
     )
     #=================================================
     # Test
-    if ($Interactive) {
-        $results = Test-WinpeTimeService -Interactive
-    }
-    else {
-        $results = Test-WinpeTimeService
-    }
+    $results = Test-WinpeTimeService
     #=================================================
     # Success
     if ($results -eq $true) {
@@ -1261,39 +1256,61 @@ function Test-WinpeFileNugetExe {
     [CmdletBinding()]
     param (
         [System.Management.Automation.SwitchParameter]
-        $Quiet
+        $Interactive
     )
-    $nugetExeSourceURL = 'https://nuget.org/nuget.exe'
+    #=================================================
+    # Requirements
     $nugetFileName = 'NuGet.exe'
-
     # $env:LOCALAPPDATA may not be set in WinPE, so should not use env:LOCALAPPDATA
     # $nugetPath = Join-Path -Path $env:LOCALAPPDATA -ChildPath 'Microsoft\Windows\PowerShell\PowerShellGet\'
     $nugetPath = Join-Path -Path "$env:UserProfile\AppData\Local" -ChildPath 'Microsoft\Windows\PowerShell\PowerShellGet\'
     $nugetExeFilePath = Join-Path -Path $nugetPath -ChildPath $nugetFileName
-
-    # Test if NuGet.exe is already installed
-    if (Test-Path -Path $nugetExeFilePath) {
-        if ($Quiet) { return 0 }
+    #=================================================
+    # Test
+    if (Test-Path $nugetExeFilePath) {
+        $success = $true
+    }
+    else {
+        $success = $false
+    }
+    #=================================================
+    # Results
+    if (-not $Interactive) {
+        if ($success -eq $true) {
+            return $true
+        }
+        else {
+            return $false
+        }
+    }
+    #=================================================
+    # Interactive Success
+    if ($success -eq $true) {
         $nugetExe = Get-Item -Path $nugetExeFilePath
         Write-Host -ForegroundColor Green "[✓] NuGet.exe [$($nugetExe.VersionInfo.FileVersion)]"
-        return 0
+        return $true
     }
-
-    if ($Quiet) { return 1 }
+    #=================================================
+    # Interactive Failure
     Write-Host -ForegroundColor Gray "[✗] NuGet.exe is NOT installed"
-    return 1
+    return $false
+    #=================================================
 }
 function Repair-WinpeFileNugetExe {
     [CmdletBinding()]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Interactive
+    )
+    #=================================================
     # Test
-    $results = Test-WinpeFileNugetExe -Quiet
-
+    $results = Test-WinpeFileNugetExe
+    #=================================================
     # Success
     if ($results -eq 0) {
         return
     }
-
+    #=================================================
     # Repair
     Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     $nugetExeSourceURL = 'https://nuget.org/nuget.exe'
@@ -1310,8 +1327,15 @@ function Repair-WinpeFileNugetExe {
     
     # Download using curl when available, then BitsTransfer, then Invoke-WebRequest
     Invoke-WinpeDownload -Uri $nugetExeSourceURL -Destination $nugetExeFilePath -AllowCurlFallback
-
-    $results = Test-WinpeFileNugetExe
+    #=================================================
+    # Test Again
+    if ($Interactive) {
+        $results = Test-WinpeFileNugetExe -Interactive
+    }
+    else {
+        $results = Test-WinpeFileNugetExe
+    }
+    #=================================================
 }
 #endregion
 
