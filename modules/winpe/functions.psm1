@@ -116,7 +116,9 @@ function Test-WinpeExecutionPolicyBypass {
         [System.Management.Automation.SwitchParameter]
         $Interactive
     )
-    # Get the current execution policy
+    #=================================================
+    # Test
+    $success = $false
     try {
         $executionPolicy = Get-ExecutionPolicy -ErrorAction Stop
     }
@@ -125,20 +127,30 @@ function Test-WinpeExecutionPolicyBypass {
         Write-Host -ForegroundColor Red $_
         throw
     }
-
-    # Success
     if ($executionPolicy -eq 'Bypass') {
-        if ($Interactive) {
-            Write-Host -ForegroundColor Green "[✓] PowerShell Execution Policy is set to Bypass"
+        $success = $true
+    }
+    #=================================================
+    # Results
+    if (-not $Interactive) {
+        if ($success -eq $true) {
+            return $true
         }
+        else {
+            return $false
+        }
+    }
+    #=================================================
+    # Interactive Success
+    if ($success -eq $true) {
+        Write-Host -ForegroundColor Green "[✓] PowerShell Execution Policy is set to Bypass"
         return $true
     }
-
-    # Failure
-    if ($Interactive) {
-        Write-Host -ForegroundColor Gray "[✗] PowerShell Execution Policy is NOT set to Bypass [$executionPolicy]"
-    }
+    #=================================================
+    # Interactive Failure
+    Write-Host -ForegroundColor Gray "[✗] PowerShell Execution Policy is NOT set to Bypass [$executionPolicy]"
     return $false
+    #=================================================
 }
 function Repair-WinpeExecutionPolicyBypass {
     [CmdletBinding()]
