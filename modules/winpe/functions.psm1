@@ -357,15 +357,12 @@ function Test-WinpeRegistryEnvironment {
 }
 function Repair-WinpeRegistryEnvironment {
     [CmdletBinding()]
-    param ()
-    # Test
-    $results = Test-WinpeRegistryEnvironment -Quiet
-
-    # Success
-    if ($results -eq 0) {
-        return
-    }
-    
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Interactive
+    )
+    #=================================================
+    # Requirements
     $registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
     $requiredEnvironment = [ordered]@{
         'APPDATA'       = "$env:UserProfile\AppData\Roaming"
@@ -374,7 +371,20 @@ function Repair-WinpeRegistryEnvironment {
         'LOCALAPPDATA'  = "$env:UserProfile\AppData\Local"
         # 'USERPROFILE'   = "$env:UserProfile"
     }
-
+    #=================================================
+    # Test
+    if ($Interactive) {
+        $results = Test-WinpeRegistryEnvironment -Interactive
+    }
+    else {
+        $results = Test-WinpeRegistryEnvironment
+    }
+    #=================================================
+    # Success
+    if ($results -eq $true) {
+        return
+    }
+    #=================================================
     # Repair
     Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
@@ -394,7 +404,15 @@ function Repair-WinpeRegistryEnvironment {
             }
         }
     }
-    $results = Test-WinpeRegistryEnvironment
+    #=================================================
+    # Test Again
+    if ($Interactive) {
+        $results = Test-WinpeRegistryEnvironment -Interactive
+    }
+    else {
+        $results = Test-WinpeRegistryEnvironment
+    }
+    #=================================================
 }
 #endregion
 
