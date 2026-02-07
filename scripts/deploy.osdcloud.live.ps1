@@ -206,8 +206,8 @@ if ($deploymentPhase -eq 'WinPE') {
     $null = Repair-WinpePowerShellProfile -Interactive
     $null = Repair-WinpeRealTimeClockUTC -Interactive
     $null = Repair-WinpeTimeService -Interactive
-    Repair-WinpeFileCurlExe
-    Repair-WinpePackageManagement
+    $null = Repair-WinpeFileCurlExe -Interactive
+    $null = Repair-WinpePackageManagement -Interactive
     Repair-WinpeNugetPackageProvider
     Repair-WinpeFileNugetExe
     Update-WinpePackageManagementVersion

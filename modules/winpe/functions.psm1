@@ -702,11 +702,12 @@ function Test-WinpePowerShellProfile {
     # Interactive Success
     if ($success -eq $true) {
         Write-Host -ForegroundColor Green "[✓] PowerShell Profile AllUsersAllHosts is properly configured"
-        return
+        return $true
     }
     #=================================================
     # Interactive Failure
     Write-Host -ForegroundColor Gray "[✗] PowerShell Profile AllUsersAllHosts is NOT configured"
+    return $false
     #=================================================
 }
 
@@ -972,33 +973,58 @@ function Test-WinpeFileCurlExe {
     [CmdletBinding()]
     param (
         [System.Management.Automation.SwitchParameter]
-        $Quiet
+        $Interactive
     )
+    #=================================================
+    # Requirements
     $curlPath = "$env:SystemRoot\System32\curl.exe"
+    #=================================================
+    # Test
     if (Test-Path $curlPath) {
-        if ($Quiet) { return 0 }
-        $curl = Get-Item -Path $curlPath
-        Write-Host -ForegroundColor Green "[✓] Curl.exe [$($curl.VersionInfo.FileVersion)]"
-        return 0
+        $success = $true
     }
     else {
-        if ($Quiet) { return 1 }
-        Write-Host -ForegroundColor Gray "[✗] Curl is NOT installed at $curlPath"
-        return 1
+        $success = $false
     }
+    #=================================================
+    # Results
+    if (-not $Interactive) {
+        if ($success -eq $true) {
+            return $true
+        }
+        else {
+            return $false
+        }
+    }
+    #=================================================
+    # Interactive Success
+    if ($success -eq $true) {
+        $curl = Get-Item -Path $curlPath
+        Write-Host -ForegroundColor Green "[✓] Curl.exe [$($curl.VersionInfo.FileVersion)]"
+        return $true
+    }
+    #=================================================
+    # Interactive Failure
+    Write-Host -ForegroundColor Gray "[✗] Curl is NOT installed at $curlPath"
+    return $false
+    #=================================================
 }
 
 function Repair-WinpeFileCurlExe {
     [CmdletBinding()]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Interactive
+    )
+    #=================================================
     # Test
-    $results = Test-WinpeFileCurlExe -Quiet
-
+    $results = Test-WinpeFileCurlExe
+    #=================================================
     # Success
     if ($results -eq 0) {
         return
     }
-
+    #=================================================
     # Repair
     Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     $curlPath = "$env:SystemRoot\System32\curl.exe"
@@ -1029,8 +1055,15 @@ function Repair-WinpeFileCurlExe {
         if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
         if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
-
-    $results = Test-WinpeFileCurlExe
+    #=================================================
+    # Test Again
+    if ($Interactive) {
+        $results = Test-WinpeFileCurlExe -Interactive
+    }
+    else {
+        $results = Test-WinpeFileCurlExe
+    }
+    #=================================================
 }
 #endregion
 
@@ -1039,64 +1072,56 @@ function Test-WinpePackageManagement {
     [CmdletBinding()]
     param (
         [System.Management.Automation.SwitchParameter]
-        $Quiet
+        $Interactive
     )
-    # Test if PackageManagement is already installed
+    #=================================================
+    # Test
     $installedModule = Get-Module -Name PackageManagement -ListAvailable
-
-    # Success
     if ($installedModule) {
-        if ($Quiet) { return 0 }
-        $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
-        Write-Host -ForegroundColor Green "[✓] PackageManagement PowerShell Module [$latestVersion]"
-        return 0
+        $success = $true
     }
     else {
-        if ($Quiet) { return 1 }
-        Write-Host -ForegroundColor Gray "[✗] PackageManagement PowerShell Module is NOT installed"
-        return 1
+        $success = $false
     }
+    #=================================================
+    # Results
+    if (-not $Interactive) {
+        if ($success -eq $true) {
+            return $true
+        }
+        else {
+            return $false
+        }
+    }
+    #=================================================
+    # Interactive Success
+    if ($success -eq $true) {
+        $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
+        Write-Host -ForegroundColor Green "[✓] PackageManagement PowerShell Module [$latestVersion]"
+        return $true
+    }
+    #=================================================
+    # Interactive Failure
+    Write-Host -ForegroundColor Gray "[✗] PackageManagement PowerShell Module is NOT installed"
+    return $false
+    #=================================================
 }
 
 function Repair-WinpePackageManagement {
-    <#
-    .SYNOPSIS
-    Installs or updates the PackageManagement module in WinPE.
-
-    .DESCRIPTION
-    Checks for the presence of the PackageManagement module. If missing, warns and exits
-    unless -Force is specified. With -Force, downloads version 1.4.8.1 from the PowerShell
-    Gallery, installs it under Program Files, and imports it globally. If already installed,
-    reports the latest installed version and does not reinstall.
-
-    .PARAMETER Force
-    When specified, performs installation/repair actions rather than only reporting status.
-
-    .EXAMPLE
-    Repair-WinpePackageManagement
-    Displays the current status of the PackageManagement module without making changes.
-
-    .EXAMPLE
-    Repair-WinpePackageManagement -Force
-    Downloads and installs PackageManagement 1.4.8.1, then imports the module.
-
-    .OUTPUTS
-    None. Writes status and progress messages to the host.
-
-    .NOTES
-    Designed for Windows PE. Prefers curl when available, then BitsTransfer, then Invoke-WebRequest.
-    Safe to re-run; no changes are made if the desired state is already present.
-    #>
     [CmdletBinding()]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Interactive
+    )
+    #=================================================
     # Test
-    $results = Test-WinpePackageManagement -Quiet
-
+    $results = Test-WinpePackageManagement
+    #=================================================
     # Success
-    if ($results -eq 0) {
+    if ($results -eq $true) {
         return
     }
-
+    #=================================================
     # Repair
     Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     try {
@@ -1126,8 +1151,15 @@ function Repair-WinpePackageManagement {
         if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
         if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
-    
-    $results = Test-WinpePackageManagement
+    #=================================================
+    # Test Again
+    if ($Interactive) {
+        $results = Test-WinpePackageManagement -Interactive
+    }
+    else {
+        $results = Test-WinpePackageManagement
+    }
+    #=================================================
 }
 #endregion
 

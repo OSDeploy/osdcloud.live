@@ -205,14 +205,14 @@ if ($deploymentPhase -eq 'WinPE') {
     $null = Test-WinpePowerShellProfile -Interactive
     $null = Test-WinpeRealTimeClockUTC -Interactive
     $null = Test-WinpeTimeService -Interactive
-    $null = Test-WinpeFileCurlExe
-    $null = Test-WinpePackageManagement
-    $null = Test-WinpeNuGetPackageProvider
-    $null = Test-WinpeFileNugetExe
-    $null = Test-WinpePackageManagementVersion
-    $null = Test-WinpePowerShellGetVersion
-    $null = Test-WinpePSGalleryTrust
-    $null = Test-WinpeFileAzcopyExe
+    $null = Test-WinpeFileCurlExe -Interactive
+    $null = Test-WinpePackageManagement -Interactive
+    $null = Test-WinpeNuGetPackageProvider -Interactive
+    $null = Test-WinpeFileNugetExe -Interactive
+    $null = Test-WinpePackageManagementVersion -Interactive
+    $null = Test-WinpePowerShellGetVersion -Interactive
+    $null = Test-WinpePSGalleryTrust -Interactive
+    $null = Test-WinpeFileAzcopyExe -Interactive
     $endTime = Get-Date
     $totalSeconds = [math]::Round(($endTime - $startTime).TotalSeconds, 2)
     Write-Host -ForegroundColor DarkGray "[i] Finished in $totalSeconds seconds"
