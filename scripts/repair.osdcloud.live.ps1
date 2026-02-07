@@ -199,8 +199,8 @@ if ($deploymentPhase -eq 'WinPE') {
     $null = Test-WinpePowerShellModuleDism -Interactive
     $null = Test-WinpePowerShellModuleStorage -Interactive
     $null = Repair-WinpeExecutionPolicyBypass -Interactive
-    Repair-WinpeUserShellFolders -Interactive
-    Repair-WinpeRegistryEnvironment
+    $null = Repair-WinpeUserShellFolders -Interactive
+    $null = Repair-WinpeRegistryEnvironment -Interactive
     Repair-WinpeSessionEnvironment
     Repair-WinpePowerShellProfilePaths
     Repair-WinpePowerShellProfile

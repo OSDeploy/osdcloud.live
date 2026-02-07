@@ -71,7 +71,6 @@ function Invoke-WinpeDownload {
 #region PowerShell Modules
 function Test-WinpePowerShellModuleDism {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
         $Interactive
@@ -91,7 +90,6 @@ function Test-WinpePowerShellModuleDism {
 }
 function Test-WinpePowerShellModuleStorage {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
         $Interactive
@@ -114,7 +112,6 @@ function Test-WinpePowerShellModuleStorage {
 #region WinpeExecutionPolicyBypass
 function Test-WinpeExecutionPolicyBypass {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
         $Interactive
@@ -145,7 +142,6 @@ function Test-WinpeExecutionPolicyBypass {
 }
 function Repair-WinpeExecutionPolicyBypass {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
         $Interactive
@@ -188,12 +184,12 @@ function Repair-WinpeExecutionPolicyBypass {
 #region WinpeUserShellFolders
 function Test-WinpeUserShellFolders {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
         $Interactive
     )
-
+    #=================================================
+    # Requirements
     $requiredFolders = @(
         "$env:ProgramFiles\WindowsPowerShell\Scripts",
         "$env:UserProfile\AppData\Local",
@@ -202,42 +198,59 @@ function Test-WinpeUserShellFolders {
         "$env:UserProfile\Documents\WindowsPowerShell",
         "$env:SystemRoot\system32\WindowsPowerShell\v1.0\Scripts"
     )
-
-    # Test if a repair is needed
+    #=================================================
+    # Test
     $success = $true
     foreach ($folder in $requiredFolders) {
         if (-not (Test-Path -Path $folder)) {
             $success = $false
         }
     }
-
-    # Success
-    if ($success -eq $true) {
-        if ($Interactive) {
-            Write-Host -ForegroundColor Green "[✓] User Shell Folders exist"
+    #=================================================
+    # Results
+    if (-not $Interactive) {
+        if ($success -eq $true) {
+            return $true
         }
+        else {
+            return $false
+        }
+    }
+    #=================================================
+    # Interactive Success
+    if ($success -eq $true) {
+        Write-Host -ForegroundColor Green "[✓] User Shell Folders exist"
         return $true
     }
-
-    # Failure
-    if ($Interactive) {
-        Write-Host -ForegroundColor Gray "[✗] User Shell Folders do NOT exist"
-        foreach ($item in $requiredFolders) {
-            if (Test-Path -Path $item) {
-                continue
-            }
-            Write-Host -ForegroundColor DarkGray $item
+    #=================================================
+    # Interactive Failure
+    Write-Host -ForegroundColor Gray "[✗] User Shell Folders do NOT exist"
+    foreach ($item in $requiredFolders) {
+        if (Test-Path -Path $item) {
+            continue
         }
+        Write-Host -ForegroundColor DarkGray $item
     }
     return $false
+    #=================================================
 }
 function Repair-WinpeUserShellFolders {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
         $Interactive
     )
+    #=================================================
+    # Requirements
+    $requiredFolders = @(
+        "$env:ProgramFiles\WindowsPowerShell\Scripts",
+        "$env:UserProfile\AppData\Local",
+        "$env:UserProfile\AppData\Roaming",
+        "$env:UserProfile\Desktop",
+        "$env:UserProfile\Documents\WindowsPowerShell",
+        "$env:SystemRoot\system32\WindowsPowerShell\v1.0\Scripts"
+    )
+    #=================================================
     # Test
     if ($Interactive) {
         $results = Test-WinpeUserShellFolders -Interactive
@@ -245,58 +258,50 @@ function Repair-WinpeUserShellFolders {
     else {
         $results = Test-WinpeUserShellFolders
     }
-
+    #=================================================
     # Success
     if ($results -eq $true) {
         return
     }
-
-    $requiredFolders = @(
-        "$env:ProgramFiles\WindowsPowerShell\Modules",
-        "$env:ProgramFiles\WindowsPowerShell\Scripts",
-        "$env:UserProfile\AppData\Local",
-        "$env:UserProfile\AppData\Roaming",
-        "$env:UserProfile\Desktop",
-        "$env:UserProfile\Documents\WindowsPowerShell",
-        "$env:SystemRoot\system32\WindowsPowerShell\v1.0\Modules",
-        "$env:SystemRoot\system32\WindowsPowerShell\v1.0\Scripts"
-    )
-
+    #=================================================
     # Repair
     Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     foreach ($item in $requiredFolders) {
         if (Test-Path -Path $item) {
             continue
         }
-
-        try {
-            $null = New-Item -Path $item -ItemType Directory -Force -ErrorAction Stop
-        }
-        catch {
-            Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
-            Write-Host -ForegroundColor Red $_
-            throw
+        else {
+            try {
+                $null = New-Item -Path $item -ItemType Directory -Force -ErrorAction Stop
+            }
+            catch {
+                Write-Host -ForegroundColor Red "[✗] $($MyInvocation.MyCommand.Name)"
+                Write-Host -ForegroundColor Red $_
+                throw
+            }
         }
     }
-
-    # Test
+    #=================================================
+    # Test Again
     if ($Interactive) {
         $results = Test-WinpeUserShellFolders -Interactive
     }
     else {
         $results = Test-WinpeUserShellFolders
     }
+    #=================================================
 }
 #endregion
 
 #region WinpeRegistryEnvironment
 function Test-WinpeRegistryEnvironment {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
-        $Quiet
+        $Interactive
     )
+    #=================================================
+    # Requirements
     $registryPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment'
     $requiredEnvironment = [ordered]@{
         'APPDATA'       = "$env:UserProfile\AppData\Roaming"
@@ -305,29 +310,37 @@ function Test-WinpeRegistryEnvironment {
         'LOCALAPPDATA'  = "$env:UserProfile\AppData\Local"
         # 'USERPROFILE'   = "$env:UserProfile"
     }
-
+    #=================================================
     # Test
-    $remediate = $false
+    $success = $false
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
         $value = $item.Value
         $currentValue = (Get-ItemProperty -Path $registryPath -Name $name -ErrorAction SilentlyContinue).$name
 
         if ($currentValue -ne $value) {
-            $remediate = $true
+            $success = $true
             break
         }
     }
-
-    # Success
-    if (-not $remediate) {
-        if ($Quiet) { return 0 }
-        Write-Host -ForegroundColor Green "[✓] Environment Variables exist in the Registry"
-        return 0
+    #=================================================
+    # Results
+    if (-not $Interactive) {
+        if ($success -eq $true) {
+            return $true
+        }
+        else {
+            return $false
+        }
     }
-
-    # Failure
-    if ($Quiet) { return 1 }
+    #=================================================
+    # Interactive Success
+    if ($success -eq $true) {
+        Write-Host -ForegroundColor Green "[✓] Environment Variables exist in the Registry"
+        return $true
+    }
+    #=================================================
+    # Interactive Failure
     Write-Host -ForegroundColor Gray "[✗] Environment Variables do NOT exist in the Registry"
     foreach ($item in $requiredEnvironment.GetEnumerator()) {
         $name = $item.Key
@@ -339,11 +352,11 @@ function Test-WinpeRegistryEnvironment {
             Write-Host -ForegroundColor DarkGray "$name = $value"
         }
     }
-    return 1
+    return $false
+    #=================================================
 }
 function Repair-WinpeRegistryEnvironment {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
     $results = Test-WinpeRegistryEnvironment -Quiet
@@ -388,7 +401,6 @@ function Repair-WinpeRegistryEnvironment {
 #region WinpeSessionEnvironment
 function Test-WinpeSessionEnvironment {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
         $Quiet
@@ -448,7 +460,6 @@ function Test-WinpeSessionEnvironment {
 }
 function Repair-WinpeSessionEnvironment {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
     $results = Test-WinpeSessionEnvironment -Quiet
@@ -498,7 +509,6 @@ function Repair-WinpeSessionEnvironment {
 #region WinpePowerShellProfilePaths
 function Test-WinpePowerShellProfilePaths {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
         $Quiet
@@ -536,7 +546,6 @@ function Test-WinpePowerShellProfilePaths {
 
 function Repair-WinpePowerShellProfilePaths {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
     $results = Test-WinpePowerShellProfilePaths -Quiet
@@ -564,43 +573,50 @@ function Repair-WinpePowerShellProfilePaths {
 #region WinpePowerShellProfile
 function Test-WinpePowerShellProfile {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
-        $Quiet
+        $Interactive
     )
+    #=================================================
+    # Requirements
     $profileDir = $PSHome
     $profilePath = Join-Path -Path $PSHome -ChildPath 'profile.ps1'
-    $repairPSProfileFile = $false
-
+    #=================================================
     # Test
+    $success = $true
     if (-not (Test-Path -Path $profilePath)) {
-        $repairPSProfileFile = $true
+        $success = $false
     }
     else {
         $existingContent = Get-Content -Path $profilePath -Raw -ErrorAction Stop
         if (-not ($existingContent -match 'OSD PowerShell Profile')) {
-            $repairPSProfileFile = $true
+            $success = $false
         }
     }
-
-    # Success
-    if ($repairPSProfileFile -eq $false) {
-        if ($Quiet) { return 0 }
-        Write-Host -ForegroundColor Green "[✓] PowerShell Profile AllUsersAllHosts is properly configured"
-        return 0
+    #=================================================
+    # Results
+    if (-not $Interactive) {
+        if ($success -eq $true) {
+            return $true
+        }
+        else {
+            return $false
+        }
     }
-
-    # Failure
-    if ($Quiet) { return 1 }
+    #=================================================
+    # Interactive Success
+    if ($success -eq $true) {
+        Write-Host -ForegroundColor Green "[✓] PowerShell Profile AllUsersAllHosts is properly configured"
+        return
+    }
+    #=================================================
+    # Interactive Failure
     Write-Host -ForegroundColor Gray "[✗] PowerShell Profile AllUsersAllHosts is NOT configured"
-    # Write-Host -ForegroundColor DarkGray "Causes issues with new PowerShell sessions not inheriting Registry Environment Variables"
-    return 1
+    #=================================================
 }
 
 function Repair-WinpePowerShellProfile {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
      # Test
     $results = Test-WinpePowerShellProfile -Quiet
@@ -648,7 +664,6 @@ $registryPath | ForEach-Object {
 #region WinpeRealTimeClockUTC
 function Test-WinpeRealTimeClockUTC {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
         $Quiet
@@ -670,7 +685,6 @@ function Test-WinpeRealTimeClockUTC {
 
 function Repair-WinpeRealTimeClockUTC {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
     $results = Test-WinpeRealTimeClockUTC -Quiet
@@ -698,7 +712,6 @@ function Repair-WinpeRealTimeClockUTC {
 #region WinpeTimeService
 function Test-WinpeTimeService {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
         $Quiet
@@ -732,7 +745,6 @@ function Test-WinpeTimeService {
 }
 function Repair-WinpeTimeService {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
     $results = Test-WinpeTimeService -Quiet
@@ -795,7 +807,6 @@ function Repair-WinpeTimeService {
 #region WinpeFileCurlExe
 function Test-WinpeFileCurlExe {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
         $Quiet
@@ -816,7 +827,6 @@ function Test-WinpeFileCurlExe {
 
 function Repair-WinpeFileCurlExe {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
     $results = Test-WinpeFileCurlExe -Quiet
@@ -864,7 +874,6 @@ function Repair-WinpeFileCurlExe {
 #region WinpePackageManagement
 function Test-WinpePackageManagement {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
         $Quiet
@@ -916,7 +925,6 @@ function Repair-WinpePackageManagement {
     Safe to re-run; no changes are made if the desired state is already present.
     #>
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
     $results = Test-WinpePackageManagement -Quiet
@@ -963,7 +971,6 @@ function Repair-WinpePackageManagement {
 #region WinpeNuGetPackageProvider
 function Test-WinpeNuGetPackageProvider {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
         $Quiet
@@ -1010,7 +1017,6 @@ function Test-WinpeNuGetPackageProvider {
 
 function Repair-WinpeNugetPackageProvider {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
     $results = Test-WinpeNuGetPackageProvider -Quiet
@@ -1037,7 +1043,6 @@ function Repair-WinpeNugetPackageProvider {
 #region WinpeFileNugetExe
 function Test-WinpeFileNugetExe {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
         $Quiet
@@ -1064,7 +1069,6 @@ function Test-WinpeFileNugetExe {
 }
 function Repair-WinpeFileNugetExe {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
     $results = Test-WinpeFileNugetExe -Quiet
@@ -1098,7 +1102,6 @@ function Repair-WinpeFileNugetExe {
 #region WinpePackageManagementVersion
 function Test-WinpePackageManagementVersion {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
         $Quiet
@@ -1120,7 +1123,6 @@ function Test-WinpePackageManagementVersion {
 }
 function Update-WinpePackageManagementVersion {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
     $results = Test-WinpePackageManagementVersion -Quiet
@@ -1168,7 +1170,6 @@ function Update-WinpePackageManagementVersion {
 #region WinpePowerShellGetVersion
 function Test-WinpePowerShellGetVersion {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
         $Quiet
@@ -1190,7 +1191,6 @@ function Test-WinpePowerShellGetVersion {
 }
 function Update-WinpePowerShellGetVersion {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
     $results = Test-WinpePowerShellGetVersion -Quiet
@@ -1242,7 +1242,6 @@ function Update-WinpePowerShellGetVersion {
 #region WinpePSGalleryTrust
 function Test-WinpePSGalleryTrust {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
         $Quiet
@@ -1276,7 +1275,6 @@ function Test-WinpePSGalleryTrust {
 }
 function Repair-WinpePSGalleryTrust {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
     $results = Test-WinpePSGalleryTrust -Quiet
@@ -1305,7 +1303,6 @@ function Repair-WinpePSGalleryTrust {
 #region WinpeFileAzcopyExe
 function Test-WinpeFileAzcopyExe {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
         $Quiet
@@ -1328,7 +1325,6 @@ function Test-WinpeFileAzcopyExe {
 
 function Repair-WinpeFileAzcopyExe {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
     # Test
     $results = Test-WinpeFileAzcopyExe -Quiet
@@ -1384,7 +1380,6 @@ function Repair-WinpeFileAzcopyExe {
 #region Other
 function winpe-RepairTls {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
         $Force
@@ -1429,7 +1424,6 @@ function winpe-RepairTls {
 
 function winpe-InstallDotNetCore {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [System.Management.Automation.SwitchParameter]
         $Force
@@ -1462,7 +1456,6 @@ function winpe-InstallDotNetCore {
 
 function winpe-InstallPowerShellModule {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [Parameter(Mandatory = $true)]
         [System.String]
@@ -1522,7 +1515,6 @@ function winpe-InstallPowerShellModule {
 
 function winpe-InstallZip {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param ()
 
     # requires both 7zr.exe and 7za.exe
@@ -1585,7 +1577,6 @@ function Send-SettingChange {
 
 function Demo-ApplicationWorkspaceSetupComplete {
     [CmdletBinding()]
-    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseApprovedVerbs', '')]
     param (
         [String]$agentbootstrapperURL = "https://download.liquit.com/extra/Bootstrapper/AgentBootstrapper-Win-2.1.0.2.exe",
         [String]$DestinationPath = "C:\Windows\Temp"

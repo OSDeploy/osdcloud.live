@@ -199,7 +199,7 @@ if ($deploymentPhase -eq 'WinPE') {
     $null = Test-WinpePowerShellModuleStorage -Interactive
     $null = Test-WinpeExecutionPolicyBypass -Interactive
     $null = Test-WinpeUserShellFolders -Interactive
-    $null = Test-WinpeRegistryEnvironment
+    $null = Test-WinpeRegistryEnvironment -Interactive
     $null = Test-WinpeSessionEnvironment
     $null = Test-WinpePowerShellProfilePaths
     $null = Test-WinpePowerShellProfile
