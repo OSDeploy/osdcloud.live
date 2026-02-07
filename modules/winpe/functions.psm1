@@ -75,18 +75,34 @@ function Test-WinpePowerShellModuleDism {
         [System.Management.Automation.SwitchParameter]
         $Interactive
     )
-
+    #=================================================
+    # Test
+    $success = $false
     if (Get-Module -ListAvailable -Name "Dism") {
-        if ($Interactive) {
-            Write-Host -ForegroundColor Green "[✓] Dism PowerShell Module is available"
+        $success = $true
+    }
+    #=================================================
+    # Results
+    if (-not $Interactive) {
+        if ($success -eq $true) {
+            return $true
         }
+        else {
+            return $false
+        }
+    }
+    #=================================================
+    # Interactive Success
+    if ($success -eq $true) {
+        Write-Host -ForegroundColor Green "[✓] Dism PowerShell Module is available"
         return $true
     }
-    if ($Interactive) {
-        Write-Host -ForegroundColor Gray "[✗] Dism PowerShell Module does NOT exist. This can NOT be repaired online."
-        Write-Host -ForegroundColor DarkGray "WinPE requires ADK Optional Component WinPE-DismCmdlets"
-    }
+    #=================================================
+    # Interactive Failure
+    Write-Host -ForegroundColor Gray "[✗] Dism PowerShell Module does NOT exist. This can NOT be repaired online."
+    Write-Host -ForegroundColor DarkGray "WinPE requires ADK Optional Component WinPE-DismCmdlets"
     return $false
+    #=================================================
 }
 function Test-WinpePowerShellModuleStorage {
     [CmdletBinding()]
@@ -94,18 +110,34 @@ function Test-WinpePowerShellModuleStorage {
         [System.Management.Automation.SwitchParameter]
         $Interactive
     )
-
+    #=================================================
+    # Test
+    $success = $false
     if (Get-Module -ListAvailable -Name "Storage") {
-        if ($Interactive) {
-            Write-Host -ForegroundColor Green "[✓] Storage PowerShell Module is available"
+        $success = $true
+    }
+    #=================================================
+    # Results
+    if (-not $Interactive) {
+        if ($success -eq $true) {
+            return $true
         }
+        else {
+            return $false
+        }
+    }
+    #=================================================
+    # Interactive Success
+    if ($success -eq $true) {
+        Write-Host -ForegroundColor Green "[✓] Storage PowerShell Module is available"
         return $true
     }
-    if ($Interactive) {
-        Write-Host -ForegroundColor Gray "[✗] Storage PowerShell Module does NOT exist. This can NOT be repaired online."
-        Write-Host -ForegroundColor DarkGray "WinPE requires ADK Optional Component WinPE-StorageWMI"
-    }
+    #=================================================
+    # Interactive Failure
+    Write-Host -ForegroundColor Gray "[✗] Storage PowerShell Module does NOT exist. This can NOT be repaired online."
+    Write-Host -ForegroundColor DarkGray "WinPE requires ADK Optional Component WinPE-StorageWMI"
     return $false
+    #=================================================
 }
 #endregion
 
