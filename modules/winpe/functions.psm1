@@ -589,15 +589,14 @@ function Test-WinpePowerShellProfilePaths {
     # Requirements
     $profileDir = $PSHome
     $profilePath = Join-Path -Path $PSHome -ChildPath 'profile.ps1'
-    $repairPSProfilePath = $false
     #=================================================
     # Test
-    $success = $false
+    $success = $true
     if ($PROFILE.CurrentUserAllHosts -ne "$Home\Documents\WindowsPowerShell\profile.ps1") {
-        $repairPSProfilePath = $true
+        $success = $false
     }
     if ($PROFILE.CurrentUserCurrentHost -ne "$Home\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1") {
-        $repairPSProfilePath = $true
+        $success = $false
     }
     #=================================================
     # Results
@@ -814,12 +813,7 @@ function Repair-WinpeRealTimeClockUTC {
     )
     #=================================================
     # Test
-    if ($Interactive) {
-        $results = Test-WinpeRealTimeClockUTC -Interactive
-    }
-    else {
-        $results = Test-WinpeRealTimeClockUTC
-    }
+    $results = Test-WinpeRealTimeClockUTC
     #=================================================
     # Success
     if ($results -eq $true) {
