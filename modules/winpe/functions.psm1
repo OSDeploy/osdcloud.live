@@ -147,12 +147,8 @@ function Repair-WinpeExecutionPolicyBypass {
         $Interactive
     )
     # Test
-    if ($Interactive) {
-        $results = Test-WinpeExecutionPolicyBypass -Interactive
-    }
-    else {
-        $results = Test-WinpeExecutionPolicyBypass
-    }
+    $results = Test-WinpeExecutionPolicyBypass
+
 
     # Success
     if ($results -eq $true) { return }
