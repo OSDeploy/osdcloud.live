@@ -205,15 +205,15 @@ if ($deploymentPhase -eq 'WinPE') {
     $null = Repair-WinpePowerShellProfilePaths -Interactive
     $null = Repair-WinpePowerShellProfile -Interactive
     $null = Repair-WinpeRealTimeClockUTC -Interactive
-    $null = Repair-WinpeTimeService -Interactive
-    $null = Repair-WinpeFileCurlExe -Interactive
-    $null = Repair-WinpePackageManagement -Interactive
-    Repair-WinpeNugetPackageProvider
-    Repair-WinpeFileNugetExe
-    Update-WinpePackageManagementVersion
-    Update-WinpePowerShellGetVersion
-    Repair-WinpePSGalleryTrust
-    Repair-WinpeFileAzcopyExe
+    Repair-WinpeTimeService -Interactive
+    Repair-WinpeFileCurlExe -Interactive
+    Repair-WinpePackageManagement -Interactive
+    Repair-WinpeNugetPackageProvider -Interactive
+    Repair-WinpeFileNugetExe -Interactive
+    Update-WinpePackageManagementVersion -Interactive
+    Update-WinpePowerShellGetVersion -Interactive
+    Repair-WinpePSGalleryTrust -Interactive
+    Repair-WinpeFileAzcopyExe -Interactive
     # winpe-InstallPowerShellModule -Name OSD
     # winpe-InstallPowerShellModule -Name OSDCloud
     $EndTime = Get-Date

@@ -63,7 +63,6 @@ function Invoke-WinpeDownload {
             Write-Host -ForegroundColor Yellow "[!] Start-BitsTransfer failed, retrying with Invoke-WebRequest"
         }
     }
-
     Invoke-WebRequest -UseBasicParsing -Uri $Uri -OutFile $Destination -ErrorAction Stop
 }
 #endregion

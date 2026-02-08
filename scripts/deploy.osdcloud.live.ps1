@@ -205,15 +205,15 @@ if ($deploymentPhase -eq 'WinPE') {
     $null = Repair-WinpePowerShellProfilePaths -Interactive
     $null = Repair-WinpePowerShellProfile -Interactive
     $null = Repair-WinpeRealTimeClockUTC -Interactive
-    $null = Repair-WinpeTimeService -Interactive
-    $null = Repair-WinpeFileCurlExe -Interactive
-    $null = Repair-WinpePackageManagement -Interactive
-    Repair-WinpeNugetPackageProvider
-    Repair-WinpeFileNugetExe
-    Update-WinpePackageManagementVersion
-    Update-WinpePowerShellGetVersion
-    Repair-WinpePSGalleryTrust
-    Repair-WinpeFileAzcopyExe
+    Repair-WinpeTimeService -Interactive
+    Repair-WinpeFileCurlExe -Interactive
+    Repair-WinpePackageManagement -Interactive
+    Repair-WinpeNugetPackageProvider -Interactive
+    Repair-WinpeFileNugetExe -Interactive
+    Update-WinpePackageManagementVersion -Interactive
+    Update-WinpePowerShellGetVersion -Interactive
+    Repair-WinpePSGalleryTrust -Interactive
+    Repair-WinpeFileAzcopyExe -Interactive
     if ($Dism -ne $true -or $Storage -ne $true) {
         if ($Dism -ne $true) {
             Write-Host -ForegroundColor Red "[!] OSDCloud deployment cannot continue due to missing DISM PowerShell module."
