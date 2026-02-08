@@ -195,8 +195,8 @@ Send-OSDCloudLiveEvent -EventName $eventName -ApiKey $postApi -DistinctId $disti
 #region WinPE
 if ($deploymentPhase -eq 'WinPE') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
-    $null = Test-WinpePowerShellModuleDism -Interactive
-    $null = Test-WinpePowerShellModuleStorage -Interactive
+    $Dism = Test-WinpePowerShellModuleDism -Interactive
+    $Storage = Test-WinpePowerShellModuleStorage -Interactive
     $null = Test-WinpeExecutionPolicyBypass -Interactive
     $null = Test-WinpeUserShellFolders -Interactive
     $null = Test-WinpeRegistryEnvironment -Interactive

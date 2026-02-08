@@ -196,8 +196,14 @@ Send-OSDCloudLiveEvent -EventName $eventName -ApiKey $postApi -DistinctId $disti
 if ($deploymentPhase -eq 'WinPE') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
     # winpe-RepairTls
-    $Dism = Test-WinpePowerShellModuleDism -Interactive
-    $Storage = Test-WinpePowerShellModuleStorage -Interactive
+    $Dism = Test-WinpePowerShellModuleDism
+    if ($Dism -ne $true) {
+        Write-Host -ForegroundColor Red "[!] OSDCloud deployment cannot continue without the DISM PowerShell module."
+    }
+    $Storage = Test-WinpePowerShellModuleStorage
+    if ($Storage -ne $true) {
+        Write-Host -ForegroundColor Red "[!] OSDCloud deployment cannot continue without the Storage PowerShell module."
+    }
     Repair-WinpeExecutionPolicyBypass -Interactive
     Repair-WinpeUserShellFolders -Interactive
     Repair-WinpeRegistryEnvironment -Interactive
@@ -214,15 +220,7 @@ if ($deploymentPhase -eq 'WinPE') {
     Update-WinpePowerShellGetVersion -Interactive
     Repair-WinpePSGalleryTrust -Interactive
     Repair-WinpeFileAzcopyExe -Interactive
-    if ($Dism -ne $true -or $Storage -ne $true) {
-        if ($Dism -ne $true) {
-            Write-Host -ForegroundColor Red "[!] OSDCloud deployment cannot continue due to missing DISM PowerShell module."
-        }
-        if ($Storage -ne $true) {
-            Write-Host -ForegroundColor Red "[!] OSDCloud deployment cannot continue due to missing Storage PowerShell module."
-        }
-    }
-    # winpe-InstallPowerShellModule -Name OSDCloud
+    winpe-InstallPowerShellModule -Name OSDCloud
     $EndTime = Get-Date
     $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
     Write-Host -ForegroundColor DarkGray "[i] Finished in $TotalSeconds seconds"
