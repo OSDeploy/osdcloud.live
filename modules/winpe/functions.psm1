@@ -964,36 +964,18 @@ function Test-WinpeFileCurlExe {
         $Interactive
     )
     #=================================================
-    # Requirements
-    $curlPath = "$env:SystemRoot\System32\curl.exe"
-    #=================================================
     # Test
+    $curlPath = "$env:SystemRoot\System32\curl.exe"
     if (Test-Path $curlPath) {
-        $success = $true
-    }
-    else {
-        $success = $false
-    }
-    #=================================================
-    # Results
-    if (-not $Interactive) {
-        if ($success -eq $true) {
-            return $true
+        if ($Interactive) {
+            $curl = Get-Item -Path $curlPath
+            Write-Host -ForegroundColor Green "[✓] Curl.exe [$($curl.VersionInfo.FileVersion)]"
         }
-        else {
-            return $false
-        }
-    }
-    #=================================================
-    # Interactive Success
-    if ($success -eq $true) {
-        $curl = Get-Item -Path $curlPath
-        Write-Host -ForegroundColor Green "[✓] Curl.exe [$($curl.VersionInfo.FileVersion)]"
         return $true
     }
-    #=================================================
-    # Interactive Failure
-    Write-Host -ForegroundColor Gray "[✗] Curl is NOT installed at $curlPath"
+    if ($Interactive) {
+        Write-Host -ForegroundColor Gray "[✗] Curl is NOT installed at $curlPath"
+    }
     return $false
     #=================================================
 }
@@ -1009,7 +991,7 @@ function Repair-WinpeFileCurlExe {
     $results = Test-WinpeFileCurlExe
     #=================================================
     # Success
-    if ($results -eq 0) {
+    if ($results -eq $true) {
         return
     }
     #=================================================
@@ -1306,7 +1288,7 @@ function Repair-WinpeFileNugetExe {
     $results = Test-WinpeFileNugetExe
     #=================================================
     # Success
-    if ($results -eq 0) {
+    if ($results -eq $true) {
         return
     }
     #=================================================
@@ -1612,36 +1594,17 @@ function Test-WinpeFileAzcopyExe {
         $Interactive
     )
     #=================================================
-    # Requirements
-    $azcopyPath = "$env:SystemRoot\System32\azcopy.exe"
-    #=================================================
     # Test
+    $azcopyPath = "$env:SystemRoot\System32\azcopy.exe"
     if (Test-Path $azcopyPath) {
-        $success = $true
-    }
-    else {
-        $success = $false
-    }
-    #=================================================
-    # Results
-    if (-not $Interactive) {
-        if ($success -eq $true) {
-            return $true
+        if ($Interactive) {
+            Write-Host -ForegroundColor Green "[✓] Microsoft AzCopy"
         }
-        else {
-            return $false
-        }
-    }
-    #=================================================
-    # Interactive Success
-    if ($success -eq $true) {
-        $azcopy = Get-Item -Path $azcopyPath
-        Write-Host -ForegroundColor Green "[✓] Microsoft AzCopy"
         return $true
     }
-    #=================================================
-    # Interactive Failure
-    Write-Host -ForegroundColor Gray "[✗] Microsoft AzCopy is NOT installed"
+    if ($Interactive) {
+        Write-Host -ForegroundColor Gray "[✗] Microsoft AzCopy is NOT installed"
+    }
     return $false
     #=================================================
 }
@@ -1657,7 +1620,7 @@ function Repair-WinpeFileAzcopyExe {
     $results = Test-WinpeFileAzcopyExe
     #=================================================
     # Success
-    if ($results -eq 0) {
+    if ($results -eq $true) {
         return
     }
     #=================================================
