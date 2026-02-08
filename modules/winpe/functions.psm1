@@ -1534,46 +1534,55 @@ function Test-WinpePSGalleryTrust {
     [CmdletBinding()]
     param (
         [System.Management.Automation.SwitchParameter]
-        $Quiet
+        $Interactive
     )
-    # Test
+    #=================================================
+    # Test Execution Policy
     $executionPolicy = Get-ExecutionPolicy -ErrorAction SilentlyContinue
     if ($executionPolicy -ne 'Bypass' -and $executionPolicy -ne 'Unrestricted') {
-        if ($Quiet) { return 1 }
-        Write-Host -ForegroundColor Gray "[✗] PSGallery Repository Installation Policy is NOT Trusted [Execution Policy $executionPolicy]"
-        # Write-Host -ForegroundColor DarkGray "Execution Policy is set to $executionPolicy"
-        # Write-Host -ForegroundColor DarkGray "Execution Policy is blocking enumerating the PowerShell Gallery PSRepository"
-        return 1
+        if ($Interactive) {
+            Write-Host -ForegroundColor Gray "[✗] PSGallery Repository Installation Policy is NOT Trusted [Execution Policy $executionPolicy]"
+        }
+        return $false
     }
-
+    #=================================================
+    # Test PSRepository PSGallery
     $PowerShellGallery = Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue
     if (-not $PowerShellGallery) {
-        if ($Quiet) { return 1 }
-        Write-Host -ForegroundColor Gray "[✗] PSGallery Repository was NOT found"
-        return 1
+        if ($Interactive) {
+            Write-Host -ForegroundColor Gray "[✗] PSGallery Repository was NOT found"
+        }
+        return $false
     }
-
+    #=================================================
+    # Test PSRepository PSGallery InstallationPolicy
     if ($PowerShellGallery.InstallationPolicy -eq 'Trusted') {
-        if ($Quiet) { return 0 }
-        Write-Host -ForegroundColor Green "[✓] PSGallery Repository Installation Policy is Trusted"
-        return 0
+        if ($Interactive) {
+            Write-Host -ForegroundColor Green "[✓] PSGallery Repository Installation Policy is Trusted"
+        }
+        return $true
     }
-
-    if ($Quiet) { return 1 }
-    Write-Host -ForegroundColor Gray "[✗] PSGallery Repository Installation Policy is NOT Trusted"
-    return 1
+    if ($Interactive) {
+        Write-Host -ForegroundColor Gray "[✗] PSGallery Repository Installation Policy is NOT Trusted [Current: $($PowerShellGallery.InstallationPolicy)]"
+    }
+    return $false
+    #=================================================
 }
 function Repair-WinpePSGalleryTrust {
     [CmdletBinding()]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Interactive
+    )
+    #=================================================
     # Test
-    $results = Test-WinpePSGalleryTrust -Quiet
-
+    $results = Test-WinpePSGalleryTrust
+    #=================================================
     # Success
-    if ($results -eq 0) {
+    if ($results -eq $true) {
         return
     }
-
+    #=================================================
     # Repair
     try {
         Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
@@ -1584,9 +1593,15 @@ function Repair-WinpePSGalleryTrust {
         Write-Host -ForegroundColor Red $_
         throw
     }
-
-    # Test
-    $results = Test-WinpePSGalleryTrust
+    #=================================================
+    # Test Again
+    if ($Interactive) {
+        $results = Test-WinpePSGalleryTrust -Interactive
+    }
+    else {
+        $results = Test-WinpePSGalleryTrust
+    }
+    #=================================================
 }
 #endregion
 
