@@ -227,7 +227,6 @@ if ($deploymentPhase -eq 'WinPE') {
         $null = Stop-Transcript -ErrorAction Ignore
         Break
     }
-    winpe-InstallPowerShellModule -Name OSD
     winpe-InstallPowerShellModule -Name OSDCloud
     $EndTime = Get-Date
     $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
