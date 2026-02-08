@@ -1344,34 +1344,53 @@ function Test-WinpePackageManagementVersion {
     [CmdletBinding()]
     param (
         [System.Management.Automation.SwitchParameter]
-        $Quiet
+        $Interactive
     )
+    #=================================================
+    # Test
+    $success = $false
     $installedModule = Get-Module -Name PackageManagement -ListAvailable | Where-Object { $_.Version -ge '1.4.8.1' }
-
-    # Success
     if ($installedModule) {
-        if ($Quiet) { return 0 }
+        $success = $true
+    }
+    #=================================================
+    # Results
+    if (-not $Interactive) {
+        if ($success -eq $true) {
+            return $true
+        }
+        else {
+            return $false
+        }
+    }
+    #=================================================
+    # Interactive Success
+    if ($success -eq $true) {
         $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
         Write-Host -ForegroundColor Green "[✓] PackageManagement PowerShell Module is updated [$latestVersion]"
-        return 0
+        return $true
     }
-
-    # Failure
+    #=================================================
+    # Interactive Failure
     Write-Host -ForegroundColor Gray "[✗] PackageManagement PowerShell Module is NOT updated to version 1.4.8.1 or later"
-    if ($Quiet) { return 1 }
-    return 1
+    return $false
+    #=================================================
 }
 function Update-WinpePackageManagementVersion {
     [CmdletBinding()]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Interactive
+    )
+    #=================================================
     # Test
-    $results = Test-WinpePackageManagementVersion -Quiet
-
+    $results = Test-WinpePackageManagementVersion
+    #=================================================
     # Success
-    if ($results -eq 0) {
+    if ($results -eq $true) {
         return
     }
-
+    #=================================================
     # Repair
     Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     try {
@@ -1401,9 +1420,15 @@ function Update-WinpePackageManagementVersion {
         if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
         if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
-
-    # Test again
-    $results = Test-WinpePackageManagementVersion
+    #=================================================
+    # Test Again
+    if ($Interactive) {
+        $results = Test-WinpePackageManagementVersion -Interactive
+    }
+    else {
+        $results = Test-WinpePackageManagementVersion
+    }
+    #=================================================
 }
 #endregion
 
@@ -1412,34 +1437,53 @@ function Test-WinpePowerShellGetVersion {
     [CmdletBinding()]
     param (
         [System.Management.Automation.SwitchParameter]
-        $Quiet
+        $Interactive
     )
+    #=================================================
+    # Test
+    $success = $false
     $installedModule = Get-Module -Name PowerShellGet -ListAvailable | Where-Object { $_.Version -ge '2.2.5' }
-
-    # Success
     if ($installedModule) {
-        if ($Quiet) { return 0 }
+        $success = $true
+    }
+    #=================================================
+    # Results
+    if (-not $Interactive) {
+        if ($success -eq $true) {
+            return $true
+        }
+        else {
+            return $false
+        }
+    }
+    #=================================================
+    # Interactive Success
+    if ($success -eq $true) {
         $latestVersion = ($installedModule | Sort-Object Version -Descending | Select-Object -First 1).Version
         Write-Host -ForegroundColor Green "[✓] PowerShellGet PowerShell Module is updated [$($latestVersion)]"
-        return 0
+        return $true
     }
-
-    # Failure
-    if ($Quiet) { return 1 }
+    #=================================================
+    # Interactive Failure
     Write-Host -ForegroundColor Gray "[✗] PowerShellGet PowerShell Module is NOT updated to version 2.2.5 or later"
-    return 1
+    return $false
+    #=================================================
 }
 function Update-WinpePowerShellGetVersion {
     [CmdletBinding()]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Interactive
+    )
+    #=================================================
     # Test
-    $results = Test-WinpePowerShellGetVersion -Quiet
-
+    $results = Test-WinpePowerShellGetVersion
+    #=================================================
     # Success
-    if ($results -eq 0) {
+    if ($results -eq $true) {
         return
     }
-
+    #=================================================
     # Repair
     try {
         Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
@@ -1473,9 +1517,15 @@ function Update-WinpePowerShellGetVersion {
         if (Test-Path $tempZip) { Remove-Item $tempZip -Force -ErrorAction SilentlyContinue }
         if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue }
     }
-
-    # Test again
-    $results = Test-WinpePowerShellGetVersion
+    #=================================================
+    # Test Again
+    if ($Interactive) {
+        $results = Test-WinpePowerShellGetVersion -Interactive
+    }
+    else {
+        $results = Test-WinpePowerShellGetVersion
+    }
+    #=================================================
 }
 #endregion
 
