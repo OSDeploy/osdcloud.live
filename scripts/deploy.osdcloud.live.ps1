@@ -198,13 +198,13 @@ if ($deploymentPhase -eq 'WinPE') {
     # winpe-RepairTls
     $Dism = Test-WinpePowerShellModuleDism -Interactive
     $Storage = Test-WinpePowerShellModuleStorage -Interactive
-    $null = Repair-WinpeExecutionPolicyBypass -Interactive
-    $null = Repair-WinpeUserShellFolders -Interactive
-    $null = Repair-WinpeRegistryEnvironment -Interactive
-    $null = Repair-WinpeSessionEnvironment -Interactive
-    $null = Repair-WinpePowerShellProfilePaths -Interactive
-    $null = Repair-WinpePowerShellProfile -Interactive
-    $null = Repair-WinpeRealTimeClockUTC -Interactive
+    Repair-WinpeExecutionPolicyBypass -Interactive
+    Repair-WinpeUserShellFolders -Interactive
+    Repair-WinpeRegistryEnvironment -Interactive
+    Repair-WinpeSessionEnvironment -Interactive
+    Repair-WinpePowerShellProfilePaths -Interactive
+    Repair-WinpePowerShellProfile -Interactive
+    Repair-WinpeRealTimeClockUTC -Interactive
     Repair-WinpeTimeService -Interactive
     Repair-WinpeFileCurlExe -Interactive
     Repair-WinpePackageManagement -Interactive

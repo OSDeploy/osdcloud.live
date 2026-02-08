@@ -196,15 +196,15 @@ Send-OSDCloudLiveEvent -EventName $eventName -ApiKey $postApi -DistinctId $disti
 if ($deploymentPhase -eq 'WinPE') {
     Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
     # winpe-RepairTls
-    $null = Test-WinpePowerShellModuleDism -Interactive
-    $null = Test-WinpePowerShellModuleStorage -Interactive
-    $null = Repair-WinpeExecutionPolicyBypass -Interactive
-    $null = Repair-WinpeUserShellFolders -Interactive
-    $null = Repair-WinpeRegistryEnvironment -Interactive
-    $null = Repair-WinpeSessionEnvironment -Interactive
-    $null = Repair-WinpePowerShellProfilePaths -Interactive
-    $null = Repair-WinpePowerShellProfile -Interactive
-    $null = Repair-WinpeRealTimeClockUTC -Interactive
+    Test-WinpePowerShellModuleDism -Interactive
+    Test-WinpePowerShellModuleStorage -Interactive
+    Repair-WinpeExecutionPolicyBypass -Interactive
+    Repair-WinpeUserShellFolders -Interactive
+    Repair-WinpeRegistryEnvironment -Interactive
+    Repair-WinpeSessionEnvironment -Interactive
+    Repair-WinpePowerShellProfilePaths -Interactive
+    Repair-WinpePowerShellProfile -Interactive
+    Repair-WinpeRealTimeClockUTC -Interactive
     Repair-WinpeTimeService -Interactive
     Repair-WinpeFileCurlExe -Interactive
     Repair-WinpePackageManagement -Interactive
