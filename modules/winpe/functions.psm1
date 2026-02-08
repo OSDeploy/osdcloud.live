@@ -1545,35 +1545,58 @@ function Test-WinpeFileAzcopyExe {
     [CmdletBinding()]
     param (
         [System.Management.Automation.SwitchParameter]
-        $Quiet
+        $Interactive
     )
+    #=================================================
+    # Requirements
     $azcopyPath = "$env:SystemRoot\System32\azcopy.exe"
-
-    # Success
+    #=================================================
+    # Test
     if (Test-Path $azcopyPath) {
-        if ($Quiet) { return 0 }
+        $success = $true
+    }
+    else {
+        $success = $false
+    }
+    #=================================================
+    # Results
+    if (-not $Interactive) {
+        if ($success -eq $true) {
+            return $true
+        }
+        else {
+            return $false
+        }
+    }
+    #=================================================
+    # Interactive Success
+    if ($success -eq $true) {
         $azcopy = Get-Item -Path $azcopyPath
         Write-Host -ForegroundColor Green "[✓] Microsoft AzCopy"
-        return 0
+        return $true
     }
-
-    # Failure
-    if ($Quiet) { return 1 }
-    Write-Host -ForegroundColor Gray "[✗] Microsoft AzCopy [NOT installed]"
-    return 1
+    #=================================================
+    # Interactive Failure
+    Write-Host -ForegroundColor Gray "[✗] Microsoft AzCopy is NOT installed"
+    return $false
+    #=================================================
 }
 
 function Repair-WinpeFileAzcopyExe {
     [CmdletBinding()]
-    param ()
+    param (
+        [System.Management.Automation.SwitchParameter]
+        $Interactive
+    )
+    #=================================================
     # Test
-    $results = Test-WinpeFileAzcopyExe -Quiet
-
+    $results = Test-WinpeFileAzcopyExe
+    #=================================================
     # Success
     if ($results -eq 0) {
         return
     }
-
+    #=================================================
     # Repair
     Write-Host -ForegroundColor DarkGray "[→] $($MyInvocation.MyCommand.Name)"
     $azcopyPath = "$env:SystemRoot\System32\azcopy.exe"
