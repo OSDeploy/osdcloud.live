@@ -13,9 +13,9 @@
 .EXTERNALSCRIPTDEPENDENCIES 
 .RELEASENOTES
 Script should be executed in a Command Prompt using the following command
-powershell Invoke-Expression -Command (Invoke-RestMethod -Uri test.osdcloud.live)
+powershell Invoke-Expression -Command (Invoke-RestMethod -Uri exportoem.osdcloud.live)
 This is abbreviated as
-powershell iex (irm test.osdcloud.live)
+powershell iex (irm exportoem.osdcloud.live)
 #>
 #Requires -RunAsAdministrator
 <#
@@ -26,14 +26,14 @@ powershell iex (irm test.osdcloud.live)
 .NOTES
     Version 26.02.10
 .LINK
-    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/scripts/test.osdcloud.live.ps1
+    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/scripts/exportoem.osdcloud.live.ps1
 .EXAMPLE
-    powershell iex (irm test.osdcloud.live)
+    powershell iex (irm exportoem.osdcloud.live)
 #>
 [CmdletBinding()]
 param()
 $startTime = Get-Date
-$scriptName = 'test.osdcloud.live'
+$scriptName = 'exportoem.osdcloud.live'
 #=================================================
 Write-Host -ForegroundColor DarkCyan "OSDCloud Live collects diagnostic data to improve functionality"
 Write-Host -ForegroundColor DarkCyan "By using OSDCloud Live, you consent to the collection of diagnostic data as outlined in the privacy policy"
@@ -62,8 +62,8 @@ $isElevated = ([Security.Principal.WindowsPrincipal] [Security.Principal.Windows
 Write-Host -ForegroundColor DarkGray "$scriptName [$deploymentPhase]"
 #endregion
 #=================================================
+$eventName = 'osdcloud_live_exportoem'
 #region OSDCloud Live Analytics
-$eventName = 'osdcloud_live_test'
 function Send-OSDCloudLiveEvent {
     param(
         [Parameter(Mandatory)]
@@ -188,101 +188,53 @@ $postApi = 'phc_2h7nQJCo41Hc5C64B2SkcEBZOvJ6mHr5xAHZyjPl3ZK'
 Send-OSDCloudLiveEvent -EventName $eventName -ApiKey $postApi -DistinctId $distinctId -Properties $eventProperties
 #endregion
 #=================================================
-#region WinPE
-if ($deploymentPhase -eq 'WinPE') {
-    Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
-    $Dism = Test-WinpePowerShellModuleDism -Interactive
-    $Storage = Test-WinpePowerShellModuleStorage -Interactive
-    $null = Test-WinpeExecutionPolicyBypass -Interactive
-    $null = Test-WinpeUserShellFolders -Interactive
-    $null = Test-WinpeRegistryEnvironment -Interactive
-    $null = Test-WinpeSessionEnvironment -Interactive
-    $null = Test-WinpePowerShellProfilePaths -Interactive
-    $null = Test-WinpePowerShellProfile -Interactive
-    $null = Test-WinpeRealTimeClockUTC -Interactive
-    $null = Test-WinpeTimeService -Interactive
-    $null = Test-WinpeFileCurlExe -Interactive
-    $null = Test-WinpePackageManagement -Interactive
-    $null = Test-WinpeNuGetPackageProvider -Interactive
-    $null = Test-WinpeFileNugetExe -Interactive
-    $null = Test-WinpePackageManagementVersion -Interactive
-    $null = Test-WinpePowerShellGetVersion -Interactive
-    $null = Test-WinpePSGalleryTrust -Interactive
-    $null = Test-WinpeFileAzcopyExe -Interactive
-    $endTime = Get-Date
-    $totalSeconds = [math]::Round(($endTime - $startTime).TotalSeconds, 2)
-    Write-Host -ForegroundColor DarkGray "[i] Finished in $totalSeconds seconds"
-    $null = Stop-Transcript -ErrorAction Ignore
-}
-#endregion
+#region Device OEM Driver Export
+# Export Path
+$ExportRoot = "$env:Temp\WinPEDriver\$deviceManufacturer\$deviceModelId $deviceModel"
 
-#region Specialize
-if ($deploymentPhase -eq 'Specialize') {
-    Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/specialize/functions.psm1')
-    $endTime = Get-Date
-    $totalSeconds = [math]::Round(($endTime - $startTime).TotalSeconds, 2)
-    Write-Host -ForegroundColor DarkGray "[i] Finished in $totalSeconds seconds"
-    $null = Stop-Transcript -ErrorAction Ignore
-}
-#endregion
+# Set the export path to the clipboard for easy access
+Set-Clipboard -Value "$env:Temp\WinPEDriver"
 
-#region AuditMode
-if ($deploymentPhase -eq 'AuditMode') {
-    Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/audit/functions.psm1')
-    $endTime = Get-Date
-    $totalSeconds = [math]::Round(($endTime - $startTime).TotalSeconds, 2)
-    Write-Host -ForegroundColor DarkGray "[i] Finished in $totalSeconds seconds"
-    $null = Stop-Transcript -ErrorAction Ignore
-}
-#endregion
+Write-Host "[$(Get-Date -format s)] Exporting OEMDrivers to $ExportRoot"
+$PnputilXml = & pnputil.exe /enum-devices /connected /format xml
+$PnputilXmlObject = [xml]$PnputilXml
+$PnputilDevices = $PnputilXmlObject.PnpUtil.Device | Where-Object {$_.DriverName -match 'oem'} | Sort-Object DriverName -Unique | Sort-Object ClassName
+#$PnputilExtension = $PnputilXmlObject.PnpUtil.Device.ExtensionDriverNames
 
-#region OOBE
-if ($deploymentPhase -eq 'OOBE') {
-    if ($isElevated) {
-        Write-Host -ForegroundColor Green "[✓] Running as $whoiam (Admin Elevated)"
+if ($PnputilDevices) {
+    foreach ($Device in $PnputilDevices) {
+        # Don't process these Drivers
+        if ($Device.ClassName -match "AudioEndpoint|AudioProcessingObject|Biometric|Bluetooth|Camera|ComputeAccelerator|Display|Firmware|MEDIA|Printer|PrintQueue|SoftwareComponent|SoftwareDevice|WSDPrintDevice") {
+            Write-Host -ForegroundColor DarkGray "[$(Get-Date -format s)] $($Device.ClassName) - $($Device.DeviceDescription)"
+            continue
+        }
+        if ($Device.DeviceDescription -match "Firmware|Smart Sound") {
+            Write-Host -ForegroundColor DarkGray "[$(Get-Date -format s)] $($Device.ClassName) - $($Device.DeviceDescription)"
+            continue
+        }
+
+        Write-Host -ForegroundColor DarkCyan "[$(Get-Date -format s)] $($Device.ClassName) - $($Device.DeviceDescription)"
+        $FolderName = $Device.DriverName -replace '.inf', ''
+        $ExportPath = "$ExportRoot\$($Device.ClassName)\$($Device.ManufacturerName)\$FolderName"
+
+        if (-not (Test-Path -Path $ExportPath)) {
+            New-Item -ItemType Directory -Path $ExportPath -Force | Out-Null
+        }
+
+        $null = & pnputil.exe /export-driver $Device.DriverName $ExportPath
+
+        # Calculate folder size of the exported driver
+        $FolderSizeBytes = (Get-ChildItem -Path $ExportPath -Recurse -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum
+        if (-not $FolderSizeBytes) { $FolderSizeBytes = 0 }
+
+        $FolderSizeMB = [math]::Round($FolderSizeBytes / 1MB, 2)
+        Write-Host "[$(Get-Date -format s)] $FolderSizeMB MB"
     }
-    else {
-        Write-Host -ForegroundColor Red "[!] Running as $whoiam (NOT Admin Elevated)"
-    }
-    Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/oobe/functions.psm1')
-    $null = oobe-ExecutionPolicyTest
-    $null = oobe-UserShellFolderTest
-    $null = oobe-RegistryEnvironmentTest
-    $null = oobe-SessionEnvironmentTest
-    $null = oobe-PowerShellProfilePathTest
-    $null = oobe-PowerShellProfileTest
-    $null = oobe-RealTimeClockUTCTest
-    $null = oobe-TimeServiceTest
-    $null = oobe-CurlExeTest
-    $null = oobe-PackageManagementTest
-    $null = oobe-NuGetPackageProviderTest
-    $null = oobe-NugetExeTest
-    $null = oobe-UpdatePackageManagementTest
-    $null = oobe-UpdatePowerShellGetTest
-    $null = oobe-PSGalleryTrustTest
-    $null = oobe-AzcopyExeTest
-    $endTime = Get-Date
-    $totalSeconds = [math]::Round(($endTime - $startTime).TotalSeconds, 2)
-    Write-Host -ForegroundColor DarkGray "[i] Finished in $totalSeconds seconds"
-    $null = Stop-Transcript -ErrorAction Ignore
 }
 #endregion
-
-#region Windows
-if ($deploymentPhase -eq 'Windows') {
-    if ($isElevated) {
-        Write-Host -ForegroundColor Green "[✓] Running as $whoiam (Admin Elevated)"
-    }
-    else {
-        Write-Host -ForegroundColor Red "[!] Running as $whoiam (NOT Admin Elevated)"
-        Break
-    }
-    $endTime = Get-Date
-    $totalSeconds = [math]::Round(($endTime - $startTime).TotalSeconds, 2)
-    Write-Host -ForegroundColor DarkGray "[i] Finished in $totalSeconds seconds"
-    $null = Stop-Transcript -ErrorAction Ignore
-}
-#endregion
-
+#=================================================
 $endTime = Get-Date
 $totalSeconds = [math]::Round(($endTime - $startTime).TotalSeconds, 2)
+Write-Host -ForegroundColor DarkGray "[i] Finished in $totalSeconds seconds"
+$null = Stop-Transcript -ErrorAction Ignore
+#=================================================
