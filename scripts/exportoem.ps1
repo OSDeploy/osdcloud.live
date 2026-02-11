@@ -191,14 +191,14 @@ Send-OSDCloudLiveEvent -EventName $eventName -ApiKey $postApi -DistinctId $disti
 #region Device OEM Driver Export
 # Export Path
 if ($env:WINPEDRIVERS) {
-    $ExportRoot = "$env:WINPEDRIVERS\$deviceManufacturer\$deviceModelId $deviceModel"
+    $ExportRoot = "$env:WINPEDRIVERS\$($deviceManufacturer)_$($deviceModelId)_$($deviceModel)"
 }
 else {
-    $ExportRoot = "$env:Temp\WinPEDriver\$deviceManufacturer\$deviceModelId $deviceModel"
+    $ExportRoot = "$env:Temp\WinPEDriver\$($deviceManufacturer)_$($deviceModelId)_$($deviceModel)"
 }
 
 # Set the export path to the clipboard for easy access
-Set-Clipboard -Value "$env:Temp\WinPEDriver"
+Set-Clipboard -Value $ExportRoot
 
 Write-Host "[$(Get-Date -format s)] Exporting OEMDrivers to $ExportRoot"
 $PnputilXml = & pnputil.exe /enum-devices /connected /format xml
