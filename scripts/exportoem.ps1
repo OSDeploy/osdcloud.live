@@ -26,7 +26,7 @@ powershell iex (irm exportoem.osdcloud.live)
 .NOTES
     Version 26.02.10
 .LINK
-    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/scripts/exportoem.osdcloud.live.ps1
+    https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/scripts/exportoem.ps1
 .EXAMPLE
     powershell iex (irm exportoem.osdcloud.live)
 #>
@@ -190,7 +190,12 @@ Send-OSDCloudLiveEvent -EventName $eventName -ApiKey $postApi -DistinctId $disti
 #=================================================
 #region Device OEM Driver Export
 # Export Path
-$ExportRoot = "$env:Temp\WinPEDriver\$deviceManufacturer\$deviceModelId $deviceModel"
+if ($env:WINPEDRIVERS) {
+    $ExportRoot = "$env:WINPEDRIVERS\$deviceManufacturer\$deviceModelId $deviceModel"
+}
+else {
+    $ExportRoot = "$env:Temp\WinPEDriver\$deviceManufacturer\$deviceModelId $deviceModel"
+}
 
 # Set the export path to the clipboard for easy access
 Set-Clipboard -Value "$env:Temp\WinPEDriver"
