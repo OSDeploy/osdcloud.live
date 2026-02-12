@@ -1,6 +1,14 @@
 # osdcloud.live
 
-> Status: early testing; expect breaking changes and incomplete coverage.
+Documentation on how to use this repository is posted at:
+
+<https://www.osdcloud.com/osdcloud-live/about>
+
+## Privacy
+
+osdcloud.live Privacy Policy is shared with OSDCloud. Please review the Privacy statement at:
+
+<https://github.com/OSDeploy/OSDCloud/blob/main/PRIVACY.md>
 
 ## Overview
 
@@ -12,19 +20,8 @@ This repository contains the working files that support the osdcloud.live experi
 - Limited documentation depth; some modules may be undocumented or in flux
 - Potential breaking changes without migration guidance until the test phase completes
 
-## Quick start
-
-1) Clone this repository locally.
-2) Review the scripts in the `modules/` and `archive/` directories to understand current coverage.
-3) Run test workflows in an isolated lab environment only; do not use in production yet.
-
 ## Contributing and feedback
 
 - File issues with clear repro steps and logs where possible.
 - When proposing changes, include updates to documentation alongside code updates.
 - Expect iteration while we collect feedback and harden the flows.
-
-## Next steps
-
-- Expand usage documentation once test scenarios finalize.
-- Add validated end-to-end examples for OOBE and WinPE once stable.
