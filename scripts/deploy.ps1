@@ -33,9 +33,9 @@ powershell iex (irm deploy.osdcloud.live)
 [CmdletBinding()]
 param()
 $startTime = Get-Date
-$scriptName = 'repair.osdcloud.live'
+$scriptName = 'deploy.osdcloud.live'
 $scriptVersion = '26.02.06'
-$eventName = 'osdcloud_live_test'
+$eventName = 'osdcloud_live_deploy'
 #=================================================
 Write-Host -ForegroundColor DarkCyan "OSDCloud Live collects diagnostic data to improve functionality"
 Write-Host -ForegroundColor DarkCyan "By using OSDCloud Live, you consent to the collection of diagnostic data as outlined in the privacy policy"
@@ -232,7 +232,8 @@ if ($deploymentPhase -eq 'WinPE') {
     $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
     Write-Host -ForegroundColor DarkGray "[i] Finished in $TotalSeconds seconds"
     $null = Stop-Transcript -ErrorAction Ignore
-    Deploy-OSDCloud Recast
+    Deploy-OSDCloud
+    # Add your own functions or steps here!!!!!!
 }
 #endregion
 

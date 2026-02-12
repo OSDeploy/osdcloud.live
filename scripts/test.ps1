@@ -34,6 +34,7 @@ powershell iex (irm test.osdcloud.live)
 param()
 $startTime = Get-Date
 $scriptName = 'test.osdcloud.live'
+$eventName = 'osdcloud_live_test'
 #=================================================
 Write-Host -ForegroundColor DarkCyan "OSDCloud Live collects diagnostic data to improve functionality"
 Write-Host -ForegroundColor DarkCyan "By using OSDCloud Live, you consent to the collection of diagnostic data as outlined in the privacy policy"
@@ -63,7 +64,6 @@ Write-Host -ForegroundColor DarkGray "$scriptName [$deploymentPhase]"
 #endregion
 #=================================================
 #region OSDCloud Live Analytics
-$eventName = 'osdcloud_live_test'
 function Send-OSDCloudLiveEvent {
     param(
         [Parameter(Mandatory)]
