@@ -253,7 +253,7 @@ if ($PnputilDevices) {
         # $FolderName = $Device.DriverName -replace '.inf', ''
         $FolderName = $Device.DeviceDescription -replace '[\\/:*?"<>|#]', ''
         $FolderName = $FolderName -replace [regex]::Escape($ManufacturerName), ''
-        $FolderName = $FolderName -replace '\(standard system devices\)', '', 'IgnoreCase'
+        $FolderName = $FolderName -replace '\(standard system devices\)', ''
         $FolderName = [regex]::Replace($FolderName, '\s*\(.*?\)\s*', ' ')
         $FolderName = [regex]::Replace($FolderName, '\s+', ' ')
         $FolderName = $FolderName.Trim()
