@@ -204,16 +204,26 @@ Write-Host "[$(Get-Date -format s)] Exporting OEMDrivers to $ExportRoot"
 $PnputilXml = (& pnputil.exe /enum-devices /connected /format xml) -join "`n"
 $PnputilXmlObject = [xml]$PnputilXml
 $PnputilDevices = $PnputilXmlObject.PnpUtil.Device | Where-Object {$_.DriverName -match 'oem'} | Sort-Object DriverName -Unique | Sort-Object ClassName
-
+$PnputilDevices | Out-File -FilePath "$ExportRoot\oemdrivers.txt" -Encoding UTF8
 #$PnputilExtension = $PnputilXmlObject.PnpUtil.Device.ExtensionDriverNames
 
 # Classes to Export
 $ExportClass = @(
+    '1394',
+    'DiskDrive',
+    'HDC',
     'HIDClass',
+    'Keyboard',
+    'Mouse',
+    'MTD',
+    'Multifunction',
     'Net',
+    'NvmeDisk',
     'SCSIAdapter',
+    'Securitydevices',
     'System',
-    'USB'
+    'Volume',
+    'USBDevice'
 )
 
 if ($PnputilDevices) {
