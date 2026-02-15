@@ -222,6 +222,7 @@ $ExportClass = @(
     'Securitydevices',
     'System',
     'Volume',
+    'USB',
     'USBDevice'
 )
 
