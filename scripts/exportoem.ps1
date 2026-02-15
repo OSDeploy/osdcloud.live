@@ -204,7 +204,6 @@ Write-Host "[$(Get-Date -format s)] Exporting OEMDrivers to $ExportRoot"
 $PnputilXml = (& pnputil.exe /enum-devices /connected /format xml) -join "`n"
 $PnputilXmlObject = [xml]$PnputilXml
 $PnputilDevices = $PnputilXmlObject.PnpUtil.Device | Where-Object {$_.DriverName -match 'oem'} | Sort-Object DriverName -Unique | Sort-Object ClassName
-$PnputilDevices | Out-File -FilePath "$ExportRoot\oemdrivers.txt" -Encoding UTF8
 #$PnputilExtension = $PnputilXmlObject.PnpUtil.Device.ExtensionDriverNames
 
 # Classes to Export
@@ -254,6 +253,7 @@ if ($PnputilDevices) {
         # $FolderName = $Device.DriverName -replace '.inf', ''
         $FolderName = $Device.DeviceDescription -replace '[\\/:*?"<>|#]', ''
         $FolderName = $FolderName -replace [regex]::Escape($ManufacturerName), ''
+        $FolderName = $FolderName -replace '\(standard system devices\)', '', 'IgnoreCase'
         $FolderName = [regex]::Replace($FolderName, '\s*\(.*?\)\s*', ' ')
         $FolderName = [regex]::Replace($FolderName, '\s+', ' ')
         $FolderName = $FolderName.Trim()
@@ -273,6 +273,7 @@ if ($PnputilDevices) {
         Write-Host "[$(Get-Date -format s)] $FolderSizeMB MB"
         #>
     }
+    $PnputilDevices | Out-File -FilePath "$ExportRoot\oemdrivers.txt" -Encoding UTF8
 }
 #endregion
 #=================================================
