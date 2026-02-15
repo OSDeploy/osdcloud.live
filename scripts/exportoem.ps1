@@ -201,39 +201,67 @@ else {
 Set-Clipboard -Value $ExportRoot
 
 Write-Host "[$(Get-Date -format s)] Exporting OEMDrivers to $ExportRoot"
-$PnputilXml = & pnputil.exe /enum-devices /connected /format xml
+$PnputilXml = (& pnputil.exe /enum-devices /connected /format xml) -join "`n"
 $PnputilXmlObject = [xml]$PnputilXml
 $PnputilDevices = $PnputilXmlObject.PnpUtil.Device | Where-Object {$_.DriverName -match 'oem'} | Sort-Object DriverName -Unique | Sort-Object ClassName
+
 #$PnputilExtension = $PnputilXmlObject.PnpUtil.Device.ExtensionDriverNames
+
+# Classes to Export
+$ExportClass = @(
+    'HIDClass',
+    'Net',
+    'SCSIAdapter',
+    'System',
+    'USB'
+)
 
 if ($PnputilDevices) {
     foreach ($Device in $PnputilDevices) {
-        # Don't process these Drivers
-        if ($Device.ClassName -match "AudioEndpoint|AudioProcessingObject|Biometric|Bluetooth|Camera|ComputeAccelerator|Display|Firmware|MEDIA|Printer|PrintQueue|SoftwareComponent|SoftwareDevice|WSDPrintDevice") {
-            Write-Host -ForegroundColor DarkGray "[$(Get-Date -format s)] $($Device.ClassName) - $($Device.DeviceDescription)"
-            continue
+
+        $ManufacturerName = $Device.ManufacturerName -as [string]
+        if ([string]::IsNullOrWhiteSpace($ManufacturerName)) {
+            $ManufacturerName = 'Unknown'
         }
-        if ($Device.DeviceDescription -match "Firmware|Smart Sound") {
-            Write-Host -ForegroundColor DarkGray "[$(Get-Date -format s)] $($Device.ClassName) - $($Device.DeviceDescription)"
+        else {
+            $ManufacturerName = $ManufacturerName.Trim()
+            if ($ManufacturerName -match 'Dell') { $ManufacturerName = 'Dell'}
+            if ($ManufacturerName -match 'HP') { $ManufacturerName = 'HP'}
+            if ($ManufacturerName -match 'Intel') { $ManufacturerName = 'Intel'}
+            if ($ManufacturerName -match 'Logitech') { $ManufacturerName = 'Logitech'}
+            if ($ManufacturerName -match 'Qualcomm') { $ManufacturerName = 'Qualcomm'}
+            if ($ManufacturerName -match 'Realtek') { $ManufacturerName = 'Realtek'}
+        }
+
+
+        # If the Device Class is not in the ExportClass list, skip it
+        if ($ExportClass -notcontains $Device.ClassName) {
+            Write-Host -ForegroundColor DarkGray "[$(Get-Date -format s)] [$($Device.ClassName)] $ManufacturerName $($Device.DeviceDescription)"
             continue
         }
 
-        Write-Host -ForegroundColor DarkCyan "[$(Get-Date -format s)] $($Device.ClassName) - $($Device.DeviceDescription)"
-        $FolderName = $Device.DriverName -replace '.inf', ''
-        $ExportPath = "$ExportRoot\$($Device.ClassName)\$($Device.ManufacturerName)\$FolderName"
+        Write-Host -ForegroundColor DarkGreen "[$(Get-Date -format s)] [$($Device.ClassName)] $ManufacturerName $($Device.DeviceDescription)"
+        # $FolderName = $Device.DriverName -replace '.inf', ''
+        $FolderName = $Device.DeviceDescription -replace '[\\/:*?"<>|#]', ''
+        $FolderName = $FolderName -replace [regex]::Escape($ManufacturerName), ''
+        $FolderName = [regex]::Replace($FolderName, '\s*\(.*?\)\s*', ' ')
+        $FolderName = [regex]::Replace($FolderName, '\s+', ' ')
+        $FolderName = $FolderName.Trim()
+
+        $ExportPath = "$ExportRoot\$ManufacturerName $FolderName"
 
         if (-not (Test-Path -Path $ExportPath)) {
             New-Item -ItemType Directory -Path $ExportPath -Force | Out-Null
         }
-
         $null = & pnputil.exe /export-driver $Device.DriverName $ExportPath
 
+        <#
         # Calculate folder size of the exported driver
         $FolderSizeBytes = (Get-ChildItem -Path $ExportPath -Recurse -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum
         if (-not $FolderSizeBytes) { $FolderSizeBytes = 0 }
-
         $FolderSizeMB = [math]::Round($FolderSizeBytes / 1MB, 2)
         Write-Host "[$(Get-Date -format s)] $FolderSizeMB MB"
+        #>
     }
 }
 #endregion
