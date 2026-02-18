@@ -201,10 +201,44 @@ else {
 Set-Clipboard -Value $ExportRoot
 
 Write-Host "[$(Get-Date -format s)] Exporting OEMDrivers to $ExportRoot"
+<#
 $PnputilXml = (& pnputil.exe /enum-devices /connected /format xml) -join "`n"
 $PnputilXmlObject = [xml]$PnputilXml
 $PnputilDevices = $PnputilXmlObject.PnpUtil.Device | Where-Object {$_.DriverName -match 'oem'} | Sort-Object DriverName -Unique | Sort-Object ClassName
 #$PnputilExtension = $PnputilXmlObject.PnpUtil.Device.ExtensionDriverNames
+#>
+
+$output = & pnputil.exe /enum-devices /connected
+
+$devices = @()
+$currentDevice = @{}
+
+foreach ($line in $output) {
+    $line = $line.Trim()
+    
+    if ([string]::IsNullOrWhiteSpace($line)) {
+        # Blank line means end of current device
+        if ($currentDevice.Count -gt 0) {
+            $devices += [PSCustomObject]$currentDevice
+            $currentDevice = @{}
+        }
+    }
+    elseif ($line -like "*:*") {
+        # Parse key-value pair
+        $key, $value = $line -split ':\s*', 2
+        $key = $key.Trim() -replace '\s+', '' # Remove spaces from key
+        $value = $value.Trim()
+        $currentDevice[$key] = $value
+    }
+}
+
+# Add last device if exists
+if ($currentDevice.Count -gt 0) {
+    $devices += [PSCustomObject]$currentDevice
+}
+
+$PnputilDevices = $devices | Where-Object { $_.DriverName -match 'oem' } | Sort-Object DriverName -Unique | Sort-Object ClassName
+# $PnputilDevices | Select-Object ClassName, DriverName, ManufacturerName, DeviceDescription | Out-GridView -Wait
 
 # Classes to Export
 $ExportClass = @(
@@ -228,7 +262,6 @@ $ExportClass = @(
 
 if ($PnputilDevices) {
     foreach ($Device in $PnputilDevices) {
-
         $ManufacturerName = $Device.ManufacturerName -as [string]
         if ([string]::IsNullOrWhiteSpace($ManufacturerName)) {
             $ManufacturerName = 'Unknown'
@@ -242,7 +275,6 @@ if ($PnputilDevices) {
             if ($ManufacturerName -match 'Qualcomm') { $ManufacturerName = 'Qualcomm'}
             if ($ManufacturerName -match 'Realtek') { $ManufacturerName = 'Realtek'}
         }
-
 
         # If the Device Class is not in the ExportClass list, skip it
         if ($ExportClass -notcontains $Device.ClassName) {
