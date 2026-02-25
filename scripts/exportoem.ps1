@@ -24,7 +24,7 @@ powershell iex (irm exportoem.osdcloud.live)
 .DESCRIPTION
     PowerShell Script which supports the OSDCloud environment
 .NOTES
-    Version 26.02.10
+    Version 26.02.25
 .LINK
     https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/scripts/exportoem.ps1
 .EXAMPLE
@@ -262,51 +262,63 @@ $ExportClass = @(
 
 if ($PnputilDevices) {
     foreach ($Device in $PnputilDevices) {
-        $ManufacturerName = $Device.ManufacturerName -as [string]
-        if ([string]::IsNullOrWhiteSpace($ManufacturerName)) {
-            $ManufacturerName = 'Unknown'
-        }
-        else {
-            $ManufacturerName = $ManufacturerName.Trim()
-            if ($ManufacturerName -match 'Dell') { $ManufacturerName = 'Dell'}
-            if ($ManufacturerName -match 'HP') { $ManufacturerName = 'HP'}
-            if ($ManufacturerName -match 'Intel') { $ManufacturerName = 'Intel'}
-            if ($ManufacturerName -match 'Logitech') { $ManufacturerName = 'Logitech'}
-            if ($ManufacturerName -match 'Qualcomm') { $ManufacturerName = 'Qualcomm'}
-            if ($ManufacturerName -match 'Realtek') { $ManufacturerName = 'Realtek'}
-        }
-
+        #=================================================
         # If the Device Class is not in the ExportClass list, skip it
         if ($ExportClass -notcontains $Device.ClassName) {
             Write-Host -ForegroundColor DarkGray "[$(Get-Date -format s)] [$($Device.ClassName)] $ManufacturerName $($Device.DeviceDescription)"
             continue
         }
-
+        #=================================================
+        # Normalize Manufacturer Name
+        $ManufacturerName = $Device.ManufacturerName -as [string]
+        if ([string]::IsNullOrWhiteSpace($ManufacturerName)) {
+            $ManufacturerName = 'Unknown'
+        }
+        $ManufacturerName = $ManufacturerName.Trim()
+        if ($ManufacturerName -match 'Dell' -or $Device.Description -match 'Dell') {
+            $ManufacturerName = 'Dell'
+        }
+        if ($ManufacturerName -match 'HP' -or $Device.Description -match 'HP') {
+            $ManufacturerName = 'HP'
+        }
+        if ($ManufacturerName -match 'Intel' -or $Device.Description -match 'Intel' -or $Device.InstanceID -match 'VEN_8086') {
+            $ManufacturerName = 'Intel'
+        }
+        if ($ManufacturerName -match 'Logitech' -or $Device.Description -match 'Logitech' -or $Device.InstanceID -match 'VID_046D') {
+            $ManufacturerName = 'Logitech'
+        }
+        if ($ManufacturerName -match 'Qualcomm|Snapdragon' -or $Device.Description -match 'Qualcomm|Snapdragon' -or $Device.InstanceID -match 'QCOM') {
+            $ManufacturerName = 'Qualcomm'
+        }
+        if ($ManufacturerName -match 'Realtek' -or $Device.Description -match 'Realtek' -or $Device.InstanceID -match 'VEN_10EC') {
+            $ManufacturerName = 'Realtek'
+        }
         Write-Host -ForegroundColor DarkGreen "[$(Get-Date -format s)] [$($Device.ClassName)] $ManufacturerName $($Device.DeviceDescription)"
-        # $FolderName = $Device.DriverName -replace '.inf', ''
+        #=================================================
+        # Normalize Foldername
         $FolderName = $Device.DeviceDescription -replace '[\\/:*?"<>|#]', ''
         $FolderName = $FolderName -replace [regex]::Escape($ManufacturerName), ''
         $FolderName = $FolderName -replace '\(standard system devices\)', ''
         $FolderName = [regex]::Replace($FolderName, '\s*\(.*?\)\s*', ' ')
         $FolderName = [regex]::Replace($FolderName, '\s+', ' ')
         $FolderName = $FolderName.Trim()
-
+        #=================================================
+        # Export Driver
         $ExportPath = "$ExportRoot\$ManufacturerName $FolderName"
-
         if (-not (Test-Path -Path $ExportPath)) {
             New-Item -ItemType Directory -Path $ExportPath -Force | Out-Null
         }
         $null = & pnputil.exe /export-driver $Device.DriverName $ExportPath
-
-        <#
+        #=================================================
         # Calculate folder size of the exported driver
+        <#
         $FolderSizeBytes = (Get-ChildItem -Path $ExportPath -Recurse -Force -File -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum
         if (-not $FolderSizeBytes) { $FolderSizeBytes = 0 }
         $FolderSizeMB = [math]::Round($FolderSizeBytes / 1MB, 2)
         Write-Host "[$(Get-Date -format s)] $FolderSizeMB MB"
         #>
     }
-    $PnputilDevices | Out-File -FilePath "$ExportRoot\oemdrivers.txt" -Encoding UTF8
+    $PnputilDevices | Out-File -FilePath "$ExportRoot\pnputil.txt" -Encoding utf8
 }
 #endregion
 #=================================================
