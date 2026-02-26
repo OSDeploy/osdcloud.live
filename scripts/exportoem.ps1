@@ -190,17 +190,11 @@ Send-OSDCloudLiveEvent -EventName $eventName -ApiKey $postApi -DistinctId $disti
 #=================================================
 #region Device OEM Driver Export
 # Export Path
-if ($env:WINPEDRIVERS) {
-    $ExportRoot = "$env:WINPEDRIVERS\$($deviceManufacturer)_$($deviceModelId)_$($deviceModel)"
-}
-else {
-    $ExportRoot = "$env:Temp\WinPEDriver\$($deviceManufacturer)_$($deviceModelId)_$($deviceModel)"
-}
+$ExportOEMRoot = "$env:Temp\exportoem"
+$ExportWinOSRoot = "$env:Temp\exportoem\$($deviceManufacturer)_$($deviceModelId)_$($deviceModel)"
+$ExportWinPERoot = "$env:Temp\exportoem\winpe_$($deviceManufacturer)_$($deviceModelId)_$($deviceModel)"
+Write-Host "[$(Get-Date -format s)] Exporting OEMDrivers to $ExportOEMRoot"
 
-# Set the export path to the clipboard for easy access
-Set-Clipboard -Value $ExportRoot
-
-Write-Host "[$(Get-Date -format s)] Exporting OEMDrivers to $ExportRoot"
 <#
 $PnputilXml = (& pnputil.exe /enum-devices /connected /format xml) -join "`n"
 $PnputilXmlObject = [xml]$PnputilXml
@@ -263,12 +257,6 @@ $ExportClass = @(
 if ($PnputilDevices) {
     foreach ($Device in $PnputilDevices) {
         #=================================================
-        # If the Device Class is not in the ExportClass list, skip it
-        if ($ExportClass -notcontains $Device.ClassName) {
-            Write-Host -ForegroundColor DarkGray "[$(Get-Date -format s)] [$($Device.ClassName)] $ManufacturerName $($Device.DeviceDescription)"
-            continue
-        }
-        #=================================================
         # Normalize Manufacturer Name
         $ManufacturerName = $Device.ManufacturerName -as [string]
         if ([string]::IsNullOrWhiteSpace($ManufacturerName)) {
@@ -293,7 +281,6 @@ if ($PnputilDevices) {
         if ($ManufacturerName -match 'Realtek' -or $Device.Description -match 'Realtek' -or $Device.InstanceID -match 'VEN_10EC') {
             $ManufacturerName = 'Realtek'
         }
-        Write-Host -ForegroundColor DarkGreen "[$(Get-Date -format s)] [$($Device.ClassName)] $ManufacturerName $($Device.DeviceDescription)"
         #=================================================
         # Normalize Foldername
         $FolderName = $Device.DeviceDescription -replace '[\\/:*?"<>|#]', ''
@@ -303,8 +290,20 @@ if ($PnputilDevices) {
         $FolderName = [regex]::Replace($FolderName, '\s+', ' ')
         $FolderName = $FolderName.Trim()
         #=================================================
-        # Export Driver
-        $ExportPath = "$ExportRoot\$($Device.ClassName)\$($ManufacturerName) $($FolderName)"
+        # Export WinOS Drivers
+        $ExportPath = "$ExportWinOSRoot\$($Device.ClassName)\$($ManufacturerName) $($FolderName)"
+        if (-not (Test-Path -Path $ExportPath)) {
+            New-Item -ItemType Directory -Path $ExportPath -Force | Out-Null
+        }
+        $null = & pnputil.exe /export-driver $Device.DriverName $ExportPath
+        #=================================================
+        # Export WinPE Drivers
+        if ($ExportClass -notcontains $Device.ClassName) {
+            Write-Host -ForegroundColor DarkGray "[$(Get-Date -format s)] [$($Device.ClassName)] $ManufacturerName $($Device.DeviceDescription)"
+            continue
+        }
+        Write-Host -ForegroundColor DarkGreen "[$(Get-Date -format s)] [$($Device.ClassName)] $ManufacturerName $($Device.DeviceDescription)"
+        $ExportPath = "$ExportWinPERoot\$($Device.ClassName)\$($ManufacturerName) $($FolderName)"
         if (-not (Test-Path -Path $ExportPath)) {
             New-Item -ItemType Directory -Path $ExportPath -Force | Out-Null
         }
@@ -318,7 +317,9 @@ if ($PnputilDevices) {
         Write-Host "[$(Get-Date -format s)] $FolderSizeMB MB"
         #>
     }
-    $PnputilDevices | Out-File -FilePath "$ExportRoot\pnputil.txt" -Encoding utf8
+    $PnputilDevices | Out-File -FilePath "$ExportWinOSRoot\pnputil.txt" -Encoding utf8
+    $PnputilDevices | Out-File -FilePath "$ExportWinPERoot\pnputil.txt" -Encoding utf8
+    explorer $ExportOEMRoot
 }
 #endregion
 #=================================================
