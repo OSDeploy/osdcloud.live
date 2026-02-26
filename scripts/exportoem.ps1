@@ -304,7 +304,7 @@ if ($PnputilDevices) {
         $FolderName = $FolderName.Trim()
         #=================================================
         # Export Driver
-        $ExportPath = "$ExportRoot\$ManufacturerName $FolderName"
+        $ExportPath = "$ExportRoot\$($Device.ClassName)\$($ManufacturerName) $($FolderName)"
         if (-not (Test-Path -Path $ExportPath)) {
             New-Item -ItemType Directory -Path $ExportPath -Force | Out-Null
         }
