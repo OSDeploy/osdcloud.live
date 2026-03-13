@@ -194,7 +194,7 @@ Send-OSDCloudLiveEvent -EventName $eventName -ApiKey $postApi -DistinctId $disti
 #=================================================
 #region WinPE
 if ($deploymentPhase -eq 'WinPE') {
-    Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
+    Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe.psm1')
     # winpe-RepairTls
     $Dism = Test-WinpePowerShellModuleDism
     if ($Dism -ne $true) {
@@ -235,48 +235,7 @@ if ($deploymentPhase -eq 'WinPE') {
     Deploy-OSDCloud
 }
 #endregion
-
-#region Specialize
-if ($deploymentPhase -eq 'Specialize') {
-    Invoke-Expression -Command (Invoke-RestMethod -Uri https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/specialize/functions.ps1)
-    $null = Stop-Transcript -ErrorAction Ignore
-}
-#endregion
-
-#region AuditMode
-if ($deploymentPhase -eq 'AuditMode') {
-    Invoke-Expression -Command (Invoke-RestMethod -Uri https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/auditmode/functions.ps1)
-    $null = Stop-Transcript -ErrorAction Ignore
-}
-#endregion
-
-#region OOBE
-if ($deploymentPhase -eq 'OOBE') {
-    if ($isElevated) {
-        Write-Host -ForegroundColor Green "[✓] Running as $whoiam (Admin Elevated)"
-    }
-    else {
-        Write-Host -ForegroundColor Red "[!] Running as $whoiam (NOT Admin Elevated)"
-    }
-    Invoke-Expression -Command (Invoke-RestMethod -Uri https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/oobe/functions.psm1)
-    $null = Stop-Transcript -ErrorAction Ignore
-}
-#endregion
-
-#region Windows
-if ($deploymentPhase -eq 'Windows') {
-    if ($isElevated) {
-        Write-Host -ForegroundColor Green "[✓] Running as $whoiam (Admin Elevated)"
-    }
-    else {
-        Write-Host -ForegroundColor Red "[!] Running as $whoiam (NOT Admin Elevated)"
-        Break
-    }
-    Invoke-Expression -Command (Invoke-RestMethod -Uri https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/windows/functions.ps1)
-    $null = Stop-Transcript -ErrorAction Ignore
-}
-#endregion
-
+#=================================================
 $EndTime = Get-Date
 $TotalSeconds = [math]::Round(($EndTime - $StartTime).TotalSeconds, 2)
 # Write-Host

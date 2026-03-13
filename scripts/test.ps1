@@ -190,7 +190,7 @@ Send-OSDCloudLiveEvent -EventName $eventName -ApiKey $postApi -DistinctId $disti
 #=================================================
 #region WinPE
 if ($deploymentPhase -eq 'WinPE') {
-    Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe/functions.psm1')
+    Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/winpe.psm1')
     $Dism = Test-WinpePowerShellModuleDism -Interactive
     $Storage = Test-WinpePowerShellModuleStorage -Interactive
     $null = Test-WinpeExecutionPolicyBypass -Interactive
@@ -215,74 +215,6 @@ if ($deploymentPhase -eq 'WinPE') {
     $null = Stop-Transcript -ErrorAction Ignore
 }
 #endregion
-
-#region Specialize
-if ($deploymentPhase -eq 'Specialize') {
-    Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/specialize/functions.psm1')
-    $endTime = Get-Date
-    $totalSeconds = [math]::Round(($endTime - $startTime).TotalSeconds, 2)
-    Write-Host -ForegroundColor DarkGray "[i] Finished in $totalSeconds seconds"
-    $null = Stop-Transcript -ErrorAction Ignore
-}
-#endregion
-
-#region AuditMode
-if ($deploymentPhase -eq 'AuditMode') {
-    Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/audit/functions.psm1')
-    $endTime = Get-Date
-    $totalSeconds = [math]::Round(($endTime - $startTime).TotalSeconds, 2)
-    Write-Host -ForegroundColor DarkGray "[i] Finished in $totalSeconds seconds"
-    $null = Stop-Transcript -ErrorAction Ignore
-}
-#endregion
-
-#region OOBE
-if ($deploymentPhase -eq 'OOBE') {
-    if ($isElevated) {
-        Write-Host -ForegroundColor Green "[✓] Running as $whoiam (Admin Elevated)"
-    }
-    else {
-        Write-Host -ForegroundColor Red "[!] Running as $whoiam (NOT Admin Elevated)"
-    }
-    Invoke-Expression -Command (Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/modules/oobe/functions.psm1')
-    $null = oobe-ExecutionPolicyTest
-    $null = oobe-UserShellFolderTest
-    $null = oobe-RegistryEnvironmentTest
-    $null = oobe-SessionEnvironmentTest
-    $null = oobe-PowerShellProfilePathTest
-    $null = oobe-PowerShellProfileTest
-    $null = oobe-RealTimeClockUTCTest
-    $null = oobe-TimeServiceTest
-    $null = oobe-CurlExeTest
-    $null = oobe-PackageManagementTest
-    $null = oobe-NuGetPackageProviderTest
-    $null = oobe-NugetExeTest
-    $null = oobe-UpdatePackageManagementTest
-    $null = oobe-UpdatePowerShellGetTest
-    $null = oobe-PSGalleryTrustTest
-    $null = oobe-AzcopyExeTest
-    $endTime = Get-Date
-    $totalSeconds = [math]::Round(($endTime - $startTime).TotalSeconds, 2)
-    Write-Host -ForegroundColor DarkGray "[i] Finished in $totalSeconds seconds"
-    $null = Stop-Transcript -ErrorAction Ignore
-}
-#endregion
-
-#region Windows
-if ($deploymentPhase -eq 'Windows') {
-    if ($isElevated) {
-        Write-Host -ForegroundColor Green "[✓] Running as $whoiam (Admin Elevated)"
-    }
-    else {
-        Write-Host -ForegroundColor Red "[!] Running as $whoiam (NOT Admin Elevated)"
-        Break
-    }
-    $endTime = Get-Date
-    $totalSeconds = [math]::Round(($endTime - $startTime).TotalSeconds, 2)
-    Write-Host -ForegroundColor DarkGray "[i] Finished in $totalSeconds seconds"
-    $null = Stop-Transcript -ErrorAction Ignore
-}
-#endregion
-
+#=================================================
 $endTime = Get-Date
 $totalSeconds = [math]::Round(($endTime - $startTime).TotalSeconds, 2)
