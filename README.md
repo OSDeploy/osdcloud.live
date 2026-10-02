@@ -32,7 +32,7 @@ The script uses the first volume it finds that meets all of these conditions:
 - It contains an `OSDCloud` directory at its root.
 - It has **more than 10 GB** of free space.
 
-On a qualifying USB volume, Windows drivers are exported to `<drive>:\OSDCloud\ModelDrivers\<manufacturer>_<modelId>_<model>_<build>`, regardless of architecture. WinPE drivers are exported to `<drive>:\OSDCloud\winpedrivers-<arch>\<manufacturer>_<modelId>_<model>_<build>`. The WinPE architecture segment is `winpedrivers-amd64` or `winpedrivers-arm64`.
+On a qualifying USB volume, Windows drivers are exported to `<drive>:\OSDCloud\modeldrivers-<arch>\<manufacturer>_<modelId>_<model>_<build>`. WinPE drivers are exported to `<drive>:\OSDCloud\winpedrivers-<arch>\<manufacturer>_<modelId>_<model>_<build>`. The architecture segments are `amd64` or `arm64`.
 
 If no USB volume qualifies, the existing `%TEMP%` destinations are used:
 
