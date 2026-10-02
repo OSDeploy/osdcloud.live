@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 26.01.20
+.VERSION 26.10.02
 .GUID 8d166026-3ff8-4a56-bb46-97e446a35ffe
 .AUTHOR David Segura @OSDeploy
 .COMPANYNAME Recast Software
@@ -24,7 +24,7 @@ powershell iex (irm exportoem.osdcloud.live)
 .DESCRIPTION
     PowerShell Script which supports the OSDCloud environment
 .NOTES
-    Version 26.10.01
+    Version 26.10.02
 .LINK
     https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/scripts/exportoem.ps1
 .EXAMPLE
@@ -202,9 +202,7 @@ switch ($env:PROCESSOR_ARCHITECTURE) {
 }
 
 $deviceFolder = "$($deviceManufacturer)_$($deviceModelId)_$($deviceModel)_$windowsBuild"
-$ExportOEMRoot = $env:Temp
-$ExportWinOSRoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath "drivers-$driverArchitecture") -ChildPath $deviceFolder
-$ExportWinPERoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath "winpedrivers-$driverArchitecture") -ChildPath $deviceFolder
+$ExportOEMRoot = Join-Path -Path $env:Temp -ChildPath 'ExportOEM'
 
 $osdCloudVolume = Get-CimInstance -ClassName Win32_LogicalDisk -ErrorAction Stop |
     Where-Object {
@@ -219,15 +217,12 @@ $osdCloudVolume = Get-CimInstance -ClassName Win32_LogicalDisk -ErrorAction Stop
 if ($osdCloudVolume) {
     $usbRoot = "$($osdCloudVolume.DeviceID)\"
     $ExportOEMRoot = Join-Path -Path $usbRoot -ChildPath 'OSDCloud'
-    $ExportWinOSRoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath 'DriverModel') -ChildPath $deviceFolder
-    $ExportWinPERoot = Join-Path -Path $usbRoot -ChildPath 'OSDeployCore'
-    $ExportWinPERoot = Join-Path -Path $ExportWinPERoot -ChildPath 'boot-assets'
-    $ExportWinPERoot = Join-Path -Path $ExportWinPERoot -ChildPath "winpedrivers-$driverArchitecture"
-    $ExportWinPERoot = Join-Path -Path $ExportWinPERoot -ChildPath $deviceFolder
+    Write-Host -ForegroundColor Green "[$(Get-Date -format s)] OSDCloud USB found at $usbRoot"
 }
-
-Write-Host "[$(Get-Date -format s)] Exporting WinOS drivers to $ExportWinOSRoot"
-Write-Host "[$(Get-Date -format s)] Exporting WinPE drivers to $ExportWinPERoot"
+$ExportWinOSRoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath "modeldrivers-$driverArchitecture") -ChildPath $deviceFolder
+$ExportWinPERoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath "winpedrivers-$driverArchitecture") -ChildPath $deviceFolder
+Write-Host -ForegroundColor Green "[$(Get-Date -format s)] ModelDrivers: $ExportWinOSRoot"
+Write-Host -ForegroundColor Green "[$(Get-Date -format s)] WinPEDrivers: $ExportWinPERoot"
 
 <#
 $PnputilXml = (& pnputil.exe /enum-devices /connected /format xml) -join "`n"
@@ -353,8 +348,7 @@ if ($PnputilDevices) {
     }
     $PnputilDevices | Out-File -FilePath "$ExportWinOSRoot\pnputil.txt" -Encoding utf8
     $PnputilDevices | Out-File -FilePath "$ExportWinPERoot\pnputil.txt" -Encoding utf8
-    explorer $ExportWinOSRoot
-    explorer $ExportWinPERoot
+    explorer $ExportOEMRoot
 }
 #endregion
 #=================================================
