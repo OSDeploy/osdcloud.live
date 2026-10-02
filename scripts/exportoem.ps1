@@ -5,12 +5,12 @@
 .COMPANYNAME Recast Software
 .COPYRIGHT (c) 2026 David Segura | Recast Software. All rights reserved.
 .TAGS OSDeploy OSDCloud WinPE OOBE Windows AutoPilot
-.LICENSEURI 
+.LICENSEURI
 .PROJECTURI https://github.com/OSDeploy/osdcloud.live
-.ICONURI 
-.EXTERNALMODULEDEPENDENCIES 
-.REQUIREDSCRIPTS 
-.EXTERNALSCRIPTDEPENDENCIES 
+.ICONURI
+.EXTERNALMODULEDEPENDENCIES
+.REQUIREDSCRIPTS
+.EXTERNALSCRIPTDEPENDENCIES
 .RELEASENOTES
 Script should be executed in a Command Prompt using the following command
 powershell Invoke-Expression -Command (Invoke-RestMethod -Uri exportoem.osdcloud.live)
@@ -24,7 +24,7 @@ powershell iex (irm exportoem.osdcloud.live)
 .DESCRIPTION
     PowerShell Script which supports the OSDCloud environment
 .NOTES
-    Version 26.02.25
+    Version 26.10.01
 .LINK
     https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/scripts/exportoem.ps1
 .EXAMPLE
@@ -202,9 +202,9 @@ switch ($env:PROCESSOR_ARCHITECTURE) {
 }
 
 $deviceFolder = "$($deviceManufacturer)_$($deviceModelId)_$($deviceModel)_$windowsBuild"
-$ExportOEMRoot = "$env:Temp\exportoem"
-$ExportWinOSRoot = Join-Path -Path $ExportOEMRoot -ChildPath $deviceFolder
-$ExportWinPERoot = Join-Path -Path $ExportOEMRoot -ChildPath "winpe_$deviceFolder"
+$ExportOEMRoot = $env:Temp
+$ExportWinOSRoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath "drivers-$driverArchitecture") -ChildPath $deviceFolder
+$ExportWinPERoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath "winpedrivers-$driverArchitecture") -ChildPath $deviceFolder
 
 $osdCloudVolume = Get-CimInstance -ClassName Win32_LogicalDisk -ErrorAction Stop |
     Where-Object {
@@ -238,7 +238,7 @@ $currentDevice = @{}
 
 foreach ($line in $output) {
     $line = $line.Trim()
-    
+
     if ([string]::IsNullOrWhiteSpace($line)) {
         # Blank line means end of current device
         if ($currentDevice.Count -gt 0) {
