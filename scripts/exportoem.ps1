@@ -220,9 +220,7 @@ if ($osdCloudVolume) {
     $usbRoot = "$($osdCloudVolume.DeviceID)\"
     $ExportOEMRoot = Join-Path -Path $usbRoot -ChildPath 'OSDCloud'
     $ExportWinOSRoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath 'ModelDrivers') -ChildPath $deviceFolder
-    $ExportWinPERoot = Join-Path -Path $usbRoot -ChildPath 'OSDeployCore'
-    $ExportWinPERoot = Join-Path -Path $ExportWinPERoot -ChildPath 'boot-assets'
-    $ExportWinPERoot = Join-Path -Path $ExportWinPERoot -ChildPath "winpedrivers-$driverArchitecture"
+    $ExportWinPERoot = Join-Path -Path $ExportOEMRoot -ChildPath "winpedrivers-$driverArchitecture"
     $ExportWinPERoot = Join-Path -Path $ExportWinPERoot -ChildPath $deviceFolder
 
     Write-Host -ForegroundColor Green "[$(Get-Date -format s)] OSDCloud USB found at $usbRoot"
