@@ -37,12 +37,12 @@ On a qualifying USB volume, Windows drivers are exported to `<drive>:\OSDCloud\M
 If no USB volume qualifies, the existing `%TEMP%` destinations are used:
 
 ```text
-%TEMP%\
+%TEMP%\ExportOEM\
 ├── drivers-<arch>\<manufacturer>_<modelId>_<model>_<build>\
 └── winpedrivers-<arch>\<manufacturer>_<modelId>_<model>_<build>\
 ```
 
-The Temp fallback uses `amd64` or `arm64` for both collections. The device folder suffix includes the Windows build number and update revision, such as `26100.9168`. For example, with `%TEMP%` as the fallback root, Windows drivers are exported to `%TEMP%\drivers-amd64\Contoso_X1_Model_One_26100.9168`; WinPE drivers use the parallel `winpedrivers-amd64` path. Each device folder contains class and manufacturer subfolders with the exported driver packages.
+The Temp fallback uses `amd64` or `arm64` for both collections. The device folder suffix includes the Windows build number and update revision, such as `26100.9168`. For example, Windows drivers are exported to `%TEMP%\ExportOEM\drivers-amd64\Contoso_X1_Model_One_26100.9168`; WinPE drivers use the parallel `winpedrivers-amd64` path. Each device folder contains class and manufacturer subfolders with the exported driver packages.
 
 The script requires administrator privileges, displays a diagnostic-data consent notice, and writes a transcript under `%SystemRoot%\Temp`. Review the [OSDCloud privacy policy](https://github.com/OSDeploy/OSDCloud/blob/main/PRIVACY.md) before running it.
 

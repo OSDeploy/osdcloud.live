@@ -202,7 +202,7 @@ switch ($env:PROCESSOR_ARCHITECTURE) {
 }
 
 $deviceFolder = "$($deviceManufacturer)_$($deviceModelId)_$($deviceModel)_$windowsBuild"
-$ExportOEMRoot = $env:Temp
+$ExportOEMRoot = Join-Path -Path $env:Temp -ChildPath 'ExportOEM'
 $ExportWinOSRoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath "drivers-$driverArchitecture") -ChildPath $deviceFolder
 $ExportWinPERoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath "winpedrivers-$driverArchitecture") -ChildPath $deviceFolder
 
@@ -358,8 +358,7 @@ if ($PnputilDevices) {
     }
     $PnputilDevices | Out-File -FilePath "$ExportWinOSRoot\pnputil.txt" -Encoding utf8
     $PnputilDevices | Out-File -FilePath "$ExportWinPERoot\pnputil.txt" -Encoding utf8
-    explorer $ExportWinOSRoot
-    explorer $ExportWinPERoot
+    explorer $ExportOEMRoot
 }
 #endregion
 #=================================================
