@@ -203,8 +203,6 @@ switch ($env:PROCESSOR_ARCHITECTURE) {
 
 $deviceFolder = "$($deviceManufacturer)_$($deviceModelId)_$($deviceModel)_$windowsBuild"
 $ExportOEMRoot = Join-Path -Path $env:Temp -ChildPath 'ExportOEM'
-$ExportWinOSRoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath "modeldrivers-$driverArchitecture") -ChildPath $deviceFolder
-$ExportWinPERoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath "winpedrivers-$driverArchitecture") -ChildPath $deviceFolder
 
 $osdCloudVolume = Get-CimInstance -ClassName Win32_LogicalDisk -ErrorAction Stop |
     Where-Object {
@@ -219,20 +217,12 @@ $osdCloudVolume = Get-CimInstance -ClassName Win32_LogicalDisk -ErrorAction Stop
 if ($osdCloudVolume) {
     $usbRoot = "$($osdCloudVolume.DeviceID)\"
     $ExportOEMRoot = Join-Path -Path $usbRoot -ChildPath 'OSDCloud'
-    $ExportWinOSRoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath 'ModelDrivers') -ChildPath $deviceFolder
-    $ExportWinPERoot = Join-Path -Path $ExportOEMRoot -ChildPath "winpedrivers-$driverArchitecture"
-    $ExportWinPERoot = Join-Path -Path $ExportWinPERoot -ChildPath $deviceFolder
-
     Write-Host -ForegroundColor Green "[$(Get-Date -format s)] OSDCloud USB found at $usbRoot"
-    Write-Host -ForegroundColor Green "[$(Get-Date -format s)] ModelDrivers are exported to $($usbRoot)OSDCloud\ModelDrivers"
-    Write-Host "[$(Get-Date -format s)] $ExportWinOSRoot"
-    Write-Host -ForegroundColor Green "[$(Get-Date -format s)] WinPEDrivers are exported to $($usbRoot)OSDCloud\WinPEDrivers"
-    Write-Host "[$(Get-Date -format s)] $ExportWinPERoot"
 }
-else {
-    Write-Host -ForegroundColor Green "[$(Get-Date -format s)] ModelDrivers: $ExportWinOSRoot"
-    Write-Host -ForegroundColor Green "[$(Get-Date -format s)] WinPEDrivers: $ExportWinPERoot"
-}
+$ExportWinOSRoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath "modeldrivers-$driverArchitecture") -ChildPath $deviceFolder
+$ExportWinPERoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath "winpedrivers-$driverArchitecture") -ChildPath $deviceFolder
+Write-Host -ForegroundColor Green "[$(Get-Date -format s)] ModelDrivers: $ExportWinOSRoot"
+Write-Host -ForegroundColor Green "[$(Get-Date -format s)] WinPEDrivers: $ExportWinPERoot"
 
 <#
 $PnputilXml = (& pnputil.exe /enum-devices /connected /format xml) -join "`n"
