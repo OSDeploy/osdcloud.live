@@ -203,7 +203,7 @@ switch ($env:PROCESSOR_ARCHITECTURE) {
 
 $deviceFolder = "$($deviceManufacturer)_$($deviceModelId)_$($deviceModel)_$windowsBuild"
 $ExportOEMRoot = Join-Path -Path $env:Temp -ChildPath 'ExportOEM'
-$ExportWinOSRoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath "drivers-$driverArchitecture") -ChildPath $deviceFolder
+$ExportWinOSRoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath "modeldrivers-$driverArchitecture") -ChildPath $deviceFolder
 $ExportWinPERoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath "winpedrivers-$driverArchitecture") -ChildPath $deviceFolder
 
 $osdCloudVolume = Get-CimInstance -ClassName Win32_LogicalDisk -ErrorAction Stop |
