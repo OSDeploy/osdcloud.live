@@ -226,7 +226,8 @@ if ($osdCloudVolume) {
     $ExportWinPERoot = Join-Path -Path $ExportWinPERoot -ChildPath $deviceFolder
 }
 
-Write-Host "[$(Get-Date -format s)] Exporting WinOS drivers to $ExportWinOSRoot and WinPE drivers to $ExportWinPERoot"
+Write-Host "[$(Get-Date -format s)] Exporting WinOS drivers to $ExportWinOSRoot"
+Write-Host "[$(Get-Date -format s)] Exporting WinPE drivers to $ExportWinPERoot"
 
 <#
 $PnputilXml = (& pnputil.exe /enum-devices /connected /format xml) -join "`n"
