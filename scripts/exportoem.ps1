@@ -189,10 +189,39 @@ Send-OSDCloudLiveEvent -EventName $eventName -ApiKey $postApi -DistinctId $disti
 #endregion
 #=================================================
 #region Device OEM Driver Export
-# Export Path
+$windowsVersion = Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -ErrorAction Stop
+if ([string]::IsNullOrWhiteSpace([string]$windowsVersion.CurrentBuildNumber) -or $null -eq $windowsVersion.UBR) {
+    throw 'Unable to determine the Windows build and update revision.'
+}
+$windowsBuild = "$($windowsVersion.CurrentBuildNumber).$($windowsVersion.UBR)"
+
+switch ($env:PROCESSOR_ARCHITECTURE) {
+    'AMD64' { $driverArchitecture = 'amd64' }
+    'ARM64' { $driverArchitecture = 'arm64' }
+    default { throw "Unsupported processor architecture: $env:PROCESSOR_ARCHITECTURE" }
+}
+
+$deviceFolder = "$($deviceManufacturer)_$($deviceModelId)_$($deviceModel)_$windowsBuild"
 $ExportOEMRoot = "$env:Temp\exportoem"
-$ExportWinOSRoot = "$env:Temp\exportoem\$($deviceManufacturer)_$($deviceModelId)_$($deviceModel)"
-$ExportWinPERoot = "$env:Temp\exportoem\winpe_$($deviceManufacturer)_$($deviceModelId)_$($deviceModel)"
+$ExportWinOSRoot = Join-Path -Path $ExportOEMRoot -ChildPath $deviceFolder
+$ExportWinPERoot = Join-Path -Path $ExportOEMRoot -ChildPath "winpe_$deviceFolder"
+
+$osdCloudVolume = Get-CimInstance -ClassName Win32_LogicalDisk -ErrorAction Stop |
+    Where-Object {
+        $_.VolumeName -eq 'OSDCloud' -and
+        $_.FreeSpace -gt 10GB -and
+        -not [string]::IsNullOrWhiteSpace([string]$_.DeviceID) -and
+        (Test-Path -LiteralPath (Join-Path -Path "$($_.DeviceID)\" -ChildPath 'OSDCloud') -PathType Container)
+    } |
+    Sort-Object -Property DeviceID |
+    Select-Object -First 1
+
+if ($osdCloudVolume) {
+    $ExportOEMRoot = Join-Path -Path "$($osdCloudVolume.DeviceID)\" -ChildPath 'OSDCloud'
+    $ExportWinOSRoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath "drivers-$driverArchitecture") -ChildPath $deviceFolder
+    $ExportWinPERoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath "winpedrivers-$driverArchitecture") -ChildPath $deviceFolder
+}
+
 Write-Host "[$(Get-Date -format s)] Exporting OEMDrivers to $ExportOEMRoot"
 
 <#
@@ -319,7 +348,8 @@ if ($PnputilDevices) {
     }
     $PnputilDevices | Out-File -FilePath "$ExportWinOSRoot\pnputil.txt" -Encoding utf8
     $PnputilDevices | Out-File -FilePath "$ExportWinPERoot\pnputil.txt" -Encoding utf8
-    explorer $ExportOEMRoot
+    explorer $ExportWinOSRoot
+    explorer $ExportWinPERoot
 }
 #endregion
 #=================================================
