@@ -226,7 +226,7 @@ if ($osdCloudVolume) {
     Write-Host -ForegroundColor Green "[$(Get-Date -format s)] OSDCloud USB found at $usbRoot"
     Write-Host -ForegroundColor Green "[$(Get-Date -format s)] ModelDrivers are exported to $($usbRoot)OSDCloud\ModelDrivers"
     Write-Host "[$(Get-Date -format s)] $ExportWinOSRoot"
-    Write-Host -ForegroundColor Green "[$(Get-Date -format s)] WinPEDrivers are exported to $($usbRoot)\OSDCloud\WinPEDrivers"
+    Write-Host -ForegroundColor Green "[$(Get-Date -format s)] WinPEDrivers are exported to $($usbRoot)OSDCloud\WinPEDrivers"
     Write-Host "[$(Get-Date -format s)] $ExportWinPERoot"
 }
 else {
