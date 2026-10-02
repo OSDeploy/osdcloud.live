@@ -1,5 +1,5 @@
 <#PSScriptInfo
-.VERSION 26.01.20
+.VERSION 26.10.02
 .GUID 8d166026-3ff8-4a56-bb46-97e446a35ffe
 .AUTHOR David Segura @OSDeploy
 .COMPANYNAME Recast Software
@@ -24,7 +24,7 @@ powershell iex (irm exportoem.osdcloud.live)
 .DESCRIPTION
     PowerShell Script which supports the OSDCloud environment
 .NOTES
-    Version 26.10.01
+    Version 26.10.02
 .LINK
     https://raw.githubusercontent.com/OSDeploy/osdcloud.live/main/scripts/exportoem.ps1
 .EXAMPLE
@@ -219,11 +219,14 @@ $osdCloudVolume = Get-CimInstance -ClassName Win32_LogicalDisk -ErrorAction Stop
 if ($osdCloudVolume) {
     $usbRoot = "$($osdCloudVolume.DeviceID)\"
     $ExportOEMRoot = Join-Path -Path $usbRoot -ChildPath 'OSDCloud'
-    $ExportWinOSRoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath 'DriverModel') -ChildPath $deviceFolder
+    $ExportWinOSRoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath 'ModelDrivers') -ChildPath $deviceFolder
     $ExportWinPERoot = Join-Path -Path $usbRoot -ChildPath 'OSDeployCore'
     $ExportWinPERoot = Join-Path -Path $ExportWinPERoot -ChildPath 'boot-assets'
     $ExportWinPERoot = Join-Path -Path $ExportWinPERoot -ChildPath "winpedrivers-$driverArchitecture"
     $ExportWinPERoot = Join-Path -Path $ExportWinPERoot -ChildPath $deviceFolder
+
+    Write-Host -ForegroundColor Green "[$(Get-Date -format s)] OSDCloud USB found at $usbRoot"
+    Write-Host -ForegroundColor Green "[$(Get-Date -format s)] Drivers will be exported to the OSDCloud USB."
 }
 
 Write-Host "[$(Get-Date -format s)] Exporting WinOS drivers to $ExportWinOSRoot"
