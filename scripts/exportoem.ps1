@@ -226,11 +226,13 @@ if ($osdCloudVolume) {
     $ExportWinPERoot = Join-Path -Path $ExportWinPERoot -ChildPath $deviceFolder
 
     Write-Host -ForegroundColor Green "[$(Get-Date -format s)] OSDCloud USB found at $usbRoot"
-    Write-Host -ForegroundColor Green "[$(Get-Date -format s)] Drivers will be exported to the OSDCloud USB."
+    Write-Host -ForegroundColor Green "[$(Get-Date -format s)] ModelDrivers will be exported to $ExportWinOSRoot"
+    Write-Host -ForegroundColor Green "[$(Get-Date -format s)] BootDrivers drivers will be exported to $ExportWinPERoot"
 }
-
-Write-Host "[$(Get-Date -format s)] Exporting WinOS drivers to $ExportWinOSRoot"
-Write-Host "[$(Get-Date -format s)] Exporting WinPE drivers to $ExportWinPERoot"
+else {
+    Write-Host -ForegroundColor Green "[$(Get-Date -format s)] ModelDrivers will be exported to $ExportWinOSRoot"
+    Write-Host -ForegroundColor Green "[$(Get-Date -format s)] BootDrivers drivers will be exported to $ExportWinPERoot"
+}
 
 <#
 $PnputilXml = (& pnputil.exe /enum-devices /connected /format xml) -join "`n"
