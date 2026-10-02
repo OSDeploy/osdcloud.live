@@ -217,12 +217,16 @@ $osdCloudVolume = Get-CimInstance -ClassName Win32_LogicalDisk -ErrorAction Stop
     Select-Object -First 1
 
 if ($osdCloudVolume) {
-    $ExportOEMRoot = Join-Path -Path "$($osdCloudVolume.DeviceID)\" -ChildPath 'OSDCloud'
-    $ExportWinOSRoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath "drivers-$driverArchitecture") -ChildPath $deviceFolder
-    $ExportWinPERoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath "winpedrivers-$driverArchitecture") -ChildPath $deviceFolder
+    $usbRoot = "$($osdCloudVolume.DeviceID)\"
+    $ExportOEMRoot = Join-Path -Path $usbRoot -ChildPath 'OSDCloud'
+    $ExportWinOSRoot = Join-Path -Path (Join-Path -Path $ExportOEMRoot -ChildPath 'DriverModel') -ChildPath $deviceFolder
+    $ExportWinPERoot = Join-Path -Path $usbRoot -ChildPath 'OSDeployCore'
+    $ExportWinPERoot = Join-Path -Path $ExportWinPERoot -ChildPath 'boot-assets'
+    $ExportWinPERoot = Join-Path -Path $ExportWinPERoot -ChildPath "winpedrivers-$driverArchitecture"
+    $ExportWinPERoot = Join-Path -Path $ExportWinPERoot -ChildPath $deviceFolder
 }
 
-Write-Host "[$(Get-Date -format s)] Exporting OEMDrivers to $ExportOEMRoot"
+Write-Host "[$(Get-Date -format s)] Exporting WinOS drivers to $ExportWinOSRoot and WinPE drivers to $ExportWinPERoot"
 
 <#
 $PnputilXml = (& pnputil.exe /enum-devices /connected /format xml) -join "`n"

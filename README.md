@@ -32,15 +32,17 @@ The script uses the first volume it finds that meets all of these conditions:
 - It contains an `OSDCloud` directory at its root.
 - It has **more than 10 GB** of free space.
 
-On a qualifying USB volume, output is written under `<drive>:\OSDCloud`. If no volume qualifies, the script uses `%TEMP%`. In either case, the collections use the same architecture-specific layout:
+On a qualifying USB volume, Windows drivers are exported to `<drive>:\OSDCloud\DriverModel\<manufacturer>_<modelId>_<model>_<build>`, regardless of architecture. WinPE drivers are exported to `<drive>:\OSDeployCore\boot-assets\winpedrivers-<arch>\<manufacturer>_<modelId>_<model>_<build>`. The WinPE architecture segment is `winpedrivers-amd64` or `winpedrivers-arm64`.
+
+If no USB volume qualifies, the existing `%TEMP%` destinations are used:
 
 ```text
-<export root>\
-├── drivers-amd64\<manufacturer>_<modelId>_<model>_<build>\
-└── winpedrivers-amd64\<manufacturer>_<modelId>_<model>_<build>\
+%TEMP%\
+├── drivers-<arch>\<manufacturer>_<modelId>_<model>_<build>\
+└── winpedrivers-<arch>\<manufacturer>_<modelId>_<model>_<build>\
 ```
 
-For ARM64 systems, `amd64` is replaced by `arm64`. The build suffix includes the Windows build number and update revision, such as `26100.9168`. For example, with `%TEMP%` as the fallback root, Windows drivers are exported to `%TEMP%\drivers-amd64\Contoso_X1_Model_One_26100.9168`; WinPE drivers use the parallel `winpedrivers-amd64` path. Each device folder contains class and manufacturer subfolders with the exported driver packages.
+The Temp fallback uses `amd64` or `arm64` for both collections. The device folder suffix includes the Windows build number and update revision, such as `26100.9168`. For example, with `%TEMP%` as the fallback root, Windows drivers are exported to `%TEMP%\drivers-amd64\Contoso_X1_Model_One_26100.9168`; WinPE drivers use the parallel `winpedrivers-amd64` path. Each device folder contains class and manufacturer subfolders with the exported driver packages.
 
 The script requires administrator privileges, displays a diagnostic-data consent notice, and writes a transcript under `%SystemRoot%\Temp`. Review the [OSDCloud privacy policy](https://github.com/OSDeploy/OSDCloud/blob/main/PRIVACY.md) before running it.
 
